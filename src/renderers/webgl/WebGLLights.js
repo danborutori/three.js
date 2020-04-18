@@ -427,9 +427,9 @@ function WebGLLights() {
 			state.pointShadowMap.length = numPointShadows;
 			state.spotShadow.length = numSpotShadows;
 			state.spotShadowMap.length = numSpotShadows;
-			state.directionalShadowMatrix.length = numDirectionalShadows;
-			state.pointShadowMatrix.length = numPointShadows;
-			state.spotShadowMatrix.length = numSpotShadows;
+			state.directionalShadowMatrix.length = Math.max( numDirectionalShadows, state.directionalShadowMatrix.length );
+			state.pointShadowMatrix.length = Math.max( numPointShadows, state.pointShadowMatrix.length);
+			state.spotShadowMatrix.length = Math.max( numSpotShadows, state.spotShadowMatrix.length);
 
 			hash.directionalLength = directionalLength;
 			hash.pointLength = pointLength;
