@@ -251,7 +251,7 @@ function WebGLLights() {
 				uniforms.direction.sub( vector3 );
 				uniforms.direction.transformDirection( viewMatrix );
 
-				if ( light.castShadow ) {
+				if ( light.castShadow || true ) {
 
 					const shadow = light.shadow;
 
@@ -292,7 +292,7 @@ function WebGLLights() {
 				uniforms.penumbraCos = Math.cos( light.angle * ( 1 - light.penumbra ) );
 				uniforms.decay = light.decay;
 
-				if ( light.castShadow ) {
+				if ( light.castShadow || true  ) {
 
 					const shadow = light.shadow;
 
@@ -357,7 +357,7 @@ function WebGLLights() {
 				uniforms.distance = light.distance;
 				uniforms.decay = light.decay;
 
-				if ( light.castShadow ) {
+				if ( light.castShadow || true ) {
 
 					const shadow = light.shadow;
 
