@@ -412,7 +412,7 @@ function WebGLShadowMap( _renderer, _objects, maxTextureSize ) {
 						const group = groups[ k ];
 						const groupMaterial = material[ group.materialIndex ];
 
-						if ( groupMaterial && groupMaterial.visible ) {
+						if ( groupMaterial && groupMaterial.visible && !groupMaterial.noShadow ) {
 
 							const depthMaterial = getDepthMaterial( object, geometry, groupMaterial, light, shadowCamera.near, shadowCamera.far, type );
 

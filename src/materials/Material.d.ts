@@ -299,6 +299,8 @@ export class Material extends EventDispatcher {
 	 */
 	userData: any;
 
+	noShadow?: boolean;
+
 	/**
 	 * This starts at 0 and counts how many times .needsUpdate is set to true.
 	 */
