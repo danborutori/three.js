@@ -9,10 +9,10 @@ console.warn( "THREE.GLTFLoader: As part of the transition to ES6 Modules, the f
 
 THREE.GLTFLoader = ( function () {
 
-	function GLTFLoader( manager ) {
+	function GLTFLoader( manager, textureLoader ) {
 
 		THREE.Loader.call( this, manager );
-
+		this.textureLoader = textureLoader;
 		this.dracoLoader = null;
 		this.ddsLoader = null;
 
@@ -216,7 +216,8 @@ THREE.GLTFLoader = ( function () {
 
 				path: path || this.resourcePath || '',
 				crossOrigin: this.crossOrigin,
-				manager: this.manager
+				manager: this.manager,
+				textureLoader: this.textureLoader
 
 			} );
 
@@ -1413,7 +1414,7 @@ THREE.GLTFLoader = ( function () {
 		// BufferGeometry caching
 		this.primitiveCache = {};
 
-		this.textureLoader = new THREE.TextureLoader( this.options.manager );
+		this.textureLoader = options.textureLoader || new THREE.TextureLoader( this.options.manager );
 		this.textureLoader.setCrossOrigin( this.options.crossOrigin );
 
 		this.fileLoader = new THREE.FileLoader( this.options.manager );
@@ -1945,17 +1946,17 @@ THREE.GLTFLoader = ( function () {
 
 			if ( ! texture.isCompressedTexture ) {
 
-				switch ( mapName ) {
+			switch ( mapName ) {
 
-					case 'aoMap':
-					case 'emissiveMap':
-					case 'metalnessMap':
-					case 'normalMap':
-					case 'roughnessMap':
-						texture.format = THREE.RGBFormat;
-						break;
+				case 'aoMap':
+				case 'emissiveMap':
+				case 'metalnessMap':
+				case 'normalMap':
+				case 'roughnessMap':
+					texture.format = THREE.RGBFormat;
+					break;
 
-				}
+			}
 
 			}
 
@@ -2823,15 +2824,16 @@ THREE.GLTFLoader = ( function () {
 			var sampler = animationDef.samplers[ channel.sampler ];
 			var target = channel.target;
 			var name = target.node !== undefined ? target.node : target.id; // NOTE: target.id is deprecated.
-			var input = animationDef.parameters !== undefined ? animationDef.parameters[ sampler.input ] : sampler.input;
-			var output = animationDef.parameters !== undefined ? animationDef.parameters[ sampler.output ] : sampler.output;
-
-			pendingNodes.push( this.getDependency( 'node', name ) );
-			pendingInputAccessors.push( this.getDependency( 'accessor', input ) );
-			pendingOutputAccessors.push( this.getDependency( 'accessor', output ) );
-			pendingSamplers.push( sampler );
-			pendingTargets.push( target );
-
+			if( name ){
+				var input = animationDef.parameters !== undefined ? animationDef.parameters[ sampler.input ] : sampler.input;
+				var output = animationDef.parameters !== undefined ? animationDef.parameters[ sampler.output ] : sampler.output;
+	
+				pendingNodes.push( this.getDependency( 'node', name ) );
+				pendingInputAccessors.push( this.getDependency( 'accessor', input ) );
+				pendingOutputAccessors.push( this.getDependency( 'accessor', output ) );
+				pendingSamplers.push( sampler );
+				pendingTargets.push( target );
+			}
 		}
 
 		return Promise.all( [
@@ -3101,7 +3103,7 @@ THREE.GLTFLoader = ( function () {
 
 					node.add( objects[ i ] );
 
-				}
+			}
 
 			}
 
