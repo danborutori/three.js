@@ -281,15 +281,14 @@ function WebGLLights() {
 
 				}
 				
-				if(light.map){
+				if(light.map && numDirectionalMaps==0 ){
 					uniforms.map = true;
-					state.directionalMap[directionalLength] = light.map;
-					numDirectionalMaps = directionalLength+1;
+					state.directionalMap[0] = light.map;
+					state.directionalMapMatrix[0] = light.shadow.matrix;
+					numDirectionalMaps++;
 				}else{
 					uniforms.map = false;
-					state.directionalMap[directionalLength] = null;
 				}
-				state.directionalMapMatrix[directionalLength] = light.shadow.matrix;
 
 				state.directional[ directionalLength ] = uniforms;
 
@@ -331,19 +330,18 @@ function WebGLLights() {
 					numSpotShadows ++;
 				}
 				
-				if(light.map){
+				if(light.map && numSpotMaps==0){
 					uniforms.map = true;
 					var tanAngle = Math.tan(light.angle);
 					light.mapMatrix.makePerspective( -tanAngle, tanAngle, tanAngle, -tanAngle, 1, 10 );
 					light.mapMatrix.multiply( matrix4.getInverse(light.matrixWorld) );
 					light.mapMatrix.multiply( camera.matrixWorld );
-					state.spotMap[spotLength] = light.map;
-					numSpotMaps = spotLength+1;
+					state.spotMap[0] = light.map;
+					state.spotMapMatrix[0] = light.mapMatrix;
+					numSpotMaps++;
 				}else{
 					uniforms.map = false;
-					state.spotMap[spotLength] = null;
 				}
-				state.spotMapMatrix[spotLength] = light.mapMatrix;
 
 				state.spot[ spotLength ] = uniforms;
 

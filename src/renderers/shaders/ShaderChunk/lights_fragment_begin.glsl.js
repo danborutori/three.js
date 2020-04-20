@@ -70,8 +70,8 @@ IncidentLight directLight;
 		
 		#if NUM_SPOT_MAP > 0 && UNROLLED_LOOP_INDEX < NUM_SPOT_MAP
 			if(spotLight.map){
-				vec4 spotMapUv = spotMapMatrix[ i ]*vec4(geometry.position,1);
-				directLight.color *= texture2D( spotMap[ i ], spotMapUv.xy/spotMapUv.w*0.5+0.5 ).rgb;
+				vec4 spotMapUv = spotMapMatrix[ 0 ]*vec4(geometry.position,1);
+				directLight.color *= texture2D( spotMap[ 0 ], spotMapUv.xy/spotMapUv.w*0.5+0.5 ).rgb;
 			}
 		#endif
 
@@ -103,8 +103,8 @@ IncidentLight directLight;
 		
 		#if NUM_DIRECTIONAL_MAP > 0 && UNROLLED_LOOP_INDEX < NUM_DIRECTIONAL_MAP
 			if(directionalLight.map){
-				vec4 directionalMapUv = directionalMapMatrix[ i ]*vec4(geometry.position,1);
-				directLight.color *= texture2D( directionalMap[ i ], directionalMapUv.xy/directionalMapUv.w*0.5+0.5 ).rgb;
+				vec4 directionalMapUv = directionalMapMatrix[ 0 ]*vec4(geometry.position,1);
+				directLight.color *= texture2D( directionalMap[ 0 ], directionalMapUv.xy/directionalMapUv.w*0.5+0.5 ).rgb;
 			}
 		#endif
 
