@@ -68,7 +68,7 @@ IncidentLight directLight;
 
 		getSpotDirectLightIrradiance( spotLight, geometry, directLight );
 		
-		#if NUM_SPOT_MAP > 0
+		#if NUM_SPOT_MAP > 0 && UNROLLED_LOOP_INDEX < NUM_SPOT_MAP
 			if(spotLight.map){
 				vec4 spotMapUv = spotMapMatrix[ i ]*vec4(geometry.position,1);
 				directLight.color *= texture2D( spotMap[ i ], spotMapUv.xy/spotMapUv.w*0.5+0.5 ).rgb;
