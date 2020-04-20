@@ -18,6 +18,12 @@ export class SpotLight extends Light {
 	);
 
 	/**
+	 * Spotlight color map.
+	 * Default — undefined.
+	 */
+	map?: Texture 
+	 
+	/**
 	 * Spotlight focus points at target.position.
 	 * Default position — (0,0,0).
 	 */

@@ -183,7 +183,8 @@ function replaceLightNums( string, parameters ) {
 		.replace( /NUM_HEMI_LIGHTS/g, parameters.numHemiLights )
 		.replace( /NUM_DIR_LIGHT_SHADOWS/g, parameters.numDirLightShadows )
 		.replace( /NUM_SPOT_LIGHT_SHADOWS/g, parameters.numSpotLightShadows )
-		.replace( /NUM_POINT_LIGHT_SHADOWS/g, parameters.numPointLightShadows );
+		.replace( /NUM_POINT_LIGHT_SHADOWS/g, parameters.numPointLightShadows )
+		.replace( /NUM_SPOT_MAP/g, parameters.numSpotMaps );
 
 }
 

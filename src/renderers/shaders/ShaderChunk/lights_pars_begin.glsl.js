@@ -135,6 +135,9 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		vec3 position;
 		vec3 direction;
 		vec3 color;
+#if NUM_SPOT_MAP > 0
+		bool map;
+#endif
 		float distance;
 		float decay;
 		float coneCos;
@@ -142,6 +145,12 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 	};
 
 	uniform SpotLight spotLights[ NUM_SPOT_LIGHTS ];
+
+#if NUM_SPOT_MAP > 0
+	uniform sampler2D spotMap[ NUM_SPOT_MAP ];
+	uniform mat4 spotMapMatrix[ NUM_SPOT_MAP ];
+#endif
+
 
 	#if defined( USE_SHADOWMAP ) && NUM_SPOT_LIGHT_SHADOWS > 0
 

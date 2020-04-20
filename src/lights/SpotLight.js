@@ -1,6 +1,7 @@
 import { Light } from './Light.js';
 import { SpotLightShadow } from './SpotLightShadow.js';
 import { Object3D } from '../core/Object3D.js';
+import { Matrix4 } from '../math/Matrix4.js';
 
 /**
  * @author alteredq / http://alteredqualia.com/
@@ -8,12 +9,16 @@ import { Object3D } from '../core/Object3D.js';
 
 function SpotLight( color, intensity, distance, angle, penumbra, decay ) {
 
-	Light.call( this, color, intensity );
+	const colorTexture = color && color.isTexture
+	
+	Light.call( this, colorTexture?0xffffff:color, intensity );
 
 	this.type = 'SpotLight';
 
 	this.position.copy( Object3D.DefaultUp );
 	this.updateMatrix();
+	this.map = colorTexture?color:undefined
+	this.mapMatrix = new Matrix4()
 
 	this.target = new Object3D();
 
@@ -53,6 +58,8 @@ SpotLight.prototype = Object.assign( Object.create( Light.prototype ), {
 
 		Light.prototype.copy.call( this, source );
 
+		this.map = source.map;
+		this.mapMatrix.copy( source.mapMatrix );
 		this.distance = source.distance;
 		this.angle = source.angle;
 		this.penumbra = source.penumbra;

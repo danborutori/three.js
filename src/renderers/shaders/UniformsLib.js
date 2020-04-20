@@ -130,6 +130,7 @@ const UniformsLib = {
 			color: {},
 			position: {},
 			direction: {},
+			map: {},
 			distance: {},
 			coneCos: {},
 			penumbraCos: {},
@@ -162,6 +163,9 @@ const UniformsLib = {
 
 		pointShadowMap: { value: [] },
 		pointShadowMatrix: { value: [] },
+		
+		spotMap: { value: [] },
+		spotMapMatrix: { value: [] },
 
 		hemisphereLights: { value: [], properties: {
 			direction: {},
