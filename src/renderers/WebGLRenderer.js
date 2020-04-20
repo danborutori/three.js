@@ -1920,8 +1920,8 @@ function WebGLRenderer( parameters ) {
 		uniforms.pointLightShadows.needsUpdate = value;
 		uniforms.spotLights.needsUpdate = value;
 		uniforms.spotLightShadows.needsUpdate = value;
-		uniforms.spotMap.needsUpdate = value;
-		uniforms.spotMapMatrix.needsUpdate = value;
+//		uniforms.spotMap.needsUpdate = value;
+//		uniforms.spotMapMatrix.needsUpdate = value;
 		uniforms.rectAreaLights.needsUpdate = value;
 		uniforms.hemisphereLights.needsUpdate = value;
 

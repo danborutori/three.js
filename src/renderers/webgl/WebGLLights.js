@@ -316,17 +316,18 @@ function WebGLLights() {
 					numSpotShadows ++;
 				}
 				
-				if( light.map ){
+				if(light.map){
 					uniforms.map = true;
 					var tanAngle = Math.tan(light.angle);
 					light.mapMatrix.makePerspective( -tanAngle, tanAngle, tanAngle, -tanAngle, 1, 10 );
 					light.mapMatrix.multiply( matrix4.getInverse(light.matrixWorld) );
 					light.mapMatrix.multiply( camera.matrixWorld );
+					state.spotMap[spotLength] = light.map;
 					numSpotMaps = spotLength+1;
 				}else{
 					uniforms.map = false;
+					state.spotMap[spotLength] = null;
 				}
-				state.spotMap[spotLength] = light.map;
 				state.spotMapMatrix[spotLength] = light.mapMatrix;
 
 				state.spot[ spotLength ] = uniforms;
