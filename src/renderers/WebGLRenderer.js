@@ -1610,6 +1610,8 @@ function WebGLRenderer( parameters ) {
 			uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
 			// TODO (abelnation): add area lights shadow info to uniforms
 			
+			uniforms.directionalMap.value = lights.state.directionalMap;
+			uniforms.directionalMapMatrix.value = lights.state.directionalMapMatrix;
 			uniforms.spotMap.value = lights.state.spotMap;
 			uniforms.spotMapMatrix.value = lights.state.spotMapMatrix;
 		}

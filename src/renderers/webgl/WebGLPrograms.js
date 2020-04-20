@@ -48,7 +48,7 @@ function WebGLPrograms( renderer, extensions, capabilities ) {
 		"maxMorphTargets", "maxMorphNormals", "premultipliedAlpha",
 		"numDirLights", "numPointLights", "numSpotLights", "numHemiLights", "numRectAreaLights",
 		"numDirLightShadows", "numPointLightShadows", "numSpotLightShadows",
-		"numSpotMaps",
+		"numDirectionalMaps", "numSpotMaps",
 		"shadowMapEnabled", "shadowMapType", "toneMapping", 'physicallyCorrectLights',
 		"alphaTest", "doubleSided", "flipSided", "numClippingPlanes", "numClipIntersection", "depthPacking", "dithering",
 		"sheen"
@@ -260,6 +260,7 @@ function WebGLPrograms( renderer, extensions, capabilities ) {
 			numPointLightShadows: lights.pointShadowMap.length,
 			numSpotLightShadows: lights.spotShadowMap.length,
 			
+			numDirectionalMaps: lights.directionalMap.length,
 			numSpotMaps: lights.spotMap.length,
 
 			numClippingPlanes: nClipPlanes,

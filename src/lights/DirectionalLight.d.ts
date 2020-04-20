@@ -14,8 +14,14 @@ import { Light } from './Light';
  */
 export class DirectionalLight extends Light {
 
-	constructor( color?: Color | string | number, intensity?: number );
+	constructor( color?: Color | string | number | Texture, intensity?: number );
 
+	/**
+	 * Spotlight color map.
+	 * Default — undefined.
+	 */
+	map?: Texture 
+	
 	/**
 	 * Target used for shadow camera orientation.
 	 */

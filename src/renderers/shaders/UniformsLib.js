@@ -114,7 +114,8 @@ const UniformsLib = {
 
 		directionalLights: { value: [], properties: {
 			direction: {},
-			color: {}
+			color: {},
+			map: {}
 		} },
 
 		directionalLightShadows: { value: [], properties: {
@@ -164,6 +165,8 @@ const UniformsLib = {
 		pointShadowMap: { value: [] },
 		pointShadowMatrix: { value: [] },
 		
+		directionalMap: { value: [] },
+		directionalMapMatrix: { value: [] },
 		spotMap: { value: [] },
 		spotMapMatrix: { value: [] },
 

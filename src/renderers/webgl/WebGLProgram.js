@@ -184,6 +184,7 @@ function replaceLightNums( string, parameters ) {
 		.replace( /NUM_DIR_LIGHT_SHADOWS/g, parameters.numDirLightShadows )
 		.replace( /NUM_SPOT_LIGHT_SHADOWS/g, parameters.numSpotLightShadows )
 		.replace( /NUM_POINT_LIGHT_SHADOWS/g, parameters.numPointLightShadows )
+		.replace( /NUM_DIRECTIONAL_MAP/g, parameters.numDirectionalMaps )
 		.replace( /NUM_SPOT_MAP/g, parameters.numSpotMaps );
 
 }

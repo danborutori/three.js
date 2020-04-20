@@ -9,7 +9,7 @@ import { Light } from './Light';
 export class SpotLight extends Light {
 
 	constructor(
-		color?: Color | string | number,
+		color?: Color | string | number | Texture,
 		intensity?: number,
 		distance?: number,
 		angle?: number,

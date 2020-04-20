@@ -100,6 +100,14 @@ IncidentLight directLight;
 		directionalLight = directionalLights[ i ];
 
 		getDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );
+		
+		#if NUM_DIRECTIONAL_MAP > 0 && UNROLLED_LOOP_INDEX < NUM_DIRECTIONAL_MAP
+			if(directionalLight.map){
+				vec4 directionalMapUv = directionalMapMatrix[ i ]*vec4(geometry.position,1);
+				directLight.color *= texture2D( directionalMap[ i ], directionalMapUv.xy/directionalMapUv.w*0.5+0.5 ).rgb;
+			}
+		#endif
+
 
 		#if defined( USE_SHADOWMAP ) && ( UNROLLED_LOOP_INDEX < NUM_DIR_LIGHT_SHADOWS )
 		directionalLightShadow = directionalLightShadows[ i ];

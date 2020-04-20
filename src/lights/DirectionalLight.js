@@ -8,11 +8,13 @@ import { Object3D } from '../core/Object3D.js';
  */
 
 function DirectionalLight( color, intensity ) {
-
-	Light.call( this, color, intensity );
+	
+	const colorTexture = color && color.isTexture;	
+	Light.call( this, colorTexture?0xffffff:color, intensity );
 
 	this.type = 'DirectionalLight';
 
+	this.map = colorTexture?color:undefined;
 	this.position.copy( Object3D.DefaultUp );
 	this.updateMatrix();
 

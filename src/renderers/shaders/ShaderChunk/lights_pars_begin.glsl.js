@@ -56,9 +56,17 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 
 #if NUM_DIR_LIGHTS > 0
 
+#if NUM_DIRECTIONAL_MAP > 0
+	uniform sampler2D directionalMap[ NUM_DIRECTIONAL_MAP ];
+	uniform mat4 directionalMapMatrix[ NUM_DIRECTIONAL_MAP ];
+#endif
+
 	struct DirectionalLight {
 		vec3 direction;
 		vec3 color;
+		#if NUM_DIRECTIONAL_MAP > 0
+		bool map;
+		#endif
 	};
 
 	uniform DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
