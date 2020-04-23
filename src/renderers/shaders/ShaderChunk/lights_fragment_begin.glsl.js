@@ -69,9 +69,9 @@ IncidentLight directLight;
 		getSpotDirectLightIrradiance( spotLight, geometry, directLight );
 		
 		#if NUM_SPOT_MAP > 0
-			if(spotLight.map){
-				vec4 spotMapUv = spotMapMatrix[ 0 ]*vec4(geometry.position,1);
-				directLight.color *= texture2D( spotMap[ 0 ], spotMapUv.xy/spotMapUv.w*0.5+0.5 ).rgb;
+			if( spotLight.map >= 0 ){ 
+				vec4 spotMapUv = spotMapMatrix[ spotLight.map ]*vec4(geometry.position,1);
+				directLight.color *= sampleSpotMap( spotLight.map, spotMapUv.xy/spotMapUv.w*0.5+0.5 ).rgb;
 			}
 		#endif
 
@@ -102,9 +102,9 @@ IncidentLight directLight;
 		getDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );
 		
 		#if NUM_DIRECTIONAL_MAP > 0
-			if(directionalLight.map){
-				vec4 directionalMapUv = directionalMapMatrix[ 0 ]*vec4(geometry.position,1);
-				directLight.color *= texture2D( directionalMap[ 0 ], directionalMapUv.xy/directionalMapUv.w*0.5+0.5 ).rgb;
+			if( directionalLight.map >= 0 ) {
+				vec4 directionalMapUv = directionalMapMatrix[ directionalLight.map ]*vec4(geometry.position,1);
+				directLight.color *= sampleDirectionalMap( directionalLight.map, directionalMapUv.xy/directionalMapUv.w*0.5+0.5 ).rgb;
 			}
 		#endif
 

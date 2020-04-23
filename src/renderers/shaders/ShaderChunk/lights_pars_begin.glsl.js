@@ -59,18 +59,28 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 #if NUM_DIRECTIONAL_MAP > 0
 	uniform sampler2D directionalMap[ NUM_DIRECTIONAL_MAP ];
 	uniform mat4 directionalMapMatrix[ NUM_DIRECTIONAL_MAP ];
+	
+	vec4 sampleDirectionalMap( int index, vec2 uv ){
+		vec4 r = vec4( 1, 1, 1, 1 );
+		#pragma unroll_loop_start
+		for ( int i = 0; i < NUM_DIRECTIONAL_MAP; i ++ ) {
+			if( UNROLLED_LOOP_INDEX == index ) r = texture2D( directionalMap[ i ], uv );
+		}
+		#pragma unroll_loop_end
+		return r;
+	}
 #endif
 
 	struct DirectionalLight {
 		vec3 direction;
 		vec3 color;
 		#if NUM_DIRECTIONAL_MAP > 0
-		bool map;
+		int map;
 		#endif
 	};
 
 	uniform DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
-
+	
 	#if defined( USE_SHADOWMAP ) && NUM_DIR_LIGHT_SHADOWS > 0
 
 		struct DirectionalLightShadow {
@@ -144,7 +154,7 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		vec3 direction;
 		vec3 color;
 #if NUM_SPOT_MAP > 0
-		bool map;
+		int map;
 #endif
 		float distance;
 		float decay;
@@ -153,10 +163,20 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 	};
 
 	uniform SpotLight spotLights[ NUM_SPOT_LIGHTS ];
-
+	
 #if NUM_SPOT_MAP > 0
 	uniform sampler2D spotMap[ NUM_SPOT_MAP ];
 	uniform mat4 spotMapMatrix[ NUM_SPOT_MAP ];
+	
+	vec4 sampleSpotMap( int index, vec2 uv ){
+		vec4 r = vec4( 1, 1, 1, 1 );
+		#pragma unroll_loop_start
+		for ( int i = 0; i < NUM_SPOT_MAP; i ++ ) {
+			if( UNROLLED_LOOP_INDEX == index ) r = texture2D( spotMap[ i ], uv );
+		}
+		#pragma unroll_loop_end
+		return r;
+	}
 #endif
 
 
