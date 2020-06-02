@@ -278,6 +278,7 @@ function WebGLLights( staticLightConfig ) {
 			const distance = light.distance;
 
 			const shadowMap = ( light.shadow && light.shadow.map ) ? light.shadow.map.texture : null;
+			light.shadowInUse = false;
 
 			if ( light.isAmbientLight ) {
 
@@ -318,7 +319,7 @@ function WebGLLights( staticLightConfig ) {
 					state.directionalShadowMatrix[ directionalLength ] = light.shadow.matrix;
 
 					numDirectionalShadows ++;
-
+					light.shadowInUse = true;
 				}
 				
 				if(light.map && (!staticLightConfig || numDirectionalMaps<staticLightConfig.numDirectionalMaps) ){
@@ -368,6 +369,7 @@ function WebGLLights( staticLightConfig ) {
 					state.spotShadowMatrix[ spotLength ] = light.shadow.matrix;
 
 					numSpotShadows ++;
+					light.shadowInUse = true;
 				}
 				
 				if(light.map && (!staticLightConfig || numSpotMaps<staticLightConfig.numSpotMaps)){
@@ -447,7 +449,7 @@ function WebGLLights( staticLightConfig ) {
 					state.pointShadowMatrix[ pointLength ] = light.shadow.matrix;
 
 					numPointShadows ++;
-
+					light.shadowInUse = true;
 				}
 
 				state.point[ pointLength ] = uniforms;

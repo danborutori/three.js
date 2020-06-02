@@ -101,6 +101,8 @@ function WebGLShadowMap( _renderer, _objects, maxTextureSize ) {
 
 			const light = lights[ i ];
 			const shadow = light.shadow;
+			
+			if( !light.shadowInUse )continue; //skip not in use shadow
 
 			if ( shadow === undefined ) {
 
