@@ -20218,7 +20218,7 @@
 
 					}
 
-				} else if ( light.isDirectionalLight || (!staticLightConfig || directionalLength<staticLightConfig.directionalLength)) {
+				} else if ( light.isDirectionalLight && (!staticLightConfig || directionalLength<staticLightConfig.directionalLength)) {
 
 					var uniforms = cache.get( light );
 
@@ -20228,7 +20228,7 @@
 					uniforms.direction.sub( vector3 );
 					uniforms.direction.transformDirection( viewMatrix );
 
-					if ( light.castShadow || (!staticLightConfig || numDirectionalShadows<staticLightConfig.numDirectionalShadows) ) {
+					if ( light.castShadow && (!staticLightConfig || numDirectionalShadows<staticLightConfig.numDirectionalShadows) ) {
 
 						var shadow = light.shadow;
 
@@ -20246,7 +20246,7 @@
 
 					}
 					
-					if(light.map || (!staticLightConfig || numDirectionalMaps<staticLightConfig.numDirectionalMaps) ){
+					if(light.map && (!staticLightConfig || numDirectionalMaps<staticLightConfig.numDirectionalMaps) ){
 						uniforms.map = numDirectionalMaps;
 						state.directionalMap[numDirectionalMaps] = light.map;
 						state.directionalMapMatrix[numDirectionalMaps] = light.shadow.matrix;
@@ -20259,7 +20259,7 @@
 
 					directionalLength ++;
 
-				} else if ( light.isSpotLight || (!staticLightConfig || spotLength<staticLightConfig.spotLength) ) {
+				} else if ( light.isSpotLight && (!staticLightConfig || spotLength<staticLightConfig.spotLength) ) {
 
 					var uniforms$1 = cache.get( light );
 
@@ -20278,7 +20278,7 @@
 					uniforms$1.penumbraCos = Math.cos( light.angle * ( 1 - light.penumbra ) );
 					uniforms$1.decay = light.decay;
 
-					if ( light.castShadow || (!staticLightConfig || numSpotShadows<staticLightConfig.numSpotShadows) ) {
+					if ( light.castShadow && (!staticLightConfig || numSpotShadows<staticLightConfig.numSpotShadows) ) {
 
 						var shadow$1 = light.shadow;
 
@@ -20295,7 +20295,7 @@
 						numSpotShadows ++;
 					}
 					
-					if(light.map || (!staticLightConfig || numSpotMaps<staticLightConfig.numSpotMaps)){
+					if(light.map && (!staticLightConfig || numSpotMaps<staticLightConfig.numSpotMaps)){
 						uniforms$1.map = numSpotMaps;
 						var tanAngle = Math.tan(light.angle);
 						light.mapMatrix.makePerspective( -tanAngle, tanAngle, tanAngle, -tanAngle, 1, 10 );
@@ -20312,7 +20312,7 @@
 
 					spotLength ++;
 
-				} else if ( light.isRectAreaLight || (!staticLightConfig || rectAreaLength<staticLightConfig.rectAreaLength) ) {
+				} else if ( light.isRectAreaLight && (!staticLightConfig || rectAreaLength<staticLightConfig.rectAreaLength) ) {
 
 					var uniforms$2 = cache.get( light );
 
@@ -20344,7 +20344,7 @@
 
 					rectAreaLength ++;
 
-				} else if ( light.isPointLight || (!staticLightConfig || pointLength<staticLightConfig.pointLength) ) {
+				} else if ( light.isPointLight && (!staticLightConfig || pointLength<staticLightConfig.pointLength) ) {
 
 					var uniforms$3 = cache.get( light );
 
@@ -20355,7 +20355,7 @@
 					uniforms$3.distance = light.distance;
 					uniforms$3.decay = light.decay;
 
-					if ( light.castShadow || (!staticLightConfig || numPointShadows<staticLightConfig.numPointShadows) ) {
+					if ( light.castShadow && (!staticLightConfig || numPointShadows<staticLightConfig.numPointShadows) ) {
 
 						var shadow$2 = light.shadow;
 
@@ -20379,7 +20379,7 @@
 
 					pointLength ++;
 
-				} else if ( light.isHemisphereLight || (!staticLightConfig || hemiLength<staticLightConfig.hemiLength) ) {
+				} else if ( light.isHemisphereLight && (!staticLightConfig || hemiLength<staticLightConfig.hemiLength) ) {
 
 					var uniforms$4 = cache.get( light );
 
