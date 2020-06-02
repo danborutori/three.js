@@ -20198,7 +20198,11 @@
 
 			var viewMatrix = camera.matrixWorldInverse;
 			
-			lights.sort( (staticLightConfig && staticLightConfig.sortFunc) || shadowCastingLightsFirst );
+			if(staticLightConfig && staticLightConfig.sortFunc){
+				lights.sort( function(a,b){ return staticLightConfig.sortFunc(camera,a,b) } );
+			}else {
+				lights.sort( shadowCastingLightsFirst );
+			}
 			
 			for ( var i$1 = 0, l = lights.length; i$1 < l; i$1 ++ ) {
 
@@ -20209,6 +20213,7 @@
 				var distance = light.distance;
 
 				var shadowMap = ( light.shadow && light.shadow.map ) ? light.shadow.map.texture : null;
+				light.shadowInUse = false;
 
 				if ( light.isAmbientLight ) {
 
@@ -20249,7 +20254,7 @@
 						state.directionalShadowMatrix[ directionalLength ] = light.shadow.matrix;
 
 						numDirectionalShadows ++;
-
+						light.shadowInUse = true;
 					}
 					
 					if(light.map && (!staticLightConfig || numDirectionalMaps<staticLightConfig.numDirectionalMaps) ){
@@ -20299,6 +20304,7 @@
 						state.spotShadowMatrix[ spotLength ] = light.shadow.matrix;
 
 						numSpotShadows ++;
+						light.shadowInUse = true;
 					}
 					
 					if(light.map && (!staticLightConfig || numSpotMaps<staticLightConfig.numSpotMaps)){
@@ -20378,7 +20384,7 @@
 						state.pointShadowMatrix[ pointLength ] = light.shadow.matrix;
 
 						numPointShadows ++;
-
+						light.shadowInUse = true;
 					}
 
 					state.point[ pointLength ] = uniforms$3;
@@ -20882,6 +20888,8 @@
 
 				var light = lights[ i ];
 				var shadow = light.shadow;
+				
+				if( !light.shadowInUse ){ continue; } //skip not in use shadow
 
 				if ( shadow === undefined ) {
 

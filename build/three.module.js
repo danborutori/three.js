@@ -20185,7 +20185,11 @@ function WebGLLights( staticLightConfig ) {
 
 		const viewMatrix = camera.matrixWorldInverse;
 		
-		lights.sort( (staticLightConfig && staticLightConfig.sortFunc) || shadowCastingLightsFirst );
+		if(staticLightConfig && staticLightConfig.sortFunc){
+			lights.sort( function(a,b){ return staticLightConfig.sortFunc(camera,a,b) } );
+		}else {
+			lights.sort( shadowCastingLightsFirst );
+		}
 		
 		for ( let i = 0, l = lights.length; i < l; i ++ ) {
 
@@ -20196,6 +20200,7 @@ function WebGLLights( staticLightConfig ) {
 			const distance = light.distance;
 
 			const shadowMap = ( light.shadow && light.shadow.map ) ? light.shadow.map.texture : null;
+			light.shadowInUse = false;
 
 			if ( light.isAmbientLight ) {
 
@@ -20236,7 +20241,7 @@ function WebGLLights( staticLightConfig ) {
 					state.directionalShadowMatrix[ directionalLength ] = light.shadow.matrix;
 
 					numDirectionalShadows ++;
-
+					light.shadowInUse = true;
 				}
 				
 				if(light.map && (!staticLightConfig || numDirectionalMaps<staticLightConfig.numDirectionalMaps) ){
@@ -20286,6 +20291,7 @@ function WebGLLights( staticLightConfig ) {
 					state.spotShadowMatrix[ spotLength ] = light.shadow.matrix;
 
 					numSpotShadows ++;
+					light.shadowInUse = true;
 				}
 				
 				if(light.map && (!staticLightConfig || numSpotMaps<staticLightConfig.numSpotMaps)){
@@ -20365,7 +20371,7 @@ function WebGLLights( staticLightConfig ) {
 					state.pointShadowMatrix[ pointLength ] = light.shadow.matrix;
 
 					numPointShadows ++;
-
+					light.shadowInUse = true;
 				}
 
 				state.point[ pointLength ] = uniforms;
@@ -20869,6 +20875,8 @@ function WebGLShadowMap( _renderer, _objects, maxTextureSize ) {
 
 			const light = lights[ i ];
 			const shadow = light.shadow;
+			
+			if( !light.shadowInUse )continue; //skip not in use shadow
 
 			if ( shadow === undefined ) {
 
