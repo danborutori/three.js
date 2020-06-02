@@ -170,6 +170,22 @@ function WebGLLights( staticLightConfig ) {
 	const cache = new UniformsCache();
 
 	const shadowCache = ShadowUniformsCache();
+	
+	const dummyDirectional = new DirectionalLight;
+	const dummySpot = new SpotLight;
+	const dummyPoint = new PointLight;
+	const dummyUniforms = {
+		direcional: cache.get(dummyDirectional),
+		point: cache.get(dummyPoint),
+		spot: cache.get(dummySpot),
+		rectArea: cache.get(new RectAreaLight),
+		hemi: cache.get(new HemisphereLight)
+	};
+	const dummyShadowUniforms = {
+		direcional: shadowCache.get(dummyDirectional),
+		point: shadowCache.get(dummyPoint),
+		spot: shadowCache.get(dummySpot)
+	};
 
 	const state = {
 
@@ -452,35 +468,35 @@ function WebGLLights( staticLightConfig ) {
 		
 		if(staticLightConfig){
 			while(directionalLength<staticLightConfig.directionalLength){
-				state.directional[ directionalLength ] = cache.get({type:'DirectionalLight'});
+				state.directional[ directionalLength ] = dummyUniforms.direcional;
 				directionalLength++;
 			}
 			while(numDirectionalShadows<staticLightConfig.numDirectionalShadows){
-				state.directionalShadow[numDirectionalShadows] = shadowCache.get({type:'DirectionalLight'});
+				state.directionalShadow[numDirectionalShadows] = dummyShadowUniforms.direcional;
 				numDirectionalShadows++;
 			}
 			while(spotLength<staticLightConfig.spotLength){
-				state.spot[ spotLength ] = cache.get({type:'SpotLight'});
+				state.spot[ spotLength ] = dummyUniforms.spot;
 				spotLength++;
 			}
 			while(numSpotShadows<staticLightConfig.numSpotShadows){
-				state.spotShadow[numSpotShadows] = shadowCache.get({type:'SpotLight'});
+				state.spotShadow[numSpotShadows] = dummyShadowUniforms.spot;
 				numSpotShadows++;
 			}
 			while(pointLength<staticLightConfig.pointLength){
-				state.point[ pointLength ] = cache.get({type:'PointLight'});
+				state.point[ pointLength ] = dummyUniforms.point;
 				pointLength++;
 			}
 			while(numPointShadows<staticLightConfig.numPointShadows){
-				state.pointShadow[numPointShadows] = shadowCache.get({type:'SpotLight'});
+				state.pointShadow[numPointShadows] = dummyShadowUniforms.point;
 				numPointShadows++;
 			}
 			while(hemiLength<staticLightConfig.hemiLength){
-				state.hemi[ pointLength ] = cache.get({type:'HemisphereLight'});
+				state.hemi[ pointLength ] = dummyUniforms.hemi;
 				hemiLength++;
 			}
 			while(rectAreaLength<staticLightConfig.rectAreaLength){
-				state.rectArea[ pointLength ] = cache.get({type:'RectAreaLight'});
+				state.rectArea[ pointLength ] = dummyUniforms.rectArea;
 				rectAreaLength++;
 			}
 			
