@@ -19206,6 +19206,728 @@ function WebGLRenderLists() {
 
 /**
  * @author mrdoob / http://mrdoob.com/
+ * @author alteredq / http://alteredqualia.com/
+ */
+
+function Light( color, intensity ) {
+
+	Object3D.call( this );
+
+	this.type = 'Light';
+
+	this.color = new Color( color );
+	this.intensity = intensity !== undefined ? intensity : 1;
+
+	this.receiveShadow = undefined;
+
+}
+
+Light.prototype = Object.assign( Object.create( Object3D.prototype ), {
+
+	constructor: Light,
+
+	isLight: true,
+
+	copy: function ( source ) {
+
+		Object3D.prototype.copy.call( this, source );
+
+		this.color.copy( source.color );
+		this.intensity = source.intensity;
+
+		return this;
+
+	},
+
+	toJSON: function ( meta ) {
+
+		const data = Object3D.prototype.toJSON.call( this, meta );
+
+		data.object.color = this.color.getHex();
+		data.object.intensity = this.intensity;
+
+		if ( this.groundColor !== undefined ) data.object.groundColor = this.groundColor.getHex();
+
+		if ( this.distance !== undefined ) data.object.distance = this.distance;
+		if ( this.angle !== undefined ) data.object.angle = this.angle;
+		if ( this.decay !== undefined ) data.object.decay = this.decay;
+		if ( this.penumbra !== undefined ) data.object.penumbra = this.penumbra;
+
+		if ( this.shadow !== undefined ) data.object.shadow = this.shadow.toJSON();
+
+		return data;
+
+	}
+
+} );
+
+/**
+ * @author mrdoob / http://mrdoob.com/
+ */
+
+function LightShadow( camera ) {
+
+	this.camera = camera;
+
+	this.bias = 0;
+	this.radius = 1;
+
+	this.mapSize = new Vector2( 512, 512 );
+
+	this.map = null;
+	this.mapPass = null;
+	this.matrix = new Matrix4();
+
+	this._frustum = new Frustum();
+	this._frameExtents = new Vector2( 1, 1 );
+
+	this._viewportCount = 1;
+
+	this._viewports = [
+
+		new Vector4( 0, 0, 1, 1 )
+
+	];
+
+}
+
+Object.assign( LightShadow.prototype, {
+
+	_projScreenMatrix: new Matrix4(),
+
+	_lightPositionWorld: new Vector3(),
+
+	_lookTarget: new Vector3(),
+
+	getViewportCount: function () {
+
+		return this._viewportCount;
+
+	},
+
+	getFrustum: function () {
+
+		return this._frustum;
+
+	},
+
+	updateMatrices: function ( light ) {
+
+		const shadowCamera = this.camera,
+			shadowMatrix = this.matrix,
+			projScreenMatrix = this._projScreenMatrix,
+			lookTarget = this._lookTarget,
+			lightPositionWorld = this._lightPositionWorld;
+
+		lightPositionWorld.setFromMatrixPosition( light.matrixWorld );
+		shadowCamera.position.copy( lightPositionWorld );
+
+		lookTarget.setFromMatrixPosition( light.target.matrixWorld );
+		shadowCamera.lookAt( lookTarget );
+		shadowCamera.updateMatrixWorld();
+
+		projScreenMatrix.multiplyMatrices( shadowCamera.projectionMatrix, shadowCamera.matrixWorldInverse );
+		this._frustum.setFromProjectionMatrix( projScreenMatrix );
+
+		shadowMatrix.set(
+			0.5, 0.0, 0.0, 0.5,
+			0.0, 0.5, 0.0, 0.5,
+			0.0, 0.0, 0.5, 0.5,
+			0.0, 0.0, 0.0, 1.0
+		);
+
+		shadowMatrix.multiply( shadowCamera.projectionMatrix );
+		shadowMatrix.multiply( shadowCamera.matrixWorldInverse );
+
+	},
+
+	getViewport: function ( viewportIndex ) {
+
+		return this._viewports[ viewportIndex ];
+
+	},
+
+	getFrameExtents: function () {
+
+		return this._frameExtents;
+
+	},
+
+	copy: function ( source ) {
+
+		this.camera = source.camera.clone();
+
+		this.bias = source.bias;
+		this.radius = source.radius;
+
+		this.mapSize.copy( source.mapSize );
+
+		return this;
+
+	},
+
+	clone: function () {
+
+		return new this.constructor().copy( this );
+
+	},
+
+	toJSON: function () {
+
+		const object = {};
+
+		if ( this.bias !== 0 ) object.bias = this.bias;
+		if ( this.radius !== 1 ) object.radius = this.radius;
+		if ( this.mapSize.x !== 512 || this.mapSize.y !== 512 ) object.mapSize = this.mapSize.toArray();
+
+		object.camera = this.camera.toJSON( false ).object;
+		delete object.camera.matrix;
+
+		return object;
+
+	}
+
+} );
+
+/**
+ * @author alteredq / http://alteredqualia.com/
+ * @author arose / http://github.com/arose
+ */
+
+function OrthographicCamera( left, right, top, bottom, near, far ) {
+
+	Camera.call( this );
+
+	this.type = 'OrthographicCamera';
+
+	this.zoom = 1;
+	this.view = null;
+
+	this.left = ( left !== undefined ) ? left : - 1;
+	this.right = ( right !== undefined ) ? right : 1;
+	this.top = ( top !== undefined ) ? top : 1;
+	this.bottom = ( bottom !== undefined ) ? bottom : - 1;
+
+	this.near = ( near !== undefined ) ? near : 0.1;
+	this.far = ( far !== undefined ) ? far : 2000;
+
+	this.updateProjectionMatrix();
+
+}
+
+OrthographicCamera.prototype = Object.assign( Object.create( Camera.prototype ), {
+
+	constructor: OrthographicCamera,
+
+	isOrthographicCamera: true,
+
+	copy: function ( source, recursive ) {
+
+		Camera.prototype.copy.call( this, source, recursive );
+
+		this.left = source.left;
+		this.right = source.right;
+		this.top = source.top;
+		this.bottom = source.bottom;
+		this.near = source.near;
+		this.far = source.far;
+
+		this.zoom = source.zoom;
+		this.view = source.view === null ? null : Object.assign( {}, source.view );
+
+		return this;
+
+	},
+
+	setViewOffset: function ( fullWidth, fullHeight, x, y, width, height ) {
+
+		if ( this.view === null ) {
+
+			this.view = {
+				enabled: true,
+				fullWidth: 1,
+				fullHeight: 1,
+				offsetX: 0,
+				offsetY: 0,
+				width: 1,
+				height: 1
+			};
+
+		}
+
+		this.view.enabled = true;
+		this.view.fullWidth = fullWidth;
+		this.view.fullHeight = fullHeight;
+		this.view.offsetX = x;
+		this.view.offsetY = y;
+		this.view.width = width;
+		this.view.height = height;
+
+		this.updateProjectionMatrix();
+
+	},
+
+	clearViewOffset: function () {
+
+		if ( this.view !== null ) {
+
+			this.view.enabled = false;
+
+		}
+
+		this.updateProjectionMatrix();
+
+	},
+
+	updateProjectionMatrix: function () {
+
+		const dx = ( this.right - this.left ) / ( 2 * this.zoom );
+		const dy = ( this.top - this.bottom ) / ( 2 * this.zoom );
+		const cx = ( this.right + this.left ) / 2;
+		const cy = ( this.top + this.bottom ) / 2;
+
+		let left = cx - dx;
+		let right = cx + dx;
+		let top = cy + dy;
+		let bottom = cy - dy;
+
+		if ( this.view !== null && this.view.enabled ) {
+
+			const scaleW = ( this.right - this.left ) / this.view.fullWidth / this.zoom;
+			const scaleH = ( this.top - this.bottom ) / this.view.fullHeight / this.zoom;
+
+			left += scaleW * this.view.offsetX;
+			right = left + scaleW * this.view.width;
+			top -= scaleH * this.view.offsetY;
+			bottom = top - scaleH * this.view.height;
+
+		}
+
+		this.projectionMatrix.makeOrthographic( left, right, top, bottom, this.near, this.far );
+
+		this.projectionMatrixInverse.getInverse( this.projectionMatrix );
+
+	},
+
+	toJSON: function ( meta ) {
+
+		const data = Object3D.prototype.toJSON.call( this, meta );
+
+		data.object.zoom = this.zoom;
+		data.object.left = this.left;
+		data.object.right = this.right;
+		data.object.top = this.top;
+		data.object.bottom = this.bottom;
+		data.object.near = this.near;
+		data.object.far = this.far;
+
+		if ( this.view !== null ) data.object.view = Object.assign( {}, this.view );
+
+		return data;
+
+	}
+
+} );
+
+/**
+ * @author mrdoob / http://mrdoob.com/
+ */
+
+function DirectionalLightShadow() {
+
+	LightShadow.call( this, new OrthographicCamera( - 5, 5, 5, - 5, 0.5, 500 ) );
+
+}
+
+DirectionalLightShadow.prototype = Object.assign( Object.create( LightShadow.prototype ), {
+
+	constructor: DirectionalLightShadow,
+
+	isDirectionalLightShadow: true,
+
+	updateMatrices: function ( light ) {
+
+		LightShadow.prototype.updateMatrices.call( this, light );
+
+	}
+
+} );
+
+/**
+ * @author mrdoob / http://mrdoob.com/
+ * @author alteredq / http://alteredqualia.com/
+ */
+
+function DirectionalLight( color, intensity ) {
+	
+	const colorTexture = color && color.isTexture;	
+	Light.call( this, colorTexture?0xffffff:color, intensity );
+
+	this.type = 'DirectionalLight';
+
+	this.map = colorTexture?color:undefined;
+	this.position.copy( Object3D.DefaultUp );
+	this.updateMatrix();
+
+	this.target = new Object3D();
+
+	this.shadow = new DirectionalLightShadow();
+
+}
+
+DirectionalLight.prototype = Object.assign( Object.create( Light.prototype ), {
+
+	constructor: DirectionalLight,
+
+	isDirectionalLight: true,
+
+	copy: function ( source ) {
+
+		Light.prototype.copy.call( this, source );
+
+		this.target = source.target.clone();
+
+		this.shadow = source.shadow.clone();
+
+		return this;
+
+	}
+
+} );
+
+/**
+ * @author mrdoob / http://mrdoob.com/
+ */
+
+function SpotLightShadow() {
+
+	LightShadow.call( this, new PerspectiveCamera( 50, 1, 0.5, 500 ) );
+
+}
+
+SpotLightShadow.prototype = Object.assign( Object.create( LightShadow.prototype ), {
+
+	constructor: SpotLightShadow,
+
+	isSpotLightShadow: true,
+
+	updateMatrices: function ( light ) {
+
+		const camera = this.camera;
+
+		const fov = MathUtils.RAD2DEG * 2 * light.angle;
+		const aspect = this.mapSize.width / this.mapSize.height;
+		const far = light.distance || camera.far;
+
+		if ( fov !== camera.fov || aspect !== camera.aspect || far !== camera.far ) {
+
+			camera.fov = fov;
+			camera.aspect = aspect;
+			camera.far = far;
+			camera.updateProjectionMatrix();
+
+		}
+
+		LightShadow.prototype.updateMatrices.call( this, light );
+
+	}
+
+} );
+
+/**
+ * @author alteredq / http://alteredqualia.com/
+ */
+
+function SpotLight( color, intensity, distance, angle, penumbra, decay ) {
+
+	const colorTexture = color && color.isTexture;
+	
+	Light.call( this, colorTexture?0xffffff:color, intensity );
+
+	this.type = 'SpotLight';
+
+	this.position.copy( Object3D.DefaultUp );
+	this.updateMatrix();
+	this.map = colorTexture?color:undefined;
+	this.mapMatrix = new Matrix4();
+
+	this.target = new Object3D();
+
+	Object.defineProperty( this, 'power', {
+		get: function () {
+
+			// intensity = power per solid angle.
+			// ref: equation (17) from https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
+			return this.intensity * Math.PI;
+
+		},
+		set: function ( power ) {
+
+			// intensity = power per solid angle.
+			// ref: equation (17) from https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
+			this.intensity = power / Math.PI;
+
+		}
+	} );
+
+	this.distance = ( distance !== undefined ) ? distance : 0;
+	this.angle = ( angle !== undefined ) ? angle : Math.PI / 3;
+	this.penumbra = ( penumbra !== undefined ) ? penumbra : 0;
+	this.decay = ( decay !== undefined ) ? decay : 1;	// for physically correct lights, should be 2.
+
+	this.shadow = new SpotLightShadow();
+
+}
+
+SpotLight.prototype = Object.assign( Object.create( Light.prototype ), {
+
+	constructor: SpotLight,
+
+	isSpotLight: true,
+
+	copy: function ( source ) {
+
+		Light.prototype.copy.call( this, source );
+
+		this.map = source.map;
+		this.mapMatrix.copy( source.mapMatrix );
+		this.distance = source.distance;
+		this.angle = source.angle;
+		this.penumbra = source.penumbra;
+		this.decay = source.decay;
+
+		this.target = source.target.clone();
+
+		this.shadow = source.shadow.clone();
+
+		return this;
+
+	}
+
+} );
+
+function PointLightShadow() {
+
+	LightShadow.call( this, new PerspectiveCamera( 90, 1, 0.5, 500 ) );
+
+	this._frameExtents = new Vector2( 4, 2 );
+
+	this._viewportCount = 6;
+
+	this._viewports = [
+		// These viewports map a cube-map onto a 2D texture with the
+		// following orientation:
+		//
+		//  xzXZ
+		//   y Y
+		//
+		// X - Positive x direction
+		// x - Negative x direction
+		// Y - Positive y direction
+		// y - Negative y direction
+		// Z - Positive z direction
+		// z - Negative z direction
+
+		// positive X
+		new Vector4( 2, 1, 1, 1 ),
+		// negative X
+		new Vector4( 0, 1, 1, 1 ),
+		// positive Z
+		new Vector4( 3, 1, 1, 1 ),
+		// negative Z
+		new Vector4( 1, 1, 1, 1 ),
+		// positive Y
+		new Vector4( 3, 0, 1, 1 ),
+		// negative Y
+		new Vector4( 1, 0, 1, 1 )
+	];
+
+	this._cubeDirections = [
+		new Vector3( 1, 0, 0 ), new Vector3( - 1, 0, 0 ), new Vector3( 0, 0, 1 ),
+		new Vector3( 0, 0, - 1 ), new Vector3( 0, 1, 0 ), new Vector3( 0, - 1, 0 )
+	];
+
+	this._cubeUps = [
+		new Vector3( 0, 1, 0 ), new Vector3( 0, 1, 0 ), new Vector3( 0, 1, 0 ),
+		new Vector3( 0, 1, 0 ), new Vector3( 0, 0, 1 ),	new Vector3( 0, 0, - 1 )
+	];
+
+}
+
+PointLightShadow.prototype = Object.assign( Object.create( LightShadow.prototype ), {
+
+	constructor: PointLightShadow,
+
+	isPointLightShadow: true,
+
+	updateMatrices: function ( light, viewportIndex ) {
+
+		if ( viewportIndex === undefined ) viewportIndex = 0;
+
+		const camera = this.camera,
+			shadowMatrix = this.matrix,
+			lightPositionWorld = this._lightPositionWorld,
+			lookTarget = this._lookTarget,
+			projScreenMatrix = this._projScreenMatrix;
+
+		lightPositionWorld.setFromMatrixPosition( light.matrixWorld );
+		camera.position.copy( lightPositionWorld );
+
+		lookTarget.copy( camera.position );
+		lookTarget.add( this._cubeDirections[ viewportIndex ] );
+		camera.up.copy( this._cubeUps[ viewportIndex ] );
+		camera.lookAt( lookTarget );
+		camera.updateMatrixWorld();
+
+		shadowMatrix.makeTranslation( - lightPositionWorld.x, - lightPositionWorld.y, - lightPositionWorld.z );
+
+		projScreenMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse );
+		this._frustum.setFromProjectionMatrix( projScreenMatrix );
+
+	}
+
+} );
+
+/**
+ * @author mrdoob / http://mrdoob.com/
+ */
+
+
+function PointLight( color, intensity, distance, decay ) {
+
+	Light.call( this, color, intensity );
+
+	this.type = 'PointLight';
+
+	Object.defineProperty( this, 'power', {
+		get: function () {
+
+			// intensity = power per solid angle.
+			// ref: equation (15) from https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
+			return this.intensity * 4 * Math.PI;
+
+		},
+		set: function ( power ) {
+
+			// intensity = power per solid angle.
+			// ref: equation (15) from https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
+			this.intensity = power / ( 4 * Math.PI );
+
+		}
+	} );
+
+	this.distance = ( distance !== undefined ) ? distance : 0;
+	this.decay = ( decay !== undefined ) ? decay : 1;	// for physically correct lights, should be 2.
+
+	this.shadow = new PointLightShadow();
+
+}
+
+PointLight.prototype = Object.assign( Object.create( Light.prototype ), {
+
+	constructor: PointLight,
+
+	isPointLight: true,
+
+	copy: function ( source ) {
+
+		Light.prototype.copy.call( this, source );
+
+		this.distance = source.distance;
+		this.decay = source.decay;
+
+		this.shadow = source.shadow.clone();
+
+		return this;
+
+	}
+
+} );
+
+/**
+ * @author abelnation / http://github.com/abelnation
+ */
+
+function RectAreaLight( color, intensity, width, height ) {
+
+	Light.call( this, color, intensity );
+
+	this.type = 'RectAreaLight';
+
+	this.width = ( width !== undefined ) ? width : 10;
+	this.height = ( height !== undefined ) ? height : 10;
+
+}
+
+RectAreaLight.prototype = Object.assign( Object.create( Light.prototype ), {
+
+	constructor: RectAreaLight,
+
+	isRectAreaLight: true,
+
+	copy: function ( source ) {
+
+		Light.prototype.copy.call( this, source );
+
+		this.width = source.width;
+		this.height = source.height;
+
+		return this;
+
+	},
+
+	toJSON: function ( meta ) {
+
+		const data = Light.prototype.toJSON.call( this, meta );
+
+		data.object.width = this.width;
+		data.object.height = this.height;
+
+		return data;
+
+	}
+
+} );
+
+/**
+ * @author alteredq / http://alteredqualia.com/
+ */
+
+function HemisphereLight( skyColor, groundColor, intensity ) {
+
+	Light.call( this, skyColor, intensity );
+
+	this.type = 'HemisphereLight';
+
+	this.castShadow = undefined;
+
+	this.position.copy( Object3D.DefaultUp );
+	this.updateMatrix();
+
+	this.groundColor = new Color( groundColor );
+
+}
+
+HemisphereLight.prototype = Object.assign( Object.create( Light.prototype ), {
+
+	constructor: HemisphereLight,
+
+	isHemisphereLight: true,
+
+	copy: function ( source ) {
+
+		Light.prototype.copy.call( this, source );
+
+		this.groundColor.copy( source.groundColor );
+
+		return this;
+
+	}
+
+} );
+
+/**
+ * @author mrdoob / http://mrdoob.com/
  */
 
 function UniformsCache() {
@@ -19371,6 +20093,22 @@ function WebGLLights( staticLightConfig ) {
 	const cache = new UniformsCache();
 
 	const shadowCache = ShadowUniformsCache();
+	
+	const dummyDirectional = new DirectionalLight;
+	const dummySpot = new SpotLight;
+	const dummyPoint = new PointLight;
+	const dummyUniforms = {
+		direcional: cache.get(dummyDirectional),
+		point: cache.get(dummyPoint),
+		spot: cache.get(dummySpot),
+		rectArea: cache.get(new RectAreaLight),
+		hemi: cache.get(new HemisphereLight)
+	};
+	const dummyShadowUniforms = {
+		direcional: shadowCache.get(dummyDirectional),
+		point: shadowCache.get(dummyPoint),
+		spot: shadowCache.get(dummySpot)
+	};
 
 	const state = {
 
@@ -19653,35 +20391,35 @@ function WebGLLights( staticLightConfig ) {
 		
 		if(staticLightConfig){
 			while(directionalLength<staticLightConfig.directionalLength){
-				state.directional[ directionalLength ] = cache.get({type:'DirectionalLight'});
+				state.directional[ directionalLength ] = dummyUniforms.direcional;
 				directionalLength++;
 			}
 			while(numDirectionalShadows<staticLightConfig.numDirectionalShadows){
-				state.directionalShadow[numDirectionalShadows] = shadowCache.get({type:'DirectionalLight'});
+				state.directionalShadow[numDirectionalShadows] = dummyShadowUniforms.direcional;
 				numDirectionalShadows++;
 			}
 			while(spotLength<staticLightConfig.spotLength){
-				state.spot[ spotLength ] = cache.get({type:'SpotLight'});
+				state.spot[ spotLength ] = dummyUniforms.spot;
 				spotLength++;
 			}
 			while(numSpotShadows<staticLightConfig.numSpotShadows){
-				state.spotShadow[numSpotShadows] = shadowCache.get({type:'SpotLight'});
+				state.spotShadow[numSpotShadows] = dummyShadowUniforms.spot;
 				numSpotShadows++;
 			}
 			while(pointLength<staticLightConfig.pointLength){
-				state.point[ pointLength ] = cache.get({type:'PointLight'});
+				state.point[ pointLength ] = dummyUniforms.point;
 				pointLength++;
 			}
 			while(numPointShadows<staticLightConfig.numPointShadows){
-				state.pointShadow[numPointShadows] = shadowCache.get({type:'SpotLight'});
+				state.pointShadow[numPointShadows] = dummyShadowUniforms.point;
 				numPointShadows++;
 			}
 			while(hemiLength<staticLightConfig.hemiLength){
-				state.hemi[ pointLength ] = cache.get({type:'HemisphereLight'});
+				state.hemi[ pointLength ] = dummyUniforms.hemi;
 				hemiLength++;
 			}
 			while(rectAreaLength<staticLightConfig.rectAreaLength){
-				state.rectArea[ pointLength ] = cache.get({type:'RectAreaLight'});
+				state.rectArea[ pointLength ] = dummyUniforms.rectArea;
 				rectAreaLength++;
 			}
 			
@@ -39086,683 +39824,6 @@ Shape.prototype = Object.assign( Object.create( Path.prototype ), {
 
 /**
  * @author mrdoob / http://mrdoob.com/
- * @author alteredq / http://alteredqualia.com/
- */
-
-function Light( color, intensity ) {
-
-	Object3D.call( this );
-
-	this.type = 'Light';
-
-	this.color = new Color( color );
-	this.intensity = intensity !== undefined ? intensity : 1;
-
-	this.receiveShadow = undefined;
-
-}
-
-Light.prototype = Object.assign( Object.create( Object3D.prototype ), {
-
-	constructor: Light,
-
-	isLight: true,
-
-	copy: function ( source ) {
-
-		Object3D.prototype.copy.call( this, source );
-
-		this.color.copy( source.color );
-		this.intensity = source.intensity;
-
-		return this;
-
-	},
-
-	toJSON: function ( meta ) {
-
-		const data = Object3D.prototype.toJSON.call( this, meta );
-
-		data.object.color = this.color.getHex();
-		data.object.intensity = this.intensity;
-
-		if ( this.groundColor !== undefined ) data.object.groundColor = this.groundColor.getHex();
-
-		if ( this.distance !== undefined ) data.object.distance = this.distance;
-		if ( this.angle !== undefined ) data.object.angle = this.angle;
-		if ( this.decay !== undefined ) data.object.decay = this.decay;
-		if ( this.penumbra !== undefined ) data.object.penumbra = this.penumbra;
-
-		if ( this.shadow !== undefined ) data.object.shadow = this.shadow.toJSON();
-
-		return data;
-
-	}
-
-} );
-
-/**
- * @author alteredq / http://alteredqualia.com/
- */
-
-function HemisphereLight( skyColor, groundColor, intensity ) {
-
-	Light.call( this, skyColor, intensity );
-
-	this.type = 'HemisphereLight';
-
-	this.castShadow = undefined;
-
-	this.position.copy( Object3D.DefaultUp );
-	this.updateMatrix();
-
-	this.groundColor = new Color( groundColor );
-
-}
-
-HemisphereLight.prototype = Object.assign( Object.create( Light.prototype ), {
-
-	constructor: HemisphereLight,
-
-	isHemisphereLight: true,
-
-	copy: function ( source ) {
-
-		Light.prototype.copy.call( this, source );
-
-		this.groundColor.copy( source.groundColor );
-
-		return this;
-
-	}
-
-} );
-
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
-function LightShadow( camera ) {
-
-	this.camera = camera;
-
-	this.bias = 0;
-	this.radius = 1;
-
-	this.mapSize = new Vector2( 512, 512 );
-
-	this.map = null;
-	this.mapPass = null;
-	this.matrix = new Matrix4();
-
-	this._frustum = new Frustum();
-	this._frameExtents = new Vector2( 1, 1 );
-
-	this._viewportCount = 1;
-
-	this._viewports = [
-
-		new Vector4( 0, 0, 1, 1 )
-
-	];
-
-}
-
-Object.assign( LightShadow.prototype, {
-
-	_projScreenMatrix: new Matrix4(),
-
-	_lightPositionWorld: new Vector3(),
-
-	_lookTarget: new Vector3(),
-
-	getViewportCount: function () {
-
-		return this._viewportCount;
-
-	},
-
-	getFrustum: function () {
-
-		return this._frustum;
-
-	},
-
-	updateMatrices: function ( light ) {
-
-		const shadowCamera = this.camera,
-			shadowMatrix = this.matrix,
-			projScreenMatrix = this._projScreenMatrix,
-			lookTarget = this._lookTarget,
-			lightPositionWorld = this._lightPositionWorld;
-
-		lightPositionWorld.setFromMatrixPosition( light.matrixWorld );
-		shadowCamera.position.copy( lightPositionWorld );
-
-		lookTarget.setFromMatrixPosition( light.target.matrixWorld );
-		shadowCamera.lookAt( lookTarget );
-		shadowCamera.updateMatrixWorld();
-
-		projScreenMatrix.multiplyMatrices( shadowCamera.projectionMatrix, shadowCamera.matrixWorldInverse );
-		this._frustum.setFromProjectionMatrix( projScreenMatrix );
-
-		shadowMatrix.set(
-			0.5, 0.0, 0.0, 0.5,
-			0.0, 0.5, 0.0, 0.5,
-			0.0, 0.0, 0.5, 0.5,
-			0.0, 0.0, 0.0, 1.0
-		);
-
-		shadowMatrix.multiply( shadowCamera.projectionMatrix );
-		shadowMatrix.multiply( shadowCamera.matrixWorldInverse );
-
-	},
-
-	getViewport: function ( viewportIndex ) {
-
-		return this._viewports[ viewportIndex ];
-
-	},
-
-	getFrameExtents: function () {
-
-		return this._frameExtents;
-
-	},
-
-	copy: function ( source ) {
-
-		this.camera = source.camera.clone();
-
-		this.bias = source.bias;
-		this.radius = source.radius;
-
-		this.mapSize.copy( source.mapSize );
-
-		return this;
-
-	},
-
-	clone: function () {
-
-		return new this.constructor().copy( this );
-
-	},
-
-	toJSON: function () {
-
-		const object = {};
-
-		if ( this.bias !== 0 ) object.bias = this.bias;
-		if ( this.radius !== 1 ) object.radius = this.radius;
-		if ( this.mapSize.x !== 512 || this.mapSize.y !== 512 ) object.mapSize = this.mapSize.toArray();
-
-		object.camera = this.camera.toJSON( false ).object;
-		delete object.camera.matrix;
-
-		return object;
-
-	}
-
-} );
-
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
-function SpotLightShadow() {
-
-	LightShadow.call( this, new PerspectiveCamera( 50, 1, 0.5, 500 ) );
-
-}
-
-SpotLightShadow.prototype = Object.assign( Object.create( LightShadow.prototype ), {
-
-	constructor: SpotLightShadow,
-
-	isSpotLightShadow: true,
-
-	updateMatrices: function ( light ) {
-
-		const camera = this.camera;
-
-		const fov = MathUtils.RAD2DEG * 2 * light.angle;
-		const aspect = this.mapSize.width / this.mapSize.height;
-		const far = light.distance || camera.far;
-
-		if ( fov !== camera.fov || aspect !== camera.aspect || far !== camera.far ) {
-
-			camera.fov = fov;
-			camera.aspect = aspect;
-			camera.far = far;
-			camera.updateProjectionMatrix();
-
-		}
-
-		LightShadow.prototype.updateMatrices.call( this, light );
-
-	}
-
-} );
-
-/**
- * @author alteredq / http://alteredqualia.com/
- */
-
-function SpotLight( color, intensity, distance, angle, penumbra, decay ) {
-
-	const colorTexture = color && color.isTexture;
-	
-	Light.call( this, colorTexture?0xffffff:color, intensity );
-
-	this.type = 'SpotLight';
-
-	this.position.copy( Object3D.DefaultUp );
-	this.updateMatrix();
-	this.map = colorTexture?color:undefined;
-	this.mapMatrix = new Matrix4();
-
-	this.target = new Object3D();
-
-	Object.defineProperty( this, 'power', {
-		get: function () {
-
-			// intensity = power per solid angle.
-			// ref: equation (17) from https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
-			return this.intensity * Math.PI;
-
-		},
-		set: function ( power ) {
-
-			// intensity = power per solid angle.
-			// ref: equation (17) from https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
-			this.intensity = power / Math.PI;
-
-		}
-	} );
-
-	this.distance = ( distance !== undefined ) ? distance : 0;
-	this.angle = ( angle !== undefined ) ? angle : Math.PI / 3;
-	this.penumbra = ( penumbra !== undefined ) ? penumbra : 0;
-	this.decay = ( decay !== undefined ) ? decay : 1;	// for physically correct lights, should be 2.
-
-	this.shadow = new SpotLightShadow();
-
-}
-
-SpotLight.prototype = Object.assign( Object.create( Light.prototype ), {
-
-	constructor: SpotLight,
-
-	isSpotLight: true,
-
-	copy: function ( source ) {
-
-		Light.prototype.copy.call( this, source );
-
-		this.map = source.map;
-		this.mapMatrix.copy( source.mapMatrix );
-		this.distance = source.distance;
-		this.angle = source.angle;
-		this.penumbra = source.penumbra;
-		this.decay = source.decay;
-
-		this.target = source.target.clone();
-
-		this.shadow = source.shadow.clone();
-
-		return this;
-
-	}
-
-} );
-
-function PointLightShadow() {
-
-	LightShadow.call( this, new PerspectiveCamera( 90, 1, 0.5, 500 ) );
-
-	this._frameExtents = new Vector2( 4, 2 );
-
-	this._viewportCount = 6;
-
-	this._viewports = [
-		// These viewports map a cube-map onto a 2D texture with the
-		// following orientation:
-		//
-		//  xzXZ
-		//   y Y
-		//
-		// X - Positive x direction
-		// x - Negative x direction
-		// Y - Positive y direction
-		// y - Negative y direction
-		// Z - Positive z direction
-		// z - Negative z direction
-
-		// positive X
-		new Vector4( 2, 1, 1, 1 ),
-		// negative X
-		new Vector4( 0, 1, 1, 1 ),
-		// positive Z
-		new Vector4( 3, 1, 1, 1 ),
-		// negative Z
-		new Vector4( 1, 1, 1, 1 ),
-		// positive Y
-		new Vector4( 3, 0, 1, 1 ),
-		// negative Y
-		new Vector4( 1, 0, 1, 1 )
-	];
-
-	this._cubeDirections = [
-		new Vector3( 1, 0, 0 ), new Vector3( - 1, 0, 0 ), new Vector3( 0, 0, 1 ),
-		new Vector3( 0, 0, - 1 ), new Vector3( 0, 1, 0 ), new Vector3( 0, - 1, 0 )
-	];
-
-	this._cubeUps = [
-		new Vector3( 0, 1, 0 ), new Vector3( 0, 1, 0 ), new Vector3( 0, 1, 0 ),
-		new Vector3( 0, 1, 0 ), new Vector3( 0, 0, 1 ),	new Vector3( 0, 0, - 1 )
-	];
-
-}
-
-PointLightShadow.prototype = Object.assign( Object.create( LightShadow.prototype ), {
-
-	constructor: PointLightShadow,
-
-	isPointLightShadow: true,
-
-	updateMatrices: function ( light, viewportIndex ) {
-
-		if ( viewportIndex === undefined ) viewportIndex = 0;
-
-		const camera = this.camera,
-			shadowMatrix = this.matrix,
-			lightPositionWorld = this._lightPositionWorld,
-			lookTarget = this._lookTarget,
-			projScreenMatrix = this._projScreenMatrix;
-
-		lightPositionWorld.setFromMatrixPosition( light.matrixWorld );
-		camera.position.copy( lightPositionWorld );
-
-		lookTarget.copy( camera.position );
-		lookTarget.add( this._cubeDirections[ viewportIndex ] );
-		camera.up.copy( this._cubeUps[ viewportIndex ] );
-		camera.lookAt( lookTarget );
-		camera.updateMatrixWorld();
-
-		shadowMatrix.makeTranslation( - lightPositionWorld.x, - lightPositionWorld.y, - lightPositionWorld.z );
-
-		projScreenMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse );
-		this._frustum.setFromProjectionMatrix( projScreenMatrix );
-
-	}
-
-} );
-
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
-
-function PointLight( color, intensity, distance, decay ) {
-
-	Light.call( this, color, intensity );
-
-	this.type = 'PointLight';
-
-	Object.defineProperty( this, 'power', {
-		get: function () {
-
-			// intensity = power per solid angle.
-			// ref: equation (15) from https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
-			return this.intensity * 4 * Math.PI;
-
-		},
-		set: function ( power ) {
-
-			// intensity = power per solid angle.
-			// ref: equation (15) from https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
-			this.intensity = power / ( 4 * Math.PI );
-
-		}
-	} );
-
-	this.distance = ( distance !== undefined ) ? distance : 0;
-	this.decay = ( decay !== undefined ) ? decay : 1;	// for physically correct lights, should be 2.
-
-	this.shadow = new PointLightShadow();
-
-}
-
-PointLight.prototype = Object.assign( Object.create( Light.prototype ), {
-
-	constructor: PointLight,
-
-	isPointLight: true,
-
-	copy: function ( source ) {
-
-		Light.prototype.copy.call( this, source );
-
-		this.distance = source.distance;
-		this.decay = source.decay;
-
-		this.shadow = source.shadow.clone();
-
-		return this;
-
-	}
-
-} );
-
-/**
- * @author alteredq / http://alteredqualia.com/
- * @author arose / http://github.com/arose
- */
-
-function OrthographicCamera( left, right, top, bottom, near, far ) {
-
-	Camera.call( this );
-
-	this.type = 'OrthographicCamera';
-
-	this.zoom = 1;
-	this.view = null;
-
-	this.left = ( left !== undefined ) ? left : - 1;
-	this.right = ( right !== undefined ) ? right : 1;
-	this.top = ( top !== undefined ) ? top : 1;
-	this.bottom = ( bottom !== undefined ) ? bottom : - 1;
-
-	this.near = ( near !== undefined ) ? near : 0.1;
-	this.far = ( far !== undefined ) ? far : 2000;
-
-	this.updateProjectionMatrix();
-
-}
-
-OrthographicCamera.prototype = Object.assign( Object.create( Camera.prototype ), {
-
-	constructor: OrthographicCamera,
-
-	isOrthographicCamera: true,
-
-	copy: function ( source, recursive ) {
-
-		Camera.prototype.copy.call( this, source, recursive );
-
-		this.left = source.left;
-		this.right = source.right;
-		this.top = source.top;
-		this.bottom = source.bottom;
-		this.near = source.near;
-		this.far = source.far;
-
-		this.zoom = source.zoom;
-		this.view = source.view === null ? null : Object.assign( {}, source.view );
-
-		return this;
-
-	},
-
-	setViewOffset: function ( fullWidth, fullHeight, x, y, width, height ) {
-
-		if ( this.view === null ) {
-
-			this.view = {
-				enabled: true,
-				fullWidth: 1,
-				fullHeight: 1,
-				offsetX: 0,
-				offsetY: 0,
-				width: 1,
-				height: 1
-			};
-
-		}
-
-		this.view.enabled = true;
-		this.view.fullWidth = fullWidth;
-		this.view.fullHeight = fullHeight;
-		this.view.offsetX = x;
-		this.view.offsetY = y;
-		this.view.width = width;
-		this.view.height = height;
-
-		this.updateProjectionMatrix();
-
-	},
-
-	clearViewOffset: function () {
-
-		if ( this.view !== null ) {
-
-			this.view.enabled = false;
-
-		}
-
-		this.updateProjectionMatrix();
-
-	},
-
-	updateProjectionMatrix: function () {
-
-		const dx = ( this.right - this.left ) / ( 2 * this.zoom );
-		const dy = ( this.top - this.bottom ) / ( 2 * this.zoom );
-		const cx = ( this.right + this.left ) / 2;
-		const cy = ( this.top + this.bottom ) / 2;
-
-		let left = cx - dx;
-		let right = cx + dx;
-		let top = cy + dy;
-		let bottom = cy - dy;
-
-		if ( this.view !== null && this.view.enabled ) {
-
-			const scaleW = ( this.right - this.left ) / this.view.fullWidth / this.zoom;
-			const scaleH = ( this.top - this.bottom ) / this.view.fullHeight / this.zoom;
-
-			left += scaleW * this.view.offsetX;
-			right = left + scaleW * this.view.width;
-			top -= scaleH * this.view.offsetY;
-			bottom = top - scaleH * this.view.height;
-
-		}
-
-		this.projectionMatrix.makeOrthographic( left, right, top, bottom, this.near, this.far );
-
-		this.projectionMatrixInverse.getInverse( this.projectionMatrix );
-
-	},
-
-	toJSON: function ( meta ) {
-
-		const data = Object3D.prototype.toJSON.call( this, meta );
-
-		data.object.zoom = this.zoom;
-		data.object.left = this.left;
-		data.object.right = this.right;
-		data.object.top = this.top;
-		data.object.bottom = this.bottom;
-		data.object.near = this.near;
-		data.object.far = this.far;
-
-		if ( this.view !== null ) data.object.view = Object.assign( {}, this.view );
-
-		return data;
-
-	}
-
-} );
-
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
-function DirectionalLightShadow() {
-
-	LightShadow.call( this, new OrthographicCamera( - 5, 5, 5, - 5, 0.5, 500 ) );
-
-}
-
-DirectionalLightShadow.prototype = Object.assign( Object.create( LightShadow.prototype ), {
-
-	constructor: DirectionalLightShadow,
-
-	isDirectionalLightShadow: true,
-
-	updateMatrices: function ( light ) {
-
-		LightShadow.prototype.updateMatrices.call( this, light );
-
-	}
-
-} );
-
-/**
- * @author mrdoob / http://mrdoob.com/
- * @author alteredq / http://alteredqualia.com/
- */
-
-function DirectionalLight( color, intensity ) {
-	
-	const colorTexture = color && color.isTexture;	
-	Light.call( this, colorTexture?0xffffff:color, intensity );
-
-	this.type = 'DirectionalLight';
-
-	this.map = colorTexture?color:undefined;
-	this.position.copy( Object3D.DefaultUp );
-	this.updateMatrix();
-
-	this.target = new Object3D();
-
-	this.shadow = new DirectionalLightShadow();
-
-}
-
-DirectionalLight.prototype = Object.assign( Object.create( Light.prototype ), {
-
-	constructor: DirectionalLight,
-
-	isDirectionalLight: true,
-
-	copy: function ( source ) {
-
-		Light.prototype.copy.call( this, source );
-
-		this.target = source.target.clone();
-
-		this.shadow = source.shadow.clone();
-
-		return this;
-
-	}
-
-} );
-
-/**
- * @author mrdoob / http://mrdoob.com/
  */
 
 function AmbientLight( color, intensity ) {
@@ -39780,51 +39841,6 @@ AmbientLight.prototype = Object.assign( Object.create( Light.prototype ), {
 	constructor: AmbientLight,
 
 	isAmbientLight: true
-
-} );
-
-/**
- * @author abelnation / http://github.com/abelnation
- */
-
-function RectAreaLight( color, intensity, width, height ) {
-
-	Light.call( this, color, intensity );
-
-	this.type = 'RectAreaLight';
-
-	this.width = ( width !== undefined ) ? width : 10;
-	this.height = ( height !== undefined ) ? height : 10;
-
-}
-
-RectAreaLight.prototype = Object.assign( Object.create( Light.prototype ), {
-
-	constructor: RectAreaLight,
-
-	isRectAreaLight: true,
-
-	copy: function ( source ) {
-
-		Light.prototype.copy.call( this, source );
-
-		this.width = source.width;
-		this.height = source.height;
-
-		return this;
-
-	},
-
-	toJSON: function ( meta ) {
-
-		const data = Light.prototype.toJSON.call( this, meta );
-
-		data.object.width = this.width;
-		data.object.height = this.height;
-
-		return data;
-
-	}
 
 } );
 
