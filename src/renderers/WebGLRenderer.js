@@ -283,7 +283,7 @@ function WebGLRenderer( parameters ) {
 		programCache = new WebGLPrograms( _this, extensions, capabilities );
 		materials = new WebGLMaterials( properties );
 		renderLists = new WebGLRenderLists();
-		renderStates = new WebGLRenderStates();
+		renderStates = new WebGLRenderStates( parameters.staticLightConfig );
 
 		background = new WebGLBackground( _this, state, objects, _premultipliedAlpha );
 

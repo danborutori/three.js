@@ -4,9 +4,9 @@
 
 import { WebGLLights } from './WebGLLights.js';
 
-function WebGLRenderState() {
+function WebGLRenderState( staticLightConfig ) {
 
-	const lights = new WebGLLights();
+	const lights = new WebGLLights( staticLightConfig );
 
 	const lightsArray = [];
 	const shadowsArray = [];

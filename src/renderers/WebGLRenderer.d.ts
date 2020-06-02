@@ -85,6 +85,23 @@ export interface WebGLRendererParameters {
 	 * default is false.
 	 */
 	logarithmicDepthBuffer?: boolean;
+	
+	/**
+	 * default is undefined
+	 **/
+	staticLightConfig?: {
+		directionalLength?: number
+		numDirectionalShadows?: number
+		spotLength?: number
+		numSpotShadows?: number
+		pointLength?: number
+		numPointShadows?: number
+		hemiLength?: number
+		rectAreaLength?: number
+		numSpotMaps?: number
+		numDirectionalMaps?: number
+		sortFunc: (a: Light, b: Light)=>number
+	};
 }
 
 export interface WebGLDebug {
