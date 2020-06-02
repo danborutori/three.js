@@ -6,6 +6,11 @@ import { Color } from '../../math/Color.js';
 import { Matrix4 } from '../../math/Matrix4.js';
 import { Vector2 } from '../../math/Vector2.js';
 import { Vector3 } from '../../math/Vector3.js';
+import { DirectionalLight } from '../../lights/DirectionalLight.js';
+import { SpotLight } from '../../lights/SpotLight.js';
+import { PointLight } from '../../lights/PointLight.js';
+import { RectAreaLight } from '../../lights/RectAreaLight.js';
+import { HemisphereLight } from '../../lights/HemisphereLight.js';
 
 function UniformsCache() {
 
