@@ -101,7 +101,7 @@ export interface WebGLRendererParameters {
 		rectAreaLength?: number
 		numSpotMaps?: number
 		numDirectionalMaps?: number
-		sortFunc: (a: Light, b: Light)=>number
+		sortFunc: (camera: Camera, a: Light, b: Light)=>number
 	};
 }
 

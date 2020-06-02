@@ -267,7 +267,11 @@ function WebGLLights( staticLightConfig ) {
 
 		const viewMatrix = camera.matrixWorldInverse;
 		
-		lights.sort( (staticLightConfig && staticLightConfig.sortFunc) || shadowCastingLightsFirst );
+		if(staticLightConfig && staticLightConfig.sortFunc){
+			lights.sort( function(a,b){ return staticLightConfig.sortFunc(camera,a,b) } );
+		}else{
+			lights.sort( shadowCastingLightsFirst );
+		}
 		
 		for ( let i = 0, l = lights.length; i < l; i ++ ) {
 
