@@ -20104,6 +20104,12 @@ function WebGLLights( staticLightConfig ) {
 		rectArea: cache.get(new RectAreaLight),
 		hemi: cache.get(new HemisphereLight)
 	};
+	dummyUniforms.direcional.color.setRGB(0,0,0);
+	dummyUniforms.point.color.setRGB(0,0,0);
+	dummyUniforms.spot.color.setRGB(0,0,0);
+	dummyUniforms.rectArea.color.setRGB(0,0,0);
+	dummyUniforms.hemi.skyColor.setRGB(0,0,0);
+	dummyUniforms.hemi.groundColor.setRGB(0,0,0);
 	const dummyShadowUniforms = {
 		direcional: shadowCache.get(dummyDirectional),
 		point: shadowCache.get(dummyPoint),
@@ -20396,6 +20402,8 @@ function WebGLLights( staticLightConfig ) {
 			}
 			while(numDirectionalShadows<staticLightConfig.numDirectionalShadows){
 				state.directionalShadow[numDirectionalShadows] = dummyShadowUniforms.direcional;
+				state.directionalShadowMap[ numDirectionalShadows ] = null;
+				state.directionalShadowMatrix[ numDirectionalShadows ] = new Matrix4;
 				numDirectionalShadows++;
 			}
 			while(spotLength<staticLightConfig.spotLength){
@@ -20404,6 +20412,8 @@ function WebGLLights( staticLightConfig ) {
 			}
 			while(numSpotShadows<staticLightConfig.numSpotShadows){
 				state.spotShadow[numSpotShadows] = dummyShadowUniforms.spot;
+				state.spotShadowMap[ numSpotShadows ] = null;
+				state.spotShadowMatrix[ numSpotShadows ] = new Matrix4;
 				numSpotShadows++;
 			}
 			while(pointLength<staticLightConfig.pointLength){
@@ -20412,6 +20422,8 @@ function WebGLLights( staticLightConfig ) {
 			}
 			while(numPointShadows<staticLightConfig.numPointShadows){
 				state.pointShadow[numPointShadows] = dummyShadowUniforms.point;
+				state.pointShadowMap[ numPointShadows ] = null;
+				state.pointShadowMatrix[ numPointShadows ] = new Matrix4;
 				numPointShadows++;
 			}
 			while(hemiLength<staticLightConfig.hemiLength){
@@ -20468,7 +20480,7 @@ function WebGLLights( staticLightConfig ) {
 			state.directionalMapMatrix.length = numDirectionalMaps;
 			state.spotMap.length = numSpotMaps;
 			state.spotMapMatrix.length = numSpotMaps;
-
+			
 			hash.directionalLength = directionalLength;
 			hash.pointLength = pointLength;
 			hash.spotLength = spotLength;
@@ -20481,7 +20493,7 @@ function WebGLLights( staticLightConfig ) {
 			
 			hash.numDirectionalMaps = numDirectionalMaps;
 			hash.numSpotMaps = numSpotMaps;
-
+			
 			state.version = nextVersion ++;
 
 		}
@@ -20500,7 +20512,7 @@ function WebGLLights( staticLightConfig ) {
  */
 
 function WebGLRenderState( staticLightConfig ) {
-
+	
 	const lights = new WebGLLights( staticLightConfig );
 
 	const lightsArray = [];
@@ -20549,7 +20561,7 @@ function WebGLRenderState( staticLightConfig ) {
 
 }
 
-function WebGLRenderStates() {
+function WebGLRenderStates( staticLightConfig ) {
 
 	let renderStates = new WeakMap();
 
@@ -20569,7 +20581,7 @@ function WebGLRenderStates() {
 
 		if ( renderStates.has( scene ) === false ) {
 
-			renderState = new WebGLRenderState();
+			renderState = new WebGLRenderState( staticLightConfig );
 			renderStates.set( scene, new WeakMap() );
 			renderStates.get( scene ).set( camera, renderState );
 
@@ -20579,7 +20591,7 @@ function WebGLRenderStates() {
 
 			if ( renderStates.get( scene ).has( camera ) === false ) {
 
-				renderState = new WebGLRenderState();
+				renderState = new WebGLRenderState( staticLightConfig );
 				renderStates.get( scene ).set( camera, renderState );
 
 			} else {
