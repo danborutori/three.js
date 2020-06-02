@@ -19353,8 +19353,21 @@ function shadowCastingLightsFirst( lightA, lightB ) {
 
 }
 
-function WebGLLights() {
-
+function WebGLLights( staticLightConfig ) {
+	
+	if(staticLightConfig){
+		staticLightConfig.directionalLength = staticLightConfig.directionalLength || 0;
+		staticLightConfig.numDirectionalShadows = staticLightConfig.numDirectionalShadows || 0;
+		staticLightConfig.spotLength = staticLightConfig.spotLength || 0;
+		staticLightConfig.numSpotShadows = staticLightConfig.numSpotShadows || 0;
+		staticLightConfig.pointLength = staticLightConfig.pointLength || 0;
+		staticLightConfig.numPointShadows = staticLightConfig.numPointShadows || 0;
+		staticLightConfig.hemiLength = staticLightConfig.hemiLength || 0;
+		staticLightConfig.rectAreaLength = staticLightConfig.rectAreaLength || 0;
+		staticLightConfig.numSpotMaps = staticLightConfig.numSpotMaps || 0;
+		staticLightConfig.numDirectionalMaps = staticLightConfig.numDirectionalMaps || 0;
+	}
+	
 	const cache = new UniformsCache();
 
 	const shadowCache = ShadowUniformsCache();
@@ -19427,9 +19440,9 @@ function WebGLLights() {
 		let numSpotMaps = 0;
 
 		const viewMatrix = camera.matrixWorldInverse;
-
-		lights.sort( shadowCastingLightsFirst );
-
+		
+		lights.sort( (staticLightConfig && staticLightConfig.sortFunc) || shadowCastingLightsFirst );
+		
 		for ( let i = 0, l = lights.length; i < l; i ++ ) {
 
 			const light = lights[ i ];
@@ -19454,7 +19467,7 @@ function WebGLLights() {
 
 				}
 
-			} else if ( light.isDirectionalLight ) {
+			} else if ( light.isDirectionalLight || (!staticLightConfig || directionalLength<staticLightConfig.directionalLength)) {
 
 				const uniforms = cache.get( light );
 
@@ -19464,7 +19477,7 @@ function WebGLLights() {
 				uniforms.direction.sub( vector3 );
 				uniforms.direction.transformDirection( viewMatrix );
 
-				if ( light.castShadow || true ) {
+				if ( light.castShadow || (!staticLightConfig || numDirectionalShadows<staticLightConfig.numDirectionalShadows) ) {
 
 					const shadow = light.shadow;
 
@@ -19482,7 +19495,7 @@ function WebGLLights() {
 
 				}
 				
-				if(light.map){
+				if(light.map || (!staticLightConfig || numDirectionalMaps<staticLightConfig.numDirectionalMaps) ){
 					uniforms.map = numDirectionalMaps;
 					state.directionalMap[numDirectionalMaps] = light.map;
 					state.directionalMapMatrix[numDirectionalMaps] = light.shadow.matrix;
@@ -19495,7 +19508,7 @@ function WebGLLights() {
 
 				directionalLength ++;
 
-			} else if ( light.isSpotLight ) {
+			} else if ( light.isSpotLight || (!staticLightConfig || spotLength<staticLightConfig.spotLength) ) {
 
 				const uniforms = cache.get( light );
 
@@ -19514,7 +19527,7 @@ function WebGLLights() {
 				uniforms.penumbraCos = Math.cos( light.angle * ( 1 - light.penumbra ) );
 				uniforms.decay = light.decay;
 
-				if ( light.castShadow || true  ) {
+				if ( light.castShadow || (!staticLightConfig || numSpotShadows<staticLightConfig.numSpotShadows) ) {
 
 					const shadow = light.shadow;
 
@@ -19531,7 +19544,7 @@ function WebGLLights() {
 					numSpotShadows ++;
 				}
 				
-				if(light.map){
+				if(light.map || (!staticLightConfig || numSpotMaps<staticLightConfig.numSpotMaps)){
 					uniforms.map = numSpotMaps;
 					var tanAngle = Math.tan(light.angle);
 					light.mapMatrix.makePerspective( -tanAngle, tanAngle, tanAngle, -tanAngle, 1, 10 );
@@ -19548,7 +19561,7 @@ function WebGLLights() {
 
 				spotLength ++;
 
-			} else if ( light.isRectAreaLight ) {
+			} else if ( light.isRectAreaLight || (!staticLightConfig || rectAreaLength<staticLightConfig.rectAreaLength) ) {
 
 				const uniforms = cache.get( light );
 
@@ -19580,7 +19593,7 @@ function WebGLLights() {
 
 				rectAreaLength ++;
 
-			} else if ( light.isPointLight ) {
+			} else if ( light.isPointLight || (!staticLightConfig || pointLength<staticLightConfig.pointLength) ) {
 
 				const uniforms = cache.get( light );
 
@@ -19591,7 +19604,7 @@ function WebGLLights() {
 				uniforms.distance = light.distance;
 				uniforms.decay = light.decay;
 
-				if ( light.castShadow || true ) {
+				if ( light.castShadow || (!staticLightConfig || numPointShadows<staticLightConfig.numPointShadows) ) {
 
 					const shadow = light.shadow;
 
@@ -19615,7 +19628,7 @@ function WebGLLights() {
 
 				pointLength ++;
 
-			} else if ( light.isHemisphereLight ) {
+			} else if ( light.isHemisphereLight || (!staticLightConfig || hemiLength<staticLightConfig.hemiLength) ) {
 
 				const uniforms = cache.get( light );
 
@@ -19638,10 +19651,51 @@ function WebGLLights() {
 		state.ambient[ 1 ] = g;
 		state.ambient[ 2 ] = b;
 		
-		numDirectionalShadows = Math.max(numDirectionalShadows, state.directionalShadowMatrix.length);
-		numPointShadows = Math.max(numPointShadows, state.pointShadowMatrix.length);
-		numSpotShadows = Math.max(numSpotShadows, state.spotShadowMatrix.length);
-		numDirectionalMaps = Math.max(numDirectionalMaps, state.directionalMapMatrix.length);		numSpotMaps = Math.max(numSpotMaps, state.spotMapMatrix.length);
+		if(staticLightConfig){
+			while(directionalLength<staticLightConfig.directionalLength){
+				state.directional[ directionalLength ] = cache.get({type:'DirectionalLight'});
+				directionalLength++;
+			}
+			while(numDirectionalShadows<staticLightConfig.numDirectionalShadows){
+				state.directionalShadow[numDirectionalShadows] = shadowCache.get({type:'DirectionalLight'});
+				numDirectionalShadows++;
+			}
+			while(spotLength<staticLightConfig.spotLength){
+				state.spot[ spotLength ] = cache.get({type:'SpotLight'});
+				spotLength++;
+			}
+			while(numSpotShadows<staticLightConfig.numSpotShadows){
+				state.spotShadow[numSpotShadows] = shadowCache.get({type:'SpotLight'});
+				numSpotShadows++;
+			}
+			while(pointLength<staticLightConfig.pointLength){
+				state.point[ pointLength ] = cache.get({type:'PointLight'});
+				pointLength++;
+			}
+			while(numPointShadows<staticLightConfig.numPointShadows){
+				state.pointShadow[numPointShadows] = shadowCache.get({type:'SpotLight'});
+				numPointShadows++;
+			}
+			while(hemiLength<staticLightConfig.hemiLength){
+				state.hemi[ pointLength ] = cache.get({type:'HemisphereLight'});
+				hemiLength++;
+			}
+			while(rectAreaLength<staticLightConfig.rectAreaLength){
+				state.rectArea[ pointLength ] = cache.get({type:'RectAreaLight'});
+				rectAreaLength++;
+			}
+			
+			while(numSpotMaps<staticLightConfig.numSpotMaps){
+				state.spotMap[ numSpotMaps ] = null;
+				state.spotMapMatrix[ numSpotMaps ] = new Matrix4();
+				numSpotMaps++;
+			}
+			while(numDirectionalMaps<staticLightConfig.numDirectionalMaps){
+				state.directionalMap[ numDirectionalMaps ] = null;
+				state.directionalMapMatrix[ numDirectionalMaps ] = new Matrix4();
+				numDirectionalMaps++;
+			}
+		}
 
 		const hash = state.hash;
 
@@ -19707,9 +19761,9 @@ function WebGLLights() {
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-function WebGLRenderState() {
+function WebGLRenderState( staticLightConfig ) {
 
-	const lights = new WebGLLights();
+	const lights = new WebGLLights( staticLightConfig );
 
 	const lightsArray = [];
 	const shadowsArray = [];
@@ -24484,7 +24538,7 @@ function WebGLRenderer( parameters ) {
 		programCache = new WebGLPrograms( _this, extensions, capabilities );
 		materials = new WebGLMaterials( properties );
 		renderLists = new WebGLRenderLists();
-		renderStates = new WebGLRenderStates();
+		renderStates = new WebGLRenderStates( parameters.staticLightConfig );
 
 		background = new WebGLBackground( _this, state, objects, _premultipliedAlpha );
 
