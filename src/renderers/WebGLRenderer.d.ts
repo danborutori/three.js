@@ -20,6 +20,7 @@ import { RenderTarget } from './webgl/WebGLRenderLists';
 import { Geometry } from './../core/Geometry';
 import { BufferGeometry } from './../core/BufferGeometry';
 import { Texture } from '../textures/Texture';
+import { Light } from '../lights/Light';
 
 export interface Renderer {
 	domElement: HTMLCanvasElement;

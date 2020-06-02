@@ -5,7 +5,7 @@
 import { WebGLLights } from './WebGLLights.js';
 
 function WebGLRenderState( staticLightConfig ) {
-
+	
 	const lights = new WebGLLights( staticLightConfig );
 
 	const lightsArray = [];
@@ -54,7 +54,7 @@ function WebGLRenderState( staticLightConfig ) {
 
 }
 
-function WebGLRenderStates() {
+function WebGLRenderStates( staticLightConfig ) {
 
 	let renderStates = new WeakMap();
 
@@ -74,7 +74,7 @@ function WebGLRenderStates() {
 
 		if ( renderStates.has( scene ) === false ) {
 
-			renderState = new WebGLRenderState();
+			renderState = new WebGLRenderState( staticLightConfig );
 			renderStates.set( scene, new WeakMap() );
 			renderStates.get( scene ).set( camera, renderState );
 
@@ -84,7 +84,7 @@ function WebGLRenderStates() {
 
 			if ( renderStates.get( scene ).has( camera ) === false ) {
 
-				renderState = new WebGLRenderState();
+				renderState = new WebGLRenderState( staticLightConfig );
 				renderStates.get( scene ).set( camera, renderState );
 
 			} else {
