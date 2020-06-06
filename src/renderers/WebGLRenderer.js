@@ -1324,6 +1324,8 @@ function WebGLRenderer( parameters ) {
 
 					}
 
+				}else{
+					object.onFrustumCulled( _this, camera );
 				}
 
 			} else if ( object.isImmediateRenderObject ) {
@@ -1387,7 +1389,10 @@ function WebGLRenderer( parameters ) {
 
 					}
 
+				}else{
+					object.onFrustumCulled( _this, camera );
 				}
+
 
 			}
 

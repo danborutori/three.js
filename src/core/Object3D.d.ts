@@ -174,6 +174,14 @@ export class Object3D extends EventDispatcher {
 		group: Group
 	) => void;
 
+	/**
+	 * Calls object culled by view frustum
+	 */
+	onFrustumCulled: (
+		renderer: WebGLRenderer,
+		camera: Camera
+	) => void;
+	
 	static DefaultUp: Vector3;
 	static DefaultMatrixAutoUpdate: boolean;
 
