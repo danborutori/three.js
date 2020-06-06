@@ -523,7 +523,7 @@ function WebGLProgram( renderer, cacheKey, parameters ) {
 
 			'#ifdef USE_COLOR',
 
-			'	attribute vec3 color;',
+			'	attribute vec4 color;',
 
 			'#endif',
 
