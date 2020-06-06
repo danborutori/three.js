@@ -5424,6 +5424,7 @@
 
 		onBeforeRender: function () {},
 		onAfterRender: function () {},
+		onFrustumCulled: function () {},
 
 		applyMatrix4: function ( matrix ) {
 
@@ -26345,6 +26346,8 @@
 
 						}
 
+					}else {
+						object.onFrustumCulled( _this, camera );
 					}
 
 				} else if ( object.isImmediateRenderObject ) {
@@ -26408,7 +26411,10 @@
 
 						}
 
+					}else {
+						object.onFrustumCulled( _this, camera );
 					}
+
 
 				}
 

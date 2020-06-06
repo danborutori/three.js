@@ -5418,6 +5418,7 @@ Object3D.prototype = Object.assign( Object.create( EventDispatcher.prototype ), 
 
 	onBeforeRender: function () {},
 	onAfterRender: function () {},
+	onFrustumCulled: function () {},
 
 	applyMatrix4: function ( matrix ) {
 
@@ -26337,6 +26338,8 @@ function WebGLRenderer( parameters ) {
 
 					}
 
+				}else {
+					object.onFrustumCulled( _this, camera );
 				}
 
 			} else if ( object.isImmediateRenderObject ) {
@@ -26400,7 +26403,10 @@ function WebGLRenderer( parameters ) {
 
 					}
 
+				}else {
+					object.onFrustumCulled( _this, camera );
 				}
+
 
 			}
 
