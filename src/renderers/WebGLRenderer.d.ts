@@ -355,6 +355,11 @@ export class WebGLRenderer implements Renderer {
 		scene: Scene,
 		camera: Camera
 	): void;
+	
+	/**
+	 * render target holding depth and color buffer after opaqueObjects
+	 **/
+	 opaqueObjectsFramebufferRenderTarget?: WebGLRenderTarget
 
 	/**
 	 * Render a scene using a camera.

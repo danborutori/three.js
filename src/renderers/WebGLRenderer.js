@@ -47,6 +47,12 @@ import { WebGLUtils } from './webgl/WebGLUtils.js';
 import { WebXRManager } from './webxr/WebXRManager.js';
 import { WebGLMaterials } from "./webgl/WebGLMaterials.js";
 
+import { PlaneBufferGeometry } from "../geometries/PlaneGeometry.js";
+import { Mesh } from "../objects/Mesh.js";
+import { MeshBasicMaterial } from "../materials/MeshBasicMaterial.js";
+import { OrthographicCamera } from "../cameras/OrthographicCamera.js";
+import { Color } from "../math/Color.js";
+
 function WebGLRenderer( parameters ) {
 
 	parameters = parameters || {};
@@ -1120,6 +1126,28 @@ function WebGLRenderer( parameters ) {
 	};
 
 	// Rendering
+	
+	const copyOpaqueObjects = new function(){
+		const scene = new Scene();
+		const mesh = new Mesh( new PlaneBufferGeometry(2,2), new MeshBasicMaterial({ color: new Color("#ff0000") } ));
+		const camera = new OrthographicCamera(-1,1,1,-1,1,10);
+		scene.add( mesh );
+		scene.add( camera );
+		camera.position.z = -5;
+		camera.lookAt(mesh.position);
+		scene.updateMatrixWorld(true);
+		
+		this.copyFramebufferRenderTarget = function (){
+			if( _currentRenderTarget && _this.opaqueObjectsFramebufferRenderTarget ){
+				_this.setRenderTarget( _this.opaqueObjectsFramebufferRenderTarget );
+				
+				renderObject( mesh, scene, camera, objects.update( mesh ), mesh.material, null );
+				
+				//restore
+				_this.setRenderTarget( _currentRenderTarget );
+			}
+		}
+	}();
 
 	this.render = function ( scene, camera ) {
 
@@ -1231,6 +1259,7 @@ function WebGLRenderer( parameters ) {
 			const overrideMaterial = scene.overrideMaterial;
 
 			if ( opaqueObjects.length ) renderObjects( opaqueObjects, scene, camera, overrideMaterial );
+			copyOpaqueObjects.copyFramebufferRenderTarget();
 			if ( transparentObjects.length ) renderObjects( transparentObjects, scene, camera, overrideMaterial );
 
 		} else {
@@ -1239,6 +1268,7 @@ function WebGLRenderer( parameters ) {
 
 			if ( opaqueObjects.length ) renderObjects( opaqueObjects, scene, camera );
 
+			copyOpaqueObjects.copyFramebufferRenderTarget();
 			// transparent pass (back-to-front order)
 
 			if ( transparentObjects.length ) renderObjects( transparentObjects, scene, camera );
