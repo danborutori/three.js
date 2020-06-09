@@ -26154,6 +26154,52 @@ function WebGLRenderer( parameters ) {
 	};
 
 	// Rendering
+	
+	const copyOpaqueObjects = new function(){
+		const scene = new Scene();
+		const material = new ShaderMaterial({
+			uniforms: {
+				tDepth: { value: null },
+				tDiffuse: { value: null }
+			},			
+			vertexShader: `
+				varying vec4 vUv;
+			
+				void main(){
+					gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1);
+					vUv = gl_Position;
+				}
+			`,
+			fragmentShader: `
+				uniform sampler2D tDepth;
+				uniform sampler2D tDiffuse;
+				
+				varying vec4 vUv;
+			
+				void main(){
+					vec2 uv = vUv.xy/vUv.w*0.5+0.5;
+					gl_FragColor = vec4(texture2D(tDepth, uv).r,0,0,1);
+				}
+			`
+		});
+		const mesh = new Mesh( new PlaneBufferGeometry(2,2), material );
+		const camera = new OrthographicCamera(-1,1,1,-1,0,1);
+		
+		this.copyDepthRenderTarget = function ( sce, cam ){
+			const restoreRenderTarget = _currentRenderTarget;
+			if( restoreRenderTarget && _this.opaqueObjectsDepthRenderTarget ){
+				_this.setRenderTarget( _this.opaqueObjectsDepthRenderTarget );
+				
+				material.uniforms.tDepth.value = restoreRenderTarget.depthTexture;
+				material.uniforms.tDiffuse.value = restoreRenderTarget.texture;
+				renderObject( mesh, scene, camera, objects.update( mesh ), mesh.material, null );
+				
+				//restore
+				_this.setRenderTarget( restoreRenderTarget );
+				currentRenderState = renderStates.get( sce, cam );
+			}
+		};
+	}();
 
 	this.render = function ( scene, camera ) {
 
@@ -26265,6 +26311,7 @@ function WebGLRenderer( parameters ) {
 			const overrideMaterial = scene.overrideMaterial;
 
 			if ( opaqueObjects.length ) renderObjects( opaqueObjects, scene, camera, overrideMaterial );
+			copyOpaqueObjects.copyDepthRenderTarget(scene, camera);
 			if ( transparentObjects.length ) renderObjects( transparentObjects, scene, camera, overrideMaterial );
 
 		} else {
@@ -26273,6 +26320,7 @@ function WebGLRenderer( parameters ) {
 
 			if ( opaqueObjects.length ) renderObjects( opaqueObjects, scene, camera );
 
+			copyOpaqueObjects.copyDepthRenderTarget(scene, camera);
 			// transparent pass (back-to-front order)
 
 			if ( transparentObjects.length ) renderObjects( transparentObjects, scene, camera );
