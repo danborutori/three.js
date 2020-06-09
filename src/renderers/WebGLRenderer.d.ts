@@ -359,7 +359,7 @@ export class WebGLRenderer implements Renderer {
 	/**
 	 * render target holding depth and color buffer after opaqueObjects
 	 **/
-	 opaqueObjectsFramebufferRenderTarget?: WebGLRenderTarget
+	 opaqueObjectsDepthRenderTarget?: WebGLRenderTarget
 
 	/**
 	 * Render a scene using a camera.
