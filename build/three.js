@@ -19600,6 +19600,7 @@
 		this.type = 'DirectionalLight';
 
 		this.map = colorTexture?color:undefined;
+		this.mapMatrix = new Matrix4();
 		this.position.copy( Object3D.DefaultUp );
 		this.updateMatrix();
 
@@ -20280,8 +20281,19 @@
 					
 					if(light.map && (!staticLightConfig || numDirectionalMaps<staticLightConfig.numDirectionalMaps) ){
 						uniforms.map = numDirectionalMaps;
+						
+						var cam = light.shadow.camera;
+						var dimension = light.mapDimension || cam;
+						light.mapMatrix.makeOrthographic(
+							dimension.left,
+							dimension.right,
+							dimension.top,
+							dimension.bottom,
+							1, 10 )
+						.multiply(cam.matrixWorldInverse)
+						.multiply(camera.matrixWorld);
 						state.directionalMap[numDirectionalMaps] = light.map;
-						state.directionalMapMatrix[numDirectionalMaps] = light.shadow.matrix;
+						state.directionalMapMatrix[numDirectionalMaps] = light.mapMatrix;
 						numDirectionalMaps++;
 					}else {
 						uniforms.map = -1;
