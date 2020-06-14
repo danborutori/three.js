@@ -1,6 +1,7 @@
 import { Light } from './Light.js';
 import { DirectionalLightShadow } from './DirectionalLightShadow.js';
 import { Object3D } from '../core/Object3D.js';
+import { Matrix4 } from '../math/Matrix4.js';
 
 /**
  * @author mrdoob / http://mrdoob.com/
@@ -15,6 +16,7 @@ function DirectionalLight( color, intensity ) {
 	this.type = 'DirectionalLight';
 
 	this.map = colorTexture?color:undefined;
+	this.mapMatrix = new Matrix4();
 	this.position.copy( Object3D.DefaultUp );
 	this.updateMatrix();
 

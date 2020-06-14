@@ -328,8 +328,19 @@ function WebGLLights( staticLightConfig ) {
 				
 				if(light.map && (!staticLightConfig || numDirectionalMaps<staticLightConfig.numDirectionalMaps) ){
 					uniforms.map = numDirectionalMaps;
+					
+					const cam = light.shadow.camera;
+					const dimension = light.mapDimension || cam;
+					light.mapMatrix.makeOrthographic(
+						dimension.left,
+						dimension.right,
+						dimension.top,
+						dimension.bottom,
+						1, 10 )
+					.multiply(cam.matrixWorldInverse)
+					.multiply(camera.matrixWorld);
 					state.directionalMap[numDirectionalMaps] = light.map;
-					state.directionalMapMatrix[numDirectionalMaps] = light.shadow.matrix;
+					state.directionalMapMatrix[numDirectionalMaps] = light.mapMatrix;
 					numDirectionalMaps++;
 				}else{
 					uniforms.map = -1;

@@ -21,6 +21,12 @@ export class DirectionalLight extends Light {
 	 * Default — undefined.
 	 */
 	map?: Texture 
+	mapDimension?: {
+		left: number,
+		right: number,
+		top: number,
+		bottom: number
+	}
 	
 	/**
 	 * Target used for shadow camera orientation.
