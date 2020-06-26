@@ -110,6 +110,13 @@ void main() {
 	#endif
 
 	gl_FragColor = vec4( outgoingLight, diffuseColor.a );
+	#ifdef gl_FragNormal
+		gl_FragNormal = vec4( normal*0.5+0.5, diffuseColor.a );
+	#endif
+	#ifdef gl_FragMetalness
+		gl_FragMetalness = vec4( roughnessFactor, metalnessFactor, 0, diffuseColor.a );
+	#endif
+
 
 	#include <tonemapping_fragment>
 	#include <encodings_fragment>

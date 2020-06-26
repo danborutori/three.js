@@ -694,8 +694,12 @@ function WebGLProgram( renderer, cacheKey, parameters ) {
 		prefixFragment = [
 			'#version 300 es\n',
 			'#define varying in',
-			isGLSL3ShaderMaterial ? '' : 'out highp vec4 pc_fragColor;',
+			isGLSL3ShaderMaterial ? '' : 'layout(location = 0) out highp vec4 pc_fragColor;',
+			isGLSL3ShaderMaterial ? '' : 'layout(location = 1) out highp vec4 pc_fragNormal;',
+			isGLSL3ShaderMaterial ? '' : 'layout(location = 2) out highp vec4 pc_fragMetalness;',
 			isGLSL3ShaderMaterial ? '' : '#define gl_FragColor pc_fragColor',
+			isGLSL3ShaderMaterial ? '' : '#define gl_FragNormal pc_fragNormal',
+			isGLSL3ShaderMaterial ? '' : '#define gl_FragMetalness pc_fragMetalness',
 			'#define gl_FragDepthEXT gl_FragDepth',
 			'#define texture2D texture',
 			'#define textureCube texture',
@@ -709,9 +713,19 @@ function WebGLProgram( renderer, cacheKey, parameters ) {
 		].join( '\n' ) + '\n' + prefixFragment;
 
 	}
-
+	
 	const vertexGlsl = prefixVertex + vertexShader;
-	const fragmentGlsl = prefixFragment + fragmentShader;
+	const fragmentGlsl = prefixFragment + fragmentShader.replace( /void\s+main\s*\(\s*\)\s*{/, function(match){
+		return match+`
+			#ifdef gl_FragNormal
+				gl_FragNormal = vec4(0.5,0.5,1,1);
+			#endif
+			#ifdef gl_FragMetalness
+				gl_FragMetalness = vec4(1,1,0,1);
+			#endif
+		`
+	} );
+	
 
 	// console.log( '*VERTEX*', vertexGlsl );
 	// console.log( '*FRAGMENT*', fragmentGlsl );

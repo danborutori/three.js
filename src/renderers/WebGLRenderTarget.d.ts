@@ -16,6 +16,8 @@ export interface WebGLRenderTargetOptions {
 	stencilBuffer?: boolean; // true;
 	generateMipmaps?: boolean; // true;
 	depthTexture?: DepthTexture;
+	normalTexture?: Texture;
+	metalnessTexture?: Texture;
 	encoding?: TextureEncoding;
 }
 
@@ -37,6 +39,8 @@ export class WebGLRenderTarget extends EventDispatcher {
 	depthBuffer: boolean;
 	stencilBuffer: boolean;
 	depthTexture: DepthTexture;
+	normalTexture: Texture | null;
+	metalnessTexture: Texture | null;
 	readonly isWebGLRenderTarget: true;
 
 	/**

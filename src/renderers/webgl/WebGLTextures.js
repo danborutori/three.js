@@ -265,6 +265,22 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		}
 
+		if ( renderTarget.normalTexture ) {
+
+			const textureProperties = properties.get( renderTarget.normalTexture );
+			if( textureProperties.__webglTexture!==undefined )
+				_gl.deleteTexture( textureProperties.__webglTexture );
+
+		}
+
+		if ( renderTarget.metalnessTexture ) {
+
+			const textureProperties = properties.get( renderTarget.metalnessTexture );
+			if( textureProperties.__webglTexture!==undefined )
+				_gl.deleteTexture( textureProperties.__webglTexture );
+
+		}
+
 		if ( renderTarget.isWebGLCubeRenderTarget ) {
 
 			for ( let i = 0; i < 6; i ++ ) {
@@ -285,6 +301,8 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 		}
 
 		properties.remove( renderTarget.texture );
+		renderTarget.normalTexture && properties.remove( renderTarget.normalTexture );
+		renderTarget.metalnessTexture && properties.remove( renderTarget.metalnessTexture );
 		properties.remove( renderTarget );
 
 	}
@@ -846,6 +864,30 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 	}
 
+	function setupFrameBufferNormalTexture( framebuffer, renderTarget, attachment, textureTarget ) {
+
+		const glFormat = utils.convert( renderTarget.normalTexture.format );
+		const glType = utils.convert( renderTarget.normalTexture.type );
+		const glInternalFormat = getInternalFormat( renderTarget.normalTexture.internalFormat, glFormat, glType );
+		state.texImage2D( textureTarget, 0, glInternalFormat, renderTarget.width, renderTarget.height, 0, glFormat, glType, null );
+		_gl.bindFramebuffer( _gl.FRAMEBUFFER, framebuffer );
+		_gl.framebufferTexture2D( _gl.FRAMEBUFFER, attachment, textureTarget, properties.get( renderTarget.normalTexture ).__webglTexture, 0 );
+		_gl.bindFramebuffer( _gl.FRAMEBUFFER, null );
+
+	}
+
+	function setupFrameBufferMetalnessTexture( framebuffer, renderTarget, attachment, textureTarget ) {
+
+		const glFormat = utils.convert( renderTarget.metalnessTexture.format );
+		const glType = utils.convert( renderTarget.metalnessTexture.type );
+		const glInternalFormat = getInternalFormat( renderTarget.metalnessTexture.internalFormat, glFormat, glType );
+		state.texImage2D( textureTarget, 0, glInternalFormat, renderTarget.width, renderTarget.height, 0, glFormat, glType, null );
+		_gl.bindFramebuffer( _gl.FRAMEBUFFER, framebuffer );
+		_gl.framebufferTexture2D( _gl.FRAMEBUFFER, attachment, textureTarget, properties.get( renderTarget.metalnessTexture ).__webglTexture, 0 );
+		_gl.bindFramebuffer( _gl.FRAMEBUFFER, null );
+
+	}
+
 	// Setup storage for internal depth/stencil buffers and bind to correct framebuffer
 	function setupRenderBufferStorage( renderbuffer, renderTarget, isMultisample ) {
 
@@ -1126,8 +1168,39 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			}
 
-			state.bindTexture( _gl.TEXTURE_2D, null );
+			if(renderTarget.normalTexture!==null){
+				const nTextureProperties = properties.get( renderTarget.normalTexture );
+				nTextureProperties.__webglTexture = _gl.createTexture();
+				state.bindTexture( _gl.TEXTURE_2D, nTextureProperties.__webglTexture );
+				setTextureParameters( _gl.TEXTURE_2D, renderTarget.normalTexture, supportsMips );
+				setupFrameBufferNormalTexture( renderTargetProperties.__webglFramebuffer, renderTarget, _gl.COLOR_ATTACHMENT1, _gl.TEXTURE_2D );
+				if ( textureNeedsGenerateMipmaps( renderTarget.normalTexture, supportsMips ) ) {
 
+					generateMipmap( _gl.TEXTURE_2D, renderTarget.normalTexture, renderTarget.width, renderTarget.height );
+
+				}
+			}
+			if(renderTarget.metalnessTexture!==null){
+				const mTextureProperties = properties.get( renderTarget.metalnessTexture );
+				mTextureProperties.__webglTexture = _gl.createTexture();
+				state.bindTexture( _gl.TEXTURE_2D, mTextureProperties.__webglTexture );
+				setTextureParameters( _gl.TEXTURE_2D, renderTarget.metalnessTexture, supportsMips );
+				setupFrameBufferMetalnessTexture( renderTargetProperties.__webglFramebuffer, renderTarget, _gl.COLOR_ATTACHMENT2, _gl.TEXTURE_2D );
+				if ( textureNeedsGenerateMipmaps( renderTarget.metalnessTexture, supportsMips ) ) {
+
+					generateMipmap( _gl.TEXTURE_2D, renderTarget.metalnessTexture, renderTarget.width, renderTarget.height );
+
+				}
+			}
+			state.bindTexture( _gl.TEXTURE_2D, null );
+			
+			_gl.bindFramebuffer( _gl.FRAMEBUFFER, renderTargetProperties.__webglFramebuffer);
+			_gl.drawBuffers([
+				_gl.COLOR_ATTACHMENT0,
+				renderTarget.normalTexture!==null?_gl.COLOR_ATTACHMENT1:_gl.NONE,
+				renderTarget.metalnessTexture!==null?_gl.COLOR_ATTACHMENT2:_gl.NONE
+			])
+			_gl.bindFramebuffer( _gl.FRAMEBUFFER, null);
 		}
 
 		// Setup depth and stencil buffers

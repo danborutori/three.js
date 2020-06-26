@@ -38,6 +38,20 @@ function WebGLRenderTarget( width, height, options ) {
 	this.depthBuffer = options.depthBuffer !== undefined ? options.depthBuffer : true;
 	this.stencilBuffer = options.stencilBuffer !== undefined ? options.stencilBuffer : true;
 	this.depthTexture = options.depthTexture !== undefined ? options.depthTexture : null;
+	this.normalTexture = options.normalTexture !== undefined ? options.normalTexture : null;
+	this.metalnessTexture = options.metalnessTexture !== undefined ? options.metalnessTexture : null;
+	if(this.normalTexture !==null){
+		this.normalTexture.image = {};
+		this.normalTexture.image.width = width;
+		this.normalTexture.image.height = height;
+		this.normalTexture.needsUpdate = true
+	}
+	if(this.metalnessTexture !==null){
+		this.metalnessTexture.image = {};
+		this.metalnessTexture.image.width = width;
+		this.metalnessTexture.image.height = height;
+		this.metalnessTexture.needsUpdate = true
+	}
 
 }
 
@@ -56,6 +70,15 @@ WebGLRenderTarget.prototype = Object.assign( Object.create( EventDispatcher.prot
 
 			this.texture.image.width = width;
 			this.texture.image.height = height;
+			
+			if(this.normalTexture !==null){
+				this.normalTexture.image.width = width;
+				this.normalTexture.image.height = height;
+			}
+			if(this.metalnessTexture !==null){
+				this.metalnessTexture.image.width = width;
+				this.metalnessTexture.image.height = height;
+			}
 
 			this.dispose();
 
@@ -84,6 +107,8 @@ WebGLRenderTarget.prototype = Object.assign( Object.create( EventDispatcher.prot
 		this.depthBuffer = source.depthBuffer;
 		this.stencilBuffer = source.stencilBuffer;
 		this.depthTexture = source.depthTexture;
+		this.normalTexture = source.normalTexture;
+		this.metalnessTexture = source.metalnessTexture;
 
 		return this;
 
