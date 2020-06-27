@@ -3068,7 +3068,11 @@ THREE.GLTFLoader = ( function () {
 				&& nodeDef.extensions[ EXTENSIONS.KHR_LIGHTS_PUNCTUAL ]
 				&& nodeDef.extensions[ EXTENSIONS.KHR_LIGHTS_PUNCTUAL ].light !== undefined ) {
 
-				pending.push( parser.getDependency( 'light', nodeDef.extensions[ EXTENSIONS.KHR_LIGHTS_PUNCTUAL ].light ) );
+				pending.push( parser.getDependency( 'light', nodeDef.extensions[ EXTENSIONS.KHR_LIGHTS_PUNCTUAL ].light ).then( lit=>{
+					const cloned = lit.clone();
+					cloned.target && cloned.add(cloned.target);
+					return Promise.resolve(cloned);
+				}));
 
 			}
 
