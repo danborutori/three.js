@@ -2523,6 +2523,7 @@
 		this.depthTexture = options.depthTexture !== undefined ? options.depthTexture : null;
 		this.normalTexture = options.normalTexture !== undefined ? options.normalTexture : null;
 		this.metalnessTexture = options.metalnessTexture !== undefined ? options.metalnessTexture : null;
+		this.diffuseColorTexture = options.diffuseColorTexture !== undefined ? options.diffuseColorTexture : null;
 		if(this.normalTexture !==null){
 			this.normalTexture.image = {};
 			this.normalTexture.image.width = width;
@@ -2534,6 +2535,12 @@
 			this.metalnessTexture.image.width = width;
 			this.metalnessTexture.image.height = height;
 			this.metalnessTexture.needsUpdate = true;
+		}
+		if(this.diffuseColorTexture !==null){
+			this.diffuseColorTexture.image = {};
+			this.diffuseColorTexture.image.width = width;
+			this.diffuseColorTexture.image.height = height;
+			this.diffuseColorTexture.needsUpdate = true;
 		}
 
 	}
@@ -2561,6 +2568,10 @@
 				if(this.metalnessTexture !==null){
 					this.metalnessTexture.image.width = width;
 					this.metalnessTexture.image.height = height;
+				}
+				if(this.diffuseColorTexture !==null){
+					this.diffuseColorTexture.image.width = width;
+					this.diffuseColorTexture.image.height = height;
 				}
 
 				this.dispose();
@@ -2592,6 +2603,7 @@
 			this.depthTexture = source.depthTexture;
 			this.normalTexture = source.normalTexture;
 			this.metalnessTexture = source.metalnessTexture;
+			this.diffuseColorTexture = source.diffuseColorTexture;
 
 			return this;
 
@@ -15118,7 +15130,7 @@
 
 	var meshphong_vert = "#define PHONG\nvarying vec3 vViewPosition;\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n#endif\n#include <common>\n#include <uv_pars_vertex>\n#include <uv2_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <envmap_pars_vertex>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <shadowmap_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <uv2_vertex>\n\t#include <color_vertex>\n\t#include <beginnormal_vertex>\n\t#include <morphnormal_vertex>\n\t#include <skinbase_vertex>\n\t#include <skinnormal_vertex>\n\t#include <defaultnormal_vertex>\n#ifndef FLAT_SHADED\n\tvNormal = normalize( transformedNormal );\n#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\tvViewPosition = - mvPosition.xyz;\n\t#include <worldpos_vertex>\n\t#include <envmap_vertex>\n\t#include <shadowmap_vertex>\n\t#include <fog_vertex>\n}";
 
-	var meshphysical_frag = "#define STANDARD\n#ifdef PHYSICAL\n\t#define REFLECTIVITY\n\t#define CLEARCOAT\n\t#define TRANSPARENCY\n#endif\nuniform vec3 diffuse;\nuniform vec3 emissive;\nuniform float roughness;\nuniform float metalness;\nuniform float opacity;\n#ifdef TRANSPARENCY\n\tuniform float transparency;\n#endif\n#ifdef REFLECTIVITY\n\tuniform float reflectivity;\n#endif\n#ifdef CLEARCOAT\n\tuniform float clearcoat;\n\tuniform float clearcoatRoughness;\n#endif\n#ifdef USE_SHEEN\n\tuniform vec3 sheen;\n#endif\nvarying vec3 vViewPosition;\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n\t#ifdef USE_TANGENT\n\t\tvarying vec3 vTangent;\n\t\tvarying vec3 vBitangent;\n\t#endif\n#endif\n#include <common>\n#include <packing>\n#include <dithering_pars_fragment>\n#include <color_pars_fragment>\n#include <uv_pars_fragment>\n#include <uv2_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <aomap_pars_fragment>\n#include <lightmap_pars_fragment>\n#include <emissivemap_pars_fragment>\n#include <bsdfs>\n#include <cube_uv_reflection_fragment>\n#include <envmap_common_pars_fragment>\n#include <envmap_physical_pars_fragment>\n#include <fog_pars_fragment>\n#include <lights_pars_begin>\n#include <lights_physical_pars_fragment>\n#include <shadowmap_pars_fragment>\n#include <bumpmap_pars_fragment>\n#include <normalmap_pars_fragment>\n#include <clearcoat_pars_fragment>\n#include <roughnessmap_pars_fragment>\n#include <metalnessmap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\n\tvec3 totalEmissiveRadiance = emissive;\n\t#include <logdepthbuf_fragment>\n\t#include <map_fragment>\n\t#include <color_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <roughnessmap_fragment>\n\t#include <metalnessmap_fragment>\n\t#include <normal_fragment_begin>\n\t#include <normal_fragment_maps>\n\t#include <clearcoat_normal_fragment_begin>\n\t#include <clearcoat_normal_fragment_maps>\n\t#include <emissivemap_fragment>\n\t#include <lights_physical_fragment>\n\t#include <lights_fragment_begin>\n\t#include <lights_fragment_maps>\n\t#include <lights_fragment_end>\n\t#include <aomap_fragment>\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\n\t#ifdef TRANSPARENCY\n\t\tdiffuseColor.a *= saturate( 1. - transparency + linearToRelativeLuminance( reflectedLight.directSpecular + reflectedLight.indirectSpecular ) );\n\t#endif\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\n\t#ifdef gl_FragNormal\n\t\tgl_FragNormal = vec4( normal*0.5+0.5, diffuseColor.a );\n\t#endif\n\t#ifdef gl_FragMetalness\n\t\tgl_FragMetalness = vec4( roughnessFactor, metalnessFactor, 0, diffuseColor.a );\n\t#endif\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n\t#include <premultiplied_alpha_fragment>\n\t#include <dithering_fragment>\n}";
+	var meshphysical_frag = "#define STANDARD\n#ifdef PHYSICAL\n\t#define REFLECTIVITY\n\t#define CLEARCOAT\n\t#define TRANSPARENCY\n#endif\nuniform vec3 diffuse;\nuniform vec3 emissive;\nuniform float roughness;\nuniform float metalness;\nuniform float opacity;\n#ifdef TRANSPARENCY\n\tuniform float transparency;\n#endif\n#ifdef REFLECTIVITY\n\tuniform float reflectivity;\n#endif\n#ifdef CLEARCOAT\n\tuniform float clearcoat;\n\tuniform float clearcoatRoughness;\n#endif\n#ifdef USE_SHEEN\n\tuniform vec3 sheen;\n#endif\nvarying vec3 vViewPosition;\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n\t#ifdef USE_TANGENT\n\t\tvarying vec3 vTangent;\n\t\tvarying vec3 vBitangent;\n\t#endif\n#endif\n#include <common>\n#include <packing>\n#include <dithering_pars_fragment>\n#include <color_pars_fragment>\n#include <uv_pars_fragment>\n#include <uv2_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <aomap_pars_fragment>\n#include <lightmap_pars_fragment>\n#include <emissivemap_pars_fragment>\n#include <bsdfs>\n#include <cube_uv_reflection_fragment>\n#include <envmap_common_pars_fragment>\n#include <envmap_physical_pars_fragment>\n#include <fog_pars_fragment>\n#include <lights_pars_begin>\n#include <lights_physical_pars_fragment>\n#include <shadowmap_pars_fragment>\n#include <bumpmap_pars_fragment>\n#include <normalmap_pars_fragment>\n#include <clearcoat_pars_fragment>\n#include <roughnessmap_pars_fragment>\n#include <metalnessmap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\n\tvec3 totalEmissiveRadiance = emissive;\n\t#include <logdepthbuf_fragment>\n\t#include <map_fragment>\n\t#include <color_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <roughnessmap_fragment>\n\t#include <metalnessmap_fragment>\n\t#include <normal_fragment_begin>\n\t#include <normal_fragment_maps>\n\t#include <clearcoat_normal_fragment_begin>\n\t#include <clearcoat_normal_fragment_maps>\n\t#include <emissivemap_fragment>\n\t#include <lights_physical_fragment>\n\t#include <lights_fragment_begin>\n\t#include <lights_fragment_maps>\n\t#include <lights_fragment_end>\n\t#include <aomap_fragment>\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\n\t#ifdef TRANSPARENCY\n\t\tdiffuseColor.a *= saturate( 1. - transparency + linearToRelativeLuminance( reflectedLight.directSpecular + reflectedLight.indirectSpecular ) );\n\t#endif\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\n\t#ifdef gl_FragNormal\n\t\tgl_FragNormal = vec4( normal*0.5+0.5, diffuseColor.a );\n\t#endif\n\t#ifdef gl_FragMetalness\n\t\tgl_FragMetalness = vec4( roughnessFactor, metalnessFactor, 0, diffuseColor.a );\n\t#endif\n\t#ifdef gl_FragDiffuseColor\n\t\tgl_FragDiffuseColor = diffuseColor;\n\t#endif\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n\t#include <premultiplied_alpha_fragment>\n\t#include <dithering_fragment>\n}";
 
 	var meshphysical_vert = "#define STANDARD\nvarying vec3 vViewPosition;\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n\t#ifdef USE_TANGENT\n\t\tvarying vec3 vTangent;\n\t\tvarying vec3 vBitangent;\n\t#endif\n#endif\n#include <common>\n#include <uv_pars_vertex>\n#include <uv2_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <shadowmap_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <uv2_vertex>\n\t#include <color_vertex>\n\t#include <beginnormal_vertex>\n\t#include <morphnormal_vertex>\n\t#include <skinbase_vertex>\n\t#include <skinnormal_vertex>\n\t#include <defaultnormal_vertex>\n#ifndef FLAT_SHADED\n\tvNormal = normalize( transformedNormal );\n\t#ifdef USE_TANGENT\n\t\tvTangent = normalize( transformedTangent );\n\t\tvBitangent = normalize( cross( vNormal, vTangent ) * tangent.w );\n\t#endif\n#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\tvViewPosition = - mvPosition.xyz;\n\t#include <worldpos_vertex>\n\t#include <shadowmap_vertex>\n\t#include <fog_vertex>\n}";
 
@@ -18427,9 +18439,11 @@
 				isGLSL3ShaderMaterial ? '' : 'layout(location = 0) out highp vec4 pc_fragColor;',
 				isGLSL3ShaderMaterial ? '' : 'layout(location = 1) out highp vec4 pc_fragNormal;',
 				isGLSL3ShaderMaterial ? '' : 'layout(location = 2) out highp vec4 pc_fragMetalness;',
+				isGLSL3ShaderMaterial ? '' : 'layout(location = 3) out highp vec4 pc_fragDiffuseColor;',
 				isGLSL3ShaderMaterial ? '' : '#define gl_FragColor pc_fragColor',
 				isGLSL3ShaderMaterial ? '' : '#define gl_FragNormal pc_fragNormal',
 				isGLSL3ShaderMaterial ? '' : '#define gl_FragMetalness pc_fragMetalness',
+				isGLSL3ShaderMaterial ? '' : '#define gl_FragDiffuseColor pc_fragDiffuseColor',
 				'#define gl_FragDepthEXT gl_FragDepth',
 				'#define texture2D texture',
 				'#define textureCube texture',
@@ -18446,7 +18460,7 @@
 		
 		var vertexGlsl = prefixVertex + vertexShader;
 		var fragmentGlsl = prefixFragment + fragmentShader.replace( /void\s+main\s*\(\s*\)\s*{/, function(match){
-			return match+"\n\t\t\t#ifdef gl_FragNormal\n\t\t\t\tgl_FragNormal = vec4(0.5,0.5,1,1);\n\t\t\t#endif\n\t\t\t#ifdef gl_FragMetalness\n\t\t\t\tgl_FragMetalness = vec4(1,1,0,1);\n\t\t\t#endif\n\t\t"
+			return match+"\n\t\t\t#ifdef gl_FragNormal\n\t\t\t\tgl_FragNormal = vec4(0.5,0.5,1,1);\n\t\t\t#endif\n\t\t\t#ifdef gl_FragMetalness\n\t\t\t\tgl_FragMetalness = vec4(1,1,0,1);\n\t\t\t#endif\n\t\t\t#ifdef gl_FragDiffuseColor\n\t\t\t\tgl_FragDiffuseColor = vec4(0,0,0,1);\n\t\t\t#endif\n\t\t"
 		} );
 		
 
@@ -20268,12 +20282,15 @@
 
 				var shadowMap = ( light.shadow && light.shadow.map ) ? light.shadow.map.texture : null;
 				light.shadowInUse = false;
+				light.lightInUse = false;
 
 				if ( light.isAmbientLight ) {
 
 					r += color.r * intensity;
 					g += color.g * intensity;
 					b += color.b * intensity;
+					
+					light.lightInUse = true;
 
 				} else if ( light.isLightProbe ) {
 
@@ -20282,6 +20299,8 @@
 						state.probe[ j ].addScaledVector( light.sh.coefficients[ j ], intensity );
 
 					}
+					
+					light.lightInUse = true;
 
 				} else if ( light.isDirectionalLight && (!staticLightConfig || directionalLength<staticLightConfig.directionalLength)) {
 
@@ -20334,6 +20353,7 @@
 					state.directional[ directionalLength ] = uniforms;
 
 					directionalLength ++;
+					light.lightInUse = true;
 
 				} else if ( light.isSpotLight && (!staticLightConfig || spotLength<staticLightConfig.spotLength) ) {
 
@@ -20388,6 +20408,7 @@
 					state.spot[ spotLength ] = uniforms$1;
 
 					spotLength ++;
+					light.lightInUse = true;
 
 				} else if ( light.isRectAreaLight && (!staticLightConfig || rectAreaLength<staticLightConfig.rectAreaLength) ) {
 
@@ -20420,6 +20441,7 @@
 					state.rectArea[ rectAreaLength ] = uniforms$2;
 
 					rectAreaLength ++;
+					light.lightInUse = true;
 
 				} else if ( light.isPointLight && (!staticLightConfig || pointLength<staticLightConfig.pointLength) ) {
 
@@ -20455,6 +20477,7 @@
 					state.point[ pointLength ] = uniforms$3;
 
 					pointLength ++;
+					light.lightInUse = true;
 
 				} else if ( light.isHemisphereLight && (!staticLightConfig || hemiLength<staticLightConfig.hemiLength) ) {
 
@@ -20470,7 +20493,8 @@
 					state.hemi[ hemiLength ] = uniforms$4;
 
 					hemiLength ++;
-
+					light.lightInUse = true;
+					
 				}
 
 			}
@@ -22604,6 +22628,14 @@
 
 			}
 
+			if ( renderTarget.diffuseColorTexture ) {
+
+				var textureProperties$3 = properties.get( renderTarget.diffuseColorTexture );
+				if( textureProperties$3.__webglTexture!==undefined )
+					{ _gl.deleteTexture( textureProperties$3.__webglTexture ); }
+
+			}
+
 			if ( renderTarget.isWebGLCubeRenderTarget ) {
 
 				for ( var i = 0; i < 6; i ++ ) {
@@ -22626,6 +22658,7 @@
 			properties.remove( renderTarget.texture );
 			renderTarget.normalTexture && properties.remove( renderTarget.normalTexture );
 			renderTarget.metalnessTexture && properties.remove( renderTarget.metalnessTexture );
+			renderTarget.diffuseColorTexture && properties.remove( renderTarget.diffuseColorTexture );
 			properties.remove( renderTarget );
 
 		}
@@ -23208,6 +23241,18 @@
 
 		}
 
+		function setupFrameBufferDiffuseColorTexture( framebuffer, renderTarget, attachment, textureTarget ) {
+
+			var glFormat = utils.convert( renderTarget.diffuseColorTexture.format );
+			var glType = utils.convert( renderTarget.diffuseColorTexture.type );
+			var glInternalFormat = getInternalFormat( renderTarget.diffuseColorTexture.internalFormat, glFormat, glType );
+			state.texImage2D( textureTarget, 0, glInternalFormat, renderTarget.width, renderTarget.height, 0, glFormat, glType, null );
+			_gl.bindFramebuffer( 36160, framebuffer );
+			_gl.framebufferTexture2D( 36160, attachment, textureTarget, properties.get( renderTarget.diffuseColorTexture ).__webglTexture, 0 );
+			_gl.bindFramebuffer( 36160, null );
+
+		}
+
 		// Setup storage for internal depth/stencil buffers and bind to correct framebuffer
 		function setupRenderBufferStorage( renderbuffer, renderTarget, isMultisample ) {
 
@@ -23512,13 +23557,26 @@
 
 					}
 				}
+				if(renderTarget.diffuseColorTexture!==null){
+					var dTextureProperties = properties.get( renderTarget.diffuseColorTexture );
+					dTextureProperties.__webglTexture = _gl.createTexture();
+					state.bindTexture( 3553, dTextureProperties.__webglTexture );
+					setTextureParameters( 3553, renderTarget.diffuseColorTexture, supportsMips );
+					setupFrameBufferDiffuseColorTexture( renderTargetProperties.__webglFramebuffer, renderTarget, _gl.COLOR_ATTACHMENT3, 3553 );
+					if ( textureNeedsGenerateMipmaps( renderTarget.diffuseColorTexture, supportsMips ) ) {
+
+						generateMipmap( 3553, renderTarget.diffuseColorTexture, renderTarget.width, renderTarget.height );
+
+					}
+				}
 				state.bindTexture( 3553, null );
 				
 				_gl.bindFramebuffer( 36160, renderTargetProperties.__webglFramebuffer);
 				_gl.drawBuffers([
 					36064,
 					renderTarget.normalTexture!==null?_gl.COLOR_ATTACHMENT1:_gl.NONE,
-					renderTarget.metalnessTexture!==null?_gl.COLOR_ATTACHMENT2:_gl.NONE
+					renderTarget.metalnessTexture!==null?_gl.COLOR_ATTACHMENT2:_gl.NONE,
+					renderTarget.diffuseColorTexture!==null?_gl.COLOR_ATTACHMENT3:_gl.NONE
 				]);
 				_gl.bindFramebuffer( 36160, null);
 			}
