@@ -283,12 +283,15 @@ function WebGLLights( staticLightConfig ) {
 
 			const shadowMap = ( light.shadow && light.shadow.map ) ? light.shadow.map.texture : null;
 			light.shadowInUse = false;
+			light.lightInUse = false;
 
 			if ( light.isAmbientLight ) {
 
 				r += color.r * intensity;
 				g += color.g * intensity;
 				b += color.b * intensity;
+				
+				light.lightInUse = true;
 
 			} else if ( light.isLightProbe ) {
 
@@ -297,6 +300,8 @@ function WebGLLights( staticLightConfig ) {
 					state.probe[ j ].addScaledVector( light.sh.coefficients[ j ], intensity );
 
 				}
+				
+				light.lightInUse = true;
 
 			} else if ( light.isDirectionalLight && (!staticLightConfig || directionalLength<staticLightConfig.directionalLength)) {
 
@@ -349,6 +354,7 @@ function WebGLLights( staticLightConfig ) {
 				state.directional[ directionalLength ] = uniforms;
 
 				directionalLength ++;
+				light.lightInUse = true;
 
 			} else if ( light.isSpotLight && (!staticLightConfig || spotLength<staticLightConfig.spotLength) ) {
 
@@ -403,6 +409,7 @@ function WebGLLights( staticLightConfig ) {
 				state.spot[ spotLength ] = uniforms;
 
 				spotLength ++;
+				light.lightInUse = true;
 
 			} else if ( light.isRectAreaLight && (!staticLightConfig || rectAreaLength<staticLightConfig.rectAreaLength) ) {
 
@@ -435,6 +442,7 @@ function WebGLLights( staticLightConfig ) {
 				state.rectArea[ rectAreaLength ] = uniforms;
 
 				rectAreaLength ++;
+				light.lightInUse = true;
 
 			} else if ( light.isPointLight && (!staticLightConfig || pointLength<staticLightConfig.pointLength) ) {
 
@@ -470,6 +478,7 @@ function WebGLLights( staticLightConfig ) {
 				state.point[ pointLength ] = uniforms;
 
 				pointLength ++;
+				light.lightInUse = true;
 
 			} else if ( light.isHemisphereLight && (!staticLightConfig || hemiLength<staticLightConfig.hemiLength) ) {
 
@@ -485,7 +494,8 @@ function WebGLLights( staticLightConfig ) {
 				state.hemi[ hemiLength ] = uniforms;
 
 				hemiLength ++;
-
+				light.lightInUse = true;
+				
 			}
 
 		}
