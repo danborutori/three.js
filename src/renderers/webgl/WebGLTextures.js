@@ -281,6 +281,14 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		}
 
+		if ( renderTarget.diffuseColorTexture ) {
+
+			const textureProperties = properties.get( renderTarget.diffuseColorTexture );
+			if( textureProperties.__webglTexture!==undefined )
+				_gl.deleteTexture( textureProperties.__webglTexture );
+
+		}
+
 		if ( renderTarget.isWebGLCubeRenderTarget ) {
 
 			for ( let i = 0; i < 6; i ++ ) {
@@ -303,6 +311,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 		properties.remove( renderTarget.texture );
 		renderTarget.normalTexture && properties.remove( renderTarget.normalTexture );
 		renderTarget.metalnessTexture && properties.remove( renderTarget.metalnessTexture );
+		renderTarget.diffuseColorTexture && properties.remove( renderTarget.diffuseColorTexture );
 		properties.remove( renderTarget );
 
 	}
@@ -888,6 +897,18 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 	}
 
+	function setupFrameBufferDiffuseColorTexture( framebuffer, renderTarget, attachment, textureTarget ) {
+
+		const glFormat = utils.convert( renderTarget.diffuseColorTexture.format );
+		const glType = utils.convert( renderTarget.diffuseColorTexture.type );
+		const glInternalFormat = getInternalFormat( renderTarget.diffuseColorTexture.internalFormat, glFormat, glType );
+		state.texImage2D( textureTarget, 0, glInternalFormat, renderTarget.width, renderTarget.height, 0, glFormat, glType, null );
+		_gl.bindFramebuffer( _gl.FRAMEBUFFER, framebuffer );
+		_gl.framebufferTexture2D( _gl.FRAMEBUFFER, attachment, textureTarget, properties.get( renderTarget.diffuseColorTexture ).__webglTexture, 0 );
+		_gl.bindFramebuffer( _gl.FRAMEBUFFER, null );
+
+	}
+
 	// Setup storage for internal depth/stencil buffers and bind to correct framebuffer
 	function setupRenderBufferStorage( renderbuffer, renderTarget, isMultisample ) {
 
@@ -1192,13 +1213,26 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 				}
 			}
+			if(renderTarget.diffuseColorTexture!==null){
+				const dTextureProperties = properties.get( renderTarget.diffuseColorTexture );
+				dTextureProperties.__webglTexture = _gl.createTexture();
+				state.bindTexture( _gl.TEXTURE_2D, dTextureProperties.__webglTexture );
+				setTextureParameters( _gl.TEXTURE_2D, renderTarget.diffuseColorTexture, supportsMips );
+				setupFrameBufferDiffuseColorTexture( renderTargetProperties.__webglFramebuffer, renderTarget, _gl.COLOR_ATTACHMENT3, _gl.TEXTURE_2D );
+				if ( textureNeedsGenerateMipmaps( renderTarget.diffuseColorTexture, supportsMips ) ) {
+
+					generateMipmap( _gl.TEXTURE_2D, renderTarget.diffuseColorTexture, renderTarget.width, renderTarget.height );
+
+				}
+			}
 			state.bindTexture( _gl.TEXTURE_2D, null );
 			
 			_gl.bindFramebuffer( _gl.FRAMEBUFFER, renderTargetProperties.__webglFramebuffer);
 			_gl.drawBuffers([
 				_gl.COLOR_ATTACHMENT0,
 				renderTarget.normalTexture!==null?_gl.COLOR_ATTACHMENT1:_gl.NONE,
-				renderTarget.metalnessTexture!==null?_gl.COLOR_ATTACHMENT2:_gl.NONE
+				renderTarget.metalnessTexture!==null?_gl.COLOR_ATTACHMENT2:_gl.NONE,
+				renderTarget.diffuseColorTexture!==null?_gl.COLOR_ATTACHMENT3:_gl.NONE
 			])
 			_gl.bindFramebuffer( _gl.FRAMEBUFFER, null);
 		}

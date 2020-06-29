@@ -697,9 +697,11 @@ function WebGLProgram( renderer, cacheKey, parameters ) {
 			isGLSL3ShaderMaterial ? '' : 'layout(location = 0) out highp vec4 pc_fragColor;',
 			isGLSL3ShaderMaterial ? '' : 'layout(location = 1) out highp vec4 pc_fragNormal;',
 			isGLSL3ShaderMaterial ? '' : 'layout(location = 2) out highp vec4 pc_fragMetalness;',
+			isGLSL3ShaderMaterial ? '' : 'layout(location = 3) out highp vec4 pc_fragDiffuseColor;',
 			isGLSL3ShaderMaterial ? '' : '#define gl_FragColor pc_fragColor',
 			isGLSL3ShaderMaterial ? '' : '#define gl_FragNormal pc_fragNormal',
 			isGLSL3ShaderMaterial ? '' : '#define gl_FragMetalness pc_fragMetalness',
+			isGLSL3ShaderMaterial ? '' : '#define gl_FragDiffuseColor pc_fragDiffuseColor',
 			'#define gl_FragDepthEXT gl_FragDepth',
 			'#define texture2D texture',
 			'#define textureCube texture',
@@ -722,6 +724,9 @@ function WebGLProgram( renderer, cacheKey, parameters ) {
 			#endif
 			#ifdef gl_FragMetalness
 				gl_FragMetalness = vec4(1,1,0,1);
+			#endif
+			#ifdef gl_FragDiffuseColor
+				gl_FragDiffuseColor = vec4(0,0,0,1);
 			#endif
 		`
 	} );

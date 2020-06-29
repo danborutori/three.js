@@ -40,6 +40,7 @@ function WebGLRenderTarget( width, height, options ) {
 	this.depthTexture = options.depthTexture !== undefined ? options.depthTexture : null;
 	this.normalTexture = options.normalTexture !== undefined ? options.normalTexture : null;
 	this.metalnessTexture = options.metalnessTexture !== undefined ? options.metalnessTexture : null;
+	this.diffuseColorTexture = options.diffuseColorTexture !== undefined ? options.diffuseColorTexture : null;
 	if(this.normalTexture !==null){
 		this.normalTexture.image = {};
 		this.normalTexture.image.width = width;
@@ -51,6 +52,12 @@ function WebGLRenderTarget( width, height, options ) {
 		this.metalnessTexture.image.width = width;
 		this.metalnessTexture.image.height = height;
 		this.metalnessTexture.needsUpdate = true
+	}
+	if(this.diffuseColorTexture !==null){
+		this.diffuseColorTexture.image = {};
+		this.diffuseColorTexture.image.width = width;
+		this.diffuseColorTexture.image.height = height;
+		this.diffuseColorTexture.needsUpdate = true
 	}
 
 }
@@ -78,6 +85,10 @@ WebGLRenderTarget.prototype = Object.assign( Object.create( EventDispatcher.prot
 			if(this.metalnessTexture !==null){
 				this.metalnessTexture.image.width = width;
 				this.metalnessTexture.image.height = height;
+			}
+			if(this.diffuseColorTexture !==null){
+				this.diffuseColorTexture.image.width = width;
+				this.diffuseColorTexture.image.height = height;
 			}
 
 			this.dispose();
@@ -109,6 +120,7 @@ WebGLRenderTarget.prototype = Object.assign( Object.create( EventDispatcher.prot
 		this.depthTexture = source.depthTexture;
 		this.normalTexture = source.normalTexture;
 		this.metalnessTexture = source.metalnessTexture;
+		this.diffuseColorTexture = source.diffuseColorTexture;
 
 		return this;
 

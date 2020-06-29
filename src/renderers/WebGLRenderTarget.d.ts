@@ -18,6 +18,7 @@ export interface WebGLRenderTargetOptions {
 	depthTexture?: DepthTexture;
 	normalTexture?: Texture;
 	metalnessTexture?: Texture;
+	diffuseColorTexture?: Texture;
 	encoding?: TextureEncoding;
 }
 
@@ -41,6 +42,7 @@ export class WebGLRenderTarget extends EventDispatcher {
 	depthTexture: DepthTexture;
 	normalTexture: Texture | null;
 	metalnessTexture: Texture | null;
+	diffuseColorTexture: Texture | null;
 	readonly isWebGLRenderTarget: true;
 
 	/**
