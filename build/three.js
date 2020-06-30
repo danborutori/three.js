@@ -18460,7 +18460,7 @@
 		
 		var vertexGlsl = prefixVertex + vertexShader;
 		var fragmentGlsl = prefixFragment + fragmentShader.replace( /void\s+main\s*\(\s*\)\s*{/, function(match){
-			return match+"\n\t\t\t#ifdef gl_FragNormal\n\t\t\t\tgl_FragNormal = vec4(0.5,0.5,1,1);\n\t\t\t#endif\n\t\t\t#ifdef gl_FragMetalness\n\t\t\t\tgl_FragMetalness = vec4(1,1,0,1);\n\t\t\t#endif\n\t\t\t#ifdef gl_FragDiffuseColor\n\t\t\t\tgl_FragDiffuseColor = vec4(0,0,0,1);\n\t\t\t#endif\n\t\t"
+			return match+"\n\t\t\t#ifdef gl_FragNormal\n\t\t\t\tgl_FragNormal = vec4(0.5,0.5,1,1);\n\t\t\t#endif\n\t\t\t#ifdef gl_FragMetalness\n\t\t\t\tgl_FragMetalness = vec4(1,0,0,1);\n\t\t\t#endif\n\t\t\t#ifdef gl_FragDiffuseColor\n\t\t\t\tgl_FragDiffuseColor = vec4(0,0,0,1);\n\t\t\t#endif\n\t\t"
 		} );
 		
 

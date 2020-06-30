@@ -18452,7 +18452,7 @@ function WebGLProgram( renderer, cacheKey, parameters ) {
 				gl_FragNormal = vec4(0.5,0.5,1,1);
 			#endif
 			#ifdef gl_FragMetalness
-				gl_FragMetalness = vec4(1,1,0,1);
+				gl_FragMetalness = vec4(1,0,0,1);
 			#endif
 			#ifdef gl_FragDiffuseColor
 				gl_FragDiffuseColor = vec4(0,0,0,1);
