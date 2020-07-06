@@ -760,7 +760,7 @@ function WebGLProgram( renderer, cacheKey, parameters ) {
 		// check for link errors
 		if ( renderer.debug.checkShaderErrors ) {
 			const linkFail = gl.getProgramParameter( program, gl.LINK_STATUS );			
-			if( !linkFail ) return;
+			if( linkFail !== false ) return;
 
 			const programLog = gl.getProgramInfoLog( program ).trim();
 			const vertexLog = gl.getShaderInfoLog( glVertexShader ).trim();
