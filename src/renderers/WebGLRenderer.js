@@ -1144,7 +1144,7 @@ function WebGLRenderer( parameters ) {
 		object.traverse( function ( object ) {
 
 			let material = object.material;
-
+			
 			if ( material ) {
 
 				if ( Array.isArray( material ) ) {
@@ -1196,6 +1196,7 @@ function WebGLRenderer( parameters ) {
 				}
 			}
 
+			if( object.isMesh ) objects.update( object );
 		} );
 		
 		return Promise.all(tasks);
