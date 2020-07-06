@@ -1230,6 +1230,111 @@ BufferGeometry.prototype = Object.assign( Object.create( EventDispatcher.prototy
 
 	},
 
+	lazyCopy: function ( source ) {
+
+		// reset
+
+		this.index = null;
+		this.attributes = {};
+		this.morphAttributes = {};
+		this.groups = [];
+		this.boundingBox = null;
+		this.boundingSphere = null;
+
+		// used for storing cloned, shared data
+
+		const data = {};
+
+		// name
+
+		this.name = source.name;
+
+		// index
+
+		const index = source.index;
+
+		if ( index !== null ) {
+
+			this.setIndex( index );
+
+		}
+
+		// attributes
+
+		const attributes = source.attributes;
+
+		for ( const name in attributes ) {
+
+			const attribute = attributes[ name ];
+			this.setAttribute( name, attribute );
+
+		}
+
+		// morph attributes
+
+		const morphAttributes = source.morphAttributes;
+
+		for ( const name in morphAttributes ) {
+
+			const array = [];
+			const morphAttribute = morphAttributes[ name ]; // morphAttribute: array of Float32BufferAttributes
+
+			for ( let i = 0, l = morphAttribute.length; i < l; i ++ ) {
+
+				array.push( morphAttribute[ i ] );
+
+			}
+
+			this.morphAttributes[ name ] = array;
+
+		}
+
+		this.morphTargetsRelative = source.morphTargetsRelative;
+
+		// groups
+
+		const groups = source.groups;
+
+		for ( let i = 0, l = groups.length; i < l; i ++ ) {
+
+			const group = groups[ i ];
+			this.addGroup( group.start, group.count, group.materialIndex );
+
+		}
+
+		// bounding box
+
+		const boundingBox = source.boundingBox;
+
+		if ( boundingBox !== null ) {
+
+			this.boundingBox = boundingBox.clone();
+
+		}
+
+		// bounding sphere
+
+		const boundingSphere = source.boundingSphere;
+
+		if ( boundingSphere !== null ) {
+
+			this.boundingSphere = boundingSphere.clone();
+
+		}
+
+		// draw range
+
+		this.drawRange.start = source.drawRange.start;
+		this.drawRange.count = source.drawRange.count;
+
+		// user data
+
+		this.userData = source.userData;
+
+		return this;
+
+	},
+	
 	dispose: function () {
 
 		this.dispatchEvent( { type: 'dispose' } );

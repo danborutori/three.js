@@ -107,6 +107,7 @@ export class BufferGeometry extends EventDispatcher {
 	toJSON(): any;
 	clone(): this;
 	copy( source: BufferGeometry ): this;
+	lazyCopy( source: BufferGeometry ): this;
 
 	/**
 	 * Disposes the object from memory.
