@@ -356,6 +356,13 @@ export class WebGLRenderer implements Renderer {
 		camera: Camera
 	): void;
 	
+	compileAsync(
+		scene: Scene,
+		camera: Camera,
+		object: THREE.Object3D,
+		progress?: (progress: number)=>void
+	): Promise<void>;
+
 	/**
 	 * render target holding depth and color buffer after opaqueObjects
 	 **/

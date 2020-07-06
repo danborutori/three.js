@@ -1039,7 +1039,7 @@ function WebGLRenderer( parameters ) {
 		state.disableUnusedAttributes();
 
 	}
-
+	
 	// Compile
 
 	this.compile = function ( scene, camera ) {
@@ -1100,6 +1100,106 @@ function WebGLRenderer( parameters ) {
 		} );
 
 	};
+	
+	// Compile async
+	function compileTextureAsync( material ){
+		
+		return new Promise( function( resolve, reject ){
+			requestAnimationFrame( function(){
+				material.map && textures.setTexture2D( material.map, 0 );
+				material.normalMap && textures.setTexture2D( material.normalMap, 0 );
+				material.roughnessMap && textures.setTexture2D( material.roughnessMap, 0 );
+				material.metalnessMap && textures.setTexture2D( material.metalnessMap, 0 );
+				resolve();
+			});
+		});
+	}
+	
+	this.compileAsync = function ( scene, camera, object, progress ) {
+		currentRenderState = renderStates.get( scene, camera );
+		currentRenderState.init();
+
+		scene.traverse( function ( object ) {
+
+			if ( object.isLight ) {
+
+				currentRenderState.pushLight( object );
+
+				if ( object.castShadow ) {
+
+					currentRenderState.pushShadow( object );
+
+				}
+
+			}
+
+		} );
+
+		currentRenderState.setupLights( camera );
+
+		const compiled = {};
+		const tasks = [];
+		let completedCnt = 0;
+
+		object.traverse( function ( object ) {
+
+			let material = object.material;
+
+			if ( material ) {
+
+				if ( Array.isArray( material ) ) {
+
+					for ( let i = 0; i < material.length; i ++ ) {
+
+						let material2 = material[ i ];
+
+						if ( material2.uuid in compiled === false ) {
+
+							tasks.push( initMaterialAsync( material2, scene, object ).then( function(){
+								progress && progress( ++completedCnt/tasks.length );
+							}));
+							tasks.push( compileTextureAsync( material2 ).then( function(){
+								progress && progress( ++completedCnt/tasks.length );
+							}));
+							compiled[ material2.uuid ] = true;
+
+						}
+
+					}
+
+				} else if ( material.uuid in compiled === false ) {
+
+					tasks.push( initMaterialAsync( material, scene, object ).then( function(){
+						progress && progress( ++completedCnt/tasks.length );
+					}));
+					tasks.push( compileTextureAsync( material ).then( function(){
+						progress && progress( ++completedCnt/tasks.length );
+					}));
+					compiled[ material.uuid ] = true;
+
+				}
+
+			}
+			
+			let customDepthMaterial = object.customDepthMaterial;
+			if ( customDepthMaterial ) {
+				if ( customDepthMaterial.uuid in compiled === false ) {
+
+					tasks.push( initMaterialAsync( customDepthMaterial, scene, object ).then( function(){
+						progress && progress( ++completedCnt/tasks.length );
+					}));
+					tasks.push( compileTextureAsync( customDepthMaterial ).then( function(){
+						progress && progress( ++completedCnt/tasks.length );
+					}));
+					compiled[ customDepthMaterial.uuid ] = true;
+
+				}
+			}
+
+		} );
+		
+		return Promise.all(tasks);
+	}
 
 	// Animation Loop
 
@@ -1684,6 +1784,152 @@ function WebGLRenderer( parameters ) {
 
 	}
 
+	function initMaterialAsync( material, scene, object ) {
+
+		const materialProperties = properties.get( material );
+
+		const lights = currentRenderState.state.lights;
+		const shadowsArray = currentRenderState.state.shadowsArray;
+
+		const lightsStateVersion = lights.state.version;
+
+		const parameters = programCache.getParameters( material, lights.state, shadowsArray, scene, _clipping.numPlanes, _clipping.numIntersection, object );
+		const programCacheKey = programCache.getProgramCacheKey( parameters );
+
+		let program = materialProperties.program;
+		let programChange = true;
+
+		if ( program === undefined ) {
+
+			// new material
+			material.addEventListener( 'dispose', onMaterialDispose );
+
+		} else if ( program.cacheKey !== programCacheKey ) {
+
+			// changed glsl or parameters
+			releaseMaterialProgramReference( material );
+
+		} else if ( materialProperties.lightsStateVersion !== lightsStateVersion ) {
+
+			materialProperties.lightsStateVersion = lightsStateVersion;
+
+			programChange = false;
+
+		} else if ( parameters.shaderID !== undefined ) {
+
+			// same glsl and uniform list
+			return;
+
+		} else {
+
+			// only rebuild uniform list
+			programChange = false;
+
+		}
+
+		if ( programChange ) {
+
+			program = programCache.acquireProgram( parameters, programCacheKey );
+
+			materialProperties.program = program;
+			materialProperties.uniforms = parameters.uniforms;
+			materialProperties.outputEncoding = parameters.outputEncoding;
+			material.program = program;
+
+		}
+
+		return program.completion.then( function(){
+			const programAttributes = program.getAttributes();
+
+			if ( material.morphTargets ) {
+
+				material.numSupportedMorphTargets = 0;
+
+				for ( let i = 0; i < _this.maxMorphTargets; i ++ ) {
+
+					if ( programAttributes[ 'morphTarget' + i ] >= 0 ) {
+
+						material.numSupportedMorphTargets ++;
+
+					}
+
+				}
+
+			}
+
+			if ( material.morphNormals ) {
+
+				material.numSupportedMorphNormals = 0;
+
+				for ( let i = 0; i < _this.maxMorphNormals; i ++ ) {
+
+					if ( programAttributes[ 'morphNormal' + i ] >= 0 ) {
+
+						material.numSupportedMorphNormals ++;
+
+					}
+
+				}
+
+			}
+
+			const uniforms = materialProperties.uniforms;
+
+			if ( ! material.isShaderMaterial &&
+				! material.isRawShaderMaterial ||
+				material.clipping === true ) {
+
+				materialProperties.numClippingPlanes = _clipping.numPlanes;
+				materialProperties.numIntersection = _clipping.numIntersection;
+				uniforms.clippingPlanes = _clipping.uniform;
+
+			}
+
+			materialProperties.environment = material.isMeshStandardMaterial ? scene.environment : null;
+			materialProperties.fog = scene.fog;
+
+			// store the light setup it was created for
+
+			materialProperties.needsLights = materialNeedsLights( material );
+			materialProperties.lightsStateVersion = lightsStateVersion;
+
+			if ( materialProperties.needsLights ) {
+
+				// wire up the material to this renderer's lighting state
+
+				uniforms.ambientLightColor.value = lights.state.ambient;
+				uniforms.lightProbe.value = lights.state.probe;
+				uniforms.directionalLights.value = lights.state.directional;
+				uniforms.directionalLightShadows.value = lights.state.directionalShadow;
+				uniforms.spotLights.value = lights.state.spot;
+				uniforms.spotLightShadows.value = lights.state.spotShadow;
+				uniforms.rectAreaLights.value = lights.state.rectArea;
+				uniforms.pointLights.value = lights.state.point;
+				uniforms.pointLightShadows.value = lights.state.pointShadow;
+				uniforms.hemisphereLights.value = lights.state.hemi;
+
+				uniforms.directionalShadowMap.value = lights.state.directionalShadowMap;
+				uniforms.directionalShadowMatrix.value = lights.state.directionalShadowMatrix;
+				uniforms.spotShadowMap.value = lights.state.spotShadowMap;
+				uniforms.spotShadowMatrix.value = lights.state.spotShadowMatrix;
+				uniforms.pointShadowMap.value = lights.state.pointShadowMap;
+				uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
+				// TODO (abelnation): add area lights shadow info to uniforms
+				
+				uniforms.directionalMap.value = lights.state.directionalMap;
+				uniforms.directionalMapMatrix.value = lights.state.directionalMapMatrix;
+				uniforms.spotMap.value = lights.state.spotMap;
+				uniforms.spotMapMatrix.value = lights.state.spotMapMatrix;
+			}
+
+			const progUniforms = materialProperties.program.getUniforms(),
+				uniformsList =
+					WebGLUniforms.seqWithValue( progUniforms.seq, uniforms );
+
+			materialProperties.uniformsList = uniformsList;
+		});
+	}
+	
 	function setProgram( camera, scene, material, object ) {
 
 		textures.resetTextureUnits();
