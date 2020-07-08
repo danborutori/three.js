@@ -1102,6 +1102,24 @@ function WebGLRenderer( parameters ) {
 	};
 	
 	// Compile async
+	function compileTextureAsync( material ){		
+		return new Promise( function( resolve, reject ){
+			setTimeout( function(){
+				material.map && textures.setTexture2D( material.map, 0 );				
+				setTimeout( function(){
+					material.normalMap && textures.setTexture2D( material.normalMap, 0 );
+					setTimeout( function(){
+						material.roughnessMap && textures.setTexture2D( material.roughnessMap, 0 );
+						setTimeout( function(){
+							material.metalnessMap && textures.setTexture2D( material.metalnessMap, 0 );
+							resolve();
+						}, 100);
+					}, 100);
+				}, 100);
+			}, 100);
+		});
+	}
+	
 	this.compileAsync = function ( scene, camera, object, progress ) {
 		currentRenderState = renderStates.get( scene, camera );
 		currentRenderState.init();
@@ -1145,6 +1163,9 @@ function WebGLRenderer( parameters ) {
 							tasks.push( initMaterialAsync( material2, scene, object ).then( function(){
 								progress && progress( ++completedCnt/tasks.length );
 							}));
+							tasks.push( compileTextureAsync( material2 ).then( function(){
+								progress && progress( ++completedCnt/tasks.length );
+							}));
 							compiled[ material2.uuid ] = true;
 
 						}
@@ -1154,6 +1175,9 @@ function WebGLRenderer( parameters ) {
 				} else if ( material.uuid in compiled === false ) {
 
 					tasks.push( initMaterialAsync( material, scene, object ).then( function(){
+						progress && progress( ++completedCnt/tasks.length );
+					}));
+					tasks.push( compileTextureAsync( material ).then( function(){
 						progress && progress( ++completedCnt/tasks.length );
 					}));
 					compiled[ material.uuid ] = true;
@@ -1169,10 +1193,15 @@ function WebGLRenderer( parameters ) {
 					tasks.push( initMaterialAsync( customDepthMaterial, scene, object ).then( function(){
 						progress && progress( ++completedCnt/tasks.length );
 					}));
+					tasks.push( compileTextureAsync( customDepthMaterial ).then( function(){
+						progress && progress( ++completedCnt/tasks.length );
+					}));
 					compiled[ customDepthMaterial.uuid ] = true;
 
 				}
 			}
+
+			if( object.isMesh ) objects.update( object );
 		} );
 		
 		return Promise.all(tasks);

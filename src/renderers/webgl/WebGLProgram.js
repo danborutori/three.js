@@ -383,6 +383,20 @@ function generateEnvMapBlendingDefine( parameters ) {
 
 }
 
+let compilingProgramCnt = 0;
+function waitAllCompileFinish(){
+	return new Promise( function( resolve, reject ){
+		const func = function(){
+			if( compilingProgramCnt==0 ){
+				resolve();
+			}else{
+				setTimeout( func, 100 );
+			}
+		};
+		func();
+	} );
+};
+
 function WebGLProgram( renderer, cacheKey, parameters ) {
 
 	const gl = renderer.getContext();
@@ -829,14 +843,18 @@ function WebGLProgram( renderer, cacheKey, parameters ) {
 	const ext = gl.getExtension('KHR_parallel_shader_compile');
 	if( ext ){
 		this.completion = new Promise( function( resolve, reject ){
+			compilingProgramCnt++;
 			function checkCompletion() {
 				if (gl.getProgramParameter(program, ext.COMPLETION_STATUS_KHR) == true) {
-				  resolve();
+				  compilingProgramCnt--;
+				  waitAllCompileFinish().then( function(){
+					  resolve()
+				  });
 				} else {
-				  setTimeout(checkCompletion, 1000);
+				  setTimeout(checkCompletion, 100);
 				}
 			}
-			setTimeout(checkCompletion, 1000);
+			setTimeout(checkCompletion, 100);
 		});
 	}else{
 		this.completion = Promise.resolve();
