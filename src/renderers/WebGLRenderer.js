@@ -1819,7 +1819,7 @@ function WebGLRenderer( parameters ) {
 		} else if ( parameters.shaderID !== undefined ) {
 
 			// same glsl and uniform list
-			return;
+			return Promise.resolve();
 
 		} else {
 
