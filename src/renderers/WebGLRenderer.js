@@ -2404,6 +2404,8 @@ function WebGLRenderer( parameters ) {
 					
 						_gl.readPixels( x, y, width, height, utils.convert( textureFormat ), utils.convert( textureType ), buffer );
 
+						if(readBufferAttachment!=0)
+							_gl.readBuffer(_gl.COLOR_ATTACHMENT0);
 					}
 
 				} else {
