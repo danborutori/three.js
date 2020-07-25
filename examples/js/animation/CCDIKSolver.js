@@ -35,6 +35,15 @@ THREE.CCDIKSolver = ( function () {
 		this._valid();
 
 	}
+	
+	function updateMatrixWorld( from, to ){
+		from.updateWorldMatrix(false, false);
+		if( from!==to ){
+			for( let c of from.children ){
+				updateMatrixWorld( c, to );
+			}
+		}
+	}
 
 	CCDIKSolver.prototype = {
 
@@ -179,16 +188,16 @@ THREE.CCDIKSolver = ( function () {
 
 							}
 
-							link.updateMatrixWorld( true );
+							updateMatrixWorld( link, effector );
 
 							rotated = true;
 
 						}
 
 						if ( ! rotated ) break;
-
 					}
 
+					effector.updateMatrixWorld(true);
 				}
 
 				return this;
