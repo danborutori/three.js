@@ -364,11 +364,6 @@ export class WebGLRenderer implements Renderer {
 	): Promise<void>;
 
 	/**
-	 * render target holding depth and color buffer after opaqueObjects
-	 **/
-	 opaqueObjectsDepthRenderTarget?: WebGLRenderTarget
-
-	/**
 	 * Render a scene using a camera.
 	 * The render is done to a previously specified {@link WebGLRenderTarget#renderTarget .renderTarget} set by calling
 	 * {@link WebGLRenderer#setRenderTarget .setRenderTarget} or to the canvas as usual.
