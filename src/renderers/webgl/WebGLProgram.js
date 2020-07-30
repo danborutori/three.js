@@ -678,6 +678,8 @@ function WebGLProgram( renderer, cacheKey, parameters ) {
 
 	vertexShader = unrollLoops( vertexShader );
 	fragmentShader = unrollLoops( fragmentShader );
+	
+	const outputFragmentType = (defines && defines.FRAGMENT_OUTPUT_TYPE) || "vec4";
 
 	if ( parameters.isWebGL2 && ! parameters.isRawShaderMaterial ) {
 
@@ -708,10 +710,10 @@ function WebGLProgram( renderer, cacheKey, parameters ) {
 		prefixFragment = [
 			'#version 300 es\n',
 			'#define varying in',
-			isGLSL3ShaderMaterial ? '' : 'layout(location = 0) out highp vec4 pc_fragColor;',
-			isGLSL3ShaderMaterial ? '' : 'layout(location = 1) out highp vec4 pc_fragNormal;',
-			isGLSL3ShaderMaterial ? '' : 'layout(location = 2) out highp vec4 pc_fragMetalness;',
-			isGLSL3ShaderMaterial ? '' : 'layout(location = 3) out highp vec4 pc_fragDiffuseColor;',
+			isGLSL3ShaderMaterial ? '' : `layout(location = 0) out highp ${outputFragmentType} pc_fragColor;`,
+			isGLSL3ShaderMaterial ? '' : `layout(location = 1) out highp ${outputFragmentType} pc_fragNormal;`,
+			isGLSL3ShaderMaterial ? '' : `layout(location = 2) out highp ${outputFragmentType} pc_fragMetalness;`,
+			isGLSL3ShaderMaterial ? '' : `layout(location = 3) out highp ${outputFragmentType} pc_fragDiffuseColor;`,
 			isGLSL3ShaderMaterial ? '' : '#define gl_FragColor pc_fragColor',
 			isGLSL3ShaderMaterial ? '' : '#define gl_FragNormal pc_fragNormal',
 			isGLSL3ShaderMaterial ? '' : '#define gl_FragMetalness pc_fragMetalness',
@@ -734,13 +736,13 @@ function WebGLProgram( renderer, cacheKey, parameters ) {
 	const fragmentGlsl = prefixFragment + fragmentShader.replace( /void\s+main\s*\(\s*\)\s*{/, function(match){
 		return match+`
 			#ifdef gl_FragNormal
-				gl_FragNormal = vec4(0.5,0.5,1,1);
+				gl_FragNormal = ${outputFragmentType}(0.5,0.5,1,1);
 			#endif
 			#ifdef gl_FragMetalness
-				gl_FragMetalness = vec4(1,0,0,1);
+				gl_FragMetalness = ${outputFragmentType}(1,0,0,1);
 			#endif
 			#ifdef gl_FragDiffuseColor
-				gl_FragDiffuseColor = vec4(0,0,0,1);
+				gl_FragDiffuseColor = ${outputFragmentType}(0,0,0,1);
 			#endif
 		`
 	} );
