@@ -159,6 +159,10 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		}
 
+		if ( glFormat === _gl.RED_INTEGER ) {
+			if ( glType === _gl.UNSIGNED_SHORT ) internalFormat = _gl.R16UI;
+		}
+
 		if ( glFormat === _gl.RGB ) {
 
 			if ( glType === _gl.FLOAT ) internalFormat = _gl.RGB32F;
