@@ -1,8 +1,3 @@
-/**
- * @author mrdoob / http://mrdoob.com/
- * @author Mugen87 / http://github.com/Mugen87
- */
-
 import { Box3 } from '../math/Box3.js';
 import { LineSegments } from '../objects/LineSegments.js';
 import { LineBasicMaterial } from '../materials/LineBasicMaterial.js';
@@ -107,12 +102,6 @@ BoxHelper.prototype.copy = function ( source ) {
 	this.object = source.object;
 
 	return this;
-
-};
-
-BoxHelper.prototype.clone = function () {
-
-	return new this.constructor().copy( this );
 
 };
 

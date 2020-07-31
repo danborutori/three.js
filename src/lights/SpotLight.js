@@ -3,10 +3,6 @@ import { SpotLightShadow } from './SpotLightShadow.js';
 import { Object3D } from '../core/Object3D.js';
 import { Matrix4 } from '../math/Matrix4.js';
 
-/**
- * @author alteredq / http://alteredqualia.com/
- */
-
 function SpotLight( color, intensity, distance, angle, penumbra, decay ) {
 
 	const colorTexture = color && color.isTexture

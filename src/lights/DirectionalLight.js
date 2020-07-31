@@ -3,11 +3,6 @@ import { DirectionalLightShadow } from './DirectionalLightShadow.js';
 import { Object3D } from '../core/Object3D.js';
 import { Matrix4 } from '../math/Matrix4.js';
 
-/**
- * @author mrdoob / http://mrdoob.com/
- * @author alteredq / http://alteredqualia.com/
- */
-
 function DirectionalLight( color, intensity ) {
 	
 	const colorTexture = color && color.isTexture;	

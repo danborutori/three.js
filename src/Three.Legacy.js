@@ -1,7 +1,3 @@
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
 import { Audio } from './audio/Audio.js';
 import { AudioAnalyser } from './audio/AudioAnalyser.js';
 import { PerspectiveCamera } from './cameras/PerspectiveCamera.js';
@@ -59,6 +55,7 @@ import { TextureLoader } from './loaders/TextureLoader.js';
 import { Material } from './materials/Material.js';
 import { LineBasicMaterial } from './materials/LineBasicMaterial.js';
 import { MeshPhongMaterial } from './materials/MeshPhongMaterial.js';
+import { MeshPhysicalMaterial } from './materials/MeshPhysicalMaterial.js';
 import { PointsMaterial } from './materials/PointsMaterial.js';
 import { ShaderMaterial } from './materials/ShaderMaterial.js';
 import { Box2 } from './math/Box2.js';
@@ -1578,6 +1575,25 @@ Object.defineProperties( MeshPhongMaterial.prototype, {
 
 } );
 
+Object.defineProperties( MeshPhysicalMaterial.prototype, {
+
+	transparency: {
+		get: function () {
+
+			console.warn( 'THREE.MeshPhysicalMaterial: .transparency has been renamed to .transmission.' );
+			return this.transmission;
+
+		},
+		set: function ( value ) {
+
+			console.warn( 'THREE.MeshPhysicalMaterial: .transparency has been renamed to .transmission.' );
+			this.transmission = value;
+
+		}
+	}
+
+} );
+
 Object.defineProperties( ShaderMaterial.prototype, {
 
 	derivatives: {
@@ -1829,7 +1845,20 @@ Object.defineProperties( WebGLRenderer.prototype, {
 			this.outputEncoding = ( value === true ) ? sRGBEncoding : LinearEncoding;
 
 		}
-	}
+	},
+	toneMappingWhitePoint: {
+		get: function () {
+
+			console.warn( 'THREE.WebGLRenderer: .toneMappingWhitePoint has been removed.' );
+			return 1.0;
+
+		},
+		set: function () {
+
+			console.warn( 'THREE.WebGLRenderer: .toneMappingWhitePoint has been removed.' );
+
+		}
+	},
 
 } );
 

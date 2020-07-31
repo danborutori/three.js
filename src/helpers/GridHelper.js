@@ -1,7 +1,3 @@
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
 import { LineSegments } from '../objects/LineSegments.js';
 import { LineBasicMaterial } from '../materials/LineBasicMaterial.js';
 import { Float32BufferAttribute } from '../core/BufferAttribute.js';
@@ -47,27 +43,7 @@ function GridHelper( size, divisions, color1, color2 ) {
 
 }
 
-GridHelper.prototype = Object.assign( Object.create( LineSegments.prototype ), {
-
-	constructor: GridHelper,
-
-	copy: function ( source ) {
-
-		LineSegments.prototype.copy.call( this, source );
-
-		this.geometry.copy( source.geometry );
-		this.material.copy( source.material );
-
-		return this;
-
-	},
-
-	clone: function () {
-
-		return new this.constructor().copy( this );
-
-	}
-
-} );
+GridHelper.prototype = Object.create( LineSegments.prototype );
+GridHelper.prototype.constructor = GridHelper;
 
 export { GridHelper };

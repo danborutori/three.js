@@ -1,7 +1,3 @@
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
 import { NotEqualDepth, GreaterDepth, GreaterEqualDepth, EqualDepth, LessEqualDepth, LessDepth, AlwaysDepth, NeverDepth, CullFaceFront, CullFaceBack, CullFaceNone, DoubleSide, BackSide, CustomBlending, MultiplyBlending, SubtractiveBlending, AdditiveBlending, NoBlending, NormalBlending, AddEquation, SubtractEquation, ReverseSubtractEquation, MinEquation, MaxEquation, ZeroFactor, OneFactor, SrcColorFactor, SrcAlphaFactor, SrcAlphaSaturateFactor, DstColorFactor, DstAlphaFactor, OneMinusSrcColorFactor, OneMinusSrcAlphaFactor, OneMinusDstColorFactor, OneMinusDstAlphaFactor } from '../../constants.js';
 import { Vector4 } from '../../math/Vector4.js';
 
@@ -318,11 +314,6 @@ function WebGLState( gl, extensions, capabilities ) {
 	const depthBuffer = new DepthBuffer();
 	const stencilBuffer = new StencilBuffer();
 
-	const maxVertexAttributes = gl.getParameter( gl.MAX_VERTEX_ATTRIBS );
-	const newAttributes = new Uint8Array( maxVertexAttributes );
-	const enabledAttributes = new Uint8Array( maxVertexAttributes );
-	const attributeDivisors = new Uint8Array( maxVertexAttributes );
-
 	let enabledCapabilities = {};
 
 	let currentProgram = null;
@@ -408,73 +399,6 @@ function WebGLState( gl, extensions, capabilities ) {
 	setBlending( NoBlending );
 
 	//
-
-	function initAttributes() {
-
-		for ( let i = 0, l = newAttributes.length; i < l; i ++ ) {
-
-			newAttributes[ i ] = 0;
-
-		}
-
-	}
-
-	function enableAttribute( attribute ) {
-
-		enableAttributeAndDivisor( attribute, 0 );
-
-	}
-
-	function enableAttributeAndDivisor( attribute, meshPerAttribute ) {
-
-		newAttributes[ attribute ] = 1;
-
-		if ( enabledAttributes[ attribute ] === 0 ) {
-
-			gl.enableVertexAttribArray( attribute );
-			enabledAttributes[ attribute ] = 1;
-
-		}
-
-		if ( attributeDivisors[ attribute ] !== meshPerAttribute ) {
-
-			const extension = isWebGL2 ? gl : extensions.get( 'ANGLE_instanced_arrays' );
-
-			extension[ isWebGL2 ? 'vertexAttribDivisor' : 'vertexAttribDivisorANGLE' ]( attribute, meshPerAttribute );
-			attributeDivisors[ attribute ] = meshPerAttribute;
-
-		}
-
-	}
-
-	function disableUnusedAttributes() {
-
-		for ( let i = 0, l = enabledAttributes.length; i !== l; ++ i ) {
-
-			if ( enabledAttributes[ i ] !== newAttributes[ i ] ) {
-
-				gl.disableVertexAttribArray( i );
-				enabledAttributes[ i ] = 0;
-
-			}
-
-		}
-
-	}
-
-	function vertexAttribPointer( index, size, type, normalized, stride, offset ) {
-
-		if ( isWebGL2 === true && ( type === gl.INT || type === gl.UNSIGNED_INT ) ) {
-
-			gl.vertexAttribIPointer( index, size, type, normalized, stride, offset );
-
-		} else {
-
-			gl.vertexAttribPointer( index, size, type, normalized, stride, offset );
-
-		}
-
-	}
 
 	function enable( id ) {
 
@@ -953,17 +877,6 @@ function WebGLState( gl, extensions, capabilities ) {
 
 	function reset() {
 
-		for ( let i = 0; i < enabledAttributes.length; i ++ ) {
-
-			if ( enabledAttributes[ i ] === 1 ) {
-
-				gl.disableVertexAttribArray( i );
-				enabledAttributes[ i ] = 0;
-
-			}
-
-		}
-
 		enabledCapabilities = {};
 
 		currentTextureSlot = null;
@@ -990,11 +903,6 @@ function WebGLState( gl, extensions, capabilities ) {
 			stencil: stencilBuffer
 		},
 
-		initAttributes: initAttributes,
-		enableAttribute: enableAttribute,
-		enableAttributeAndDivisor: enableAttributeAndDivisor,
-		disableUnusedAttributes: disableUnusedAttributes,
-		vertexAttribPointer: vertexAttribPointer,
 		enable: enable,
 		disable: disable,
 
