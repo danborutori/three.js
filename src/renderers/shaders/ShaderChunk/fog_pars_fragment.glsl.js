@@ -1,19 +1,21 @@
 export default /* glsl */`
 #ifdef USE_FOG
 
-	uniform vec3 fogColor;
+	layout (std140) uniform FogBlock{
+		vec3 fogColor;
+
+		#ifdef FOG_EXP2
+
+			float fogDensity;
+
+		#else
+
+			float fogNear;
+			float fogFar;
+
+		#endif
+	};
 	varying float fogDepth;
-
-	#ifdef FOG_EXP2
-
-		uniform float fogDensity;
-
-	#else
-
-		uniform float fogNear;
-		uniform float fogFar;
-
-	#endif
 
 #endif
 `;

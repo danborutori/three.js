@@ -69,6 +69,8 @@ let cameraBlockUBO = null;
 let cameraBlockArray = null;
 const _vector3 = new Vector3();
 
+const fogBlockUBOs = {};
+
 
 // Flattening for arrays of vectors and matrices
 
@@ -824,8 +826,8 @@ function parseUniform( activeInfo, addr, container ) {
 
 }
 
-function parseUniformBlock( gl, program, container ) {
-	const index = gl.getUniformBlockIndex( program, "CameraBlock");
+function parseUniformBlock( gl, program, blockName, container ) {
+	const index = gl.getUniformBlockIndex( program, blockName);
 	const dataSize = gl.getActiveUniformBlockParameter(program, index, gl.UNIFORM_BLOCK_DATA_SIZE);
 	const indices = gl.getActiveUniformBlockParameter(program, index, gl.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES );
 	if( indices!==null ){
@@ -835,16 +837,46 @@ function parseUniformBlock( gl, program, container ) {
 			const infos = gl.getActiveUniform(program, indices[i]);
 			uniformOffsets[infos.name] = offsets[i];
 		}
-		container.blocks.camera = {
+		container.blocks[blockName] = {
+			index: index,
 			size: dataSize,
 			offsets: uniformOffsets
 		};
-		
+	}
+}
+
+function parseUniformBlocks( gl, program, container ){
+	let bindingLocation = 0;
+	parseUniformBlock( gl, program, "CameraBlock", container );
+	const cameraBlock = container.blocks["CameraBlock"];
+	if( cameraBlock!==undefined ){
 		if( cameraBlockUBO===null ){
 			cameraBlockUBO = gl.createBuffer();
 		}
-		
-		gl.bindBufferBase( gl.UNIFORM_BUFFER, index, cameraBlockUBO );
+		gl.uniformBlockBinding(program, cameraBlock.index, bindingLocation);
+		gl.bindBufferBase( gl.UNIFORM_BUFFER, bindingLocation, cameraBlockUBO );
+		bindingLocation++;
+	}
+	
+	parseUniformBlock( gl, program, "FogBlock", container );
+	const fogBlock = container.blocks["FogBlock"];
+	if( fogBlock!==undefined ){
+		let block = fogBlockUBOs[fogBlock.size];
+		if( block===undefined ){
+			const ubo = gl.createBuffer();
+			const array = new Float32Array( fogBlock.size/4 );
+			block = {
+				ubo: ubo,
+				array: array
+			};
+			fogBlockUBOs[fogBlock.size] = block;
+			gl.bindBuffer( gl.UNIFORM_BUFFER, ubo );
+			gl.bufferData( gl.UNIFORM_BUFFER, fogBlock.size, gl.DYNAMIC_DRAW);
+			gl.bindBuffer( gl.UNIFORM_BUFFER, null );
+		}
+		gl.uniformBlockBinding(program, fogBlock.index, bindingLocation);
+		gl.bindBufferBase( gl.UNIFORM_BUFFER, bindingLocation, block.ubo );
+		bindingLocation++;
 	}
 }
 
@@ -856,7 +888,7 @@ function WebGLUniforms( gl, program ) {
 	this.map = {};
 	this.blocks = {};
 
-	parseUniformBlock( gl, program, this );
+	parseUniformBlocks( gl, program, this );
 
 	const n = gl.getProgramParameter( program, gl.ACTIVE_UNIFORMS );
 
@@ -890,7 +922,7 @@ WebGLUniforms.prototype.setOptional = function ( gl, object, name ) {
 
 WebGLUniforms.prototype.setCameraBlock = function ( gl, camera ) {
 
-	const cameraBlock = this.blocks.camera;
+	const cameraBlock = this.blocks["CameraBlock"];
 	if( cameraBlock!==undefined ){
 		gl.bindBuffer( gl.UNIFORM_BUFFER, cameraBlockUBO );
 		if( cameraBlockArray===null ){
@@ -905,6 +937,30 @@ WebGLUniforms.prototype.setCameraBlock = function ( gl, camera ) {
 		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, cameraBlockArray );
 		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
 	}
+};
+
+WebGLUniforms.prototype.setFogBlock = function ( gl, fog ) {
+	const fogBlock = this.blocks["FogBlock"];
+	if( fogBlock!==undefined ){
+		const offsets = fogBlock.offsets;
+		const block = fogBlockUBOs[fogBlock.size];
+		const array = block.array;
+		
+		fog.color.toArray( array, offsets.fogColor/4 );
+
+		if ( fog.isFog ) {
+			array[ offsets.fogNear/4 ] = fog.near;
+			array[ offsets.fogFar/4 ] = fog.far;
+		} else if ( fog.isFogExp2 ) {
+			array[ offsets.fogDensity/4 ] = fog.density;
+		}
+
+		gl.bindBuffer( gl.UNIFORM_BUFFER, block.ubo );
+		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, array );
+		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
+		return true;
+	}
+	return false;
 };
 
 
@@ -947,6 +1003,10 @@ WebGLUniforms.dispose = function ( gl ) {
 	if( cameraBlockUBO!==null ){
 		gl.deleteBuffer( cameraBlockUBO );
 		cameraBlockUBO = null;
+	}
+	for( let name in fogBlockUBOs ){
+		gl.deleteBuffer( fogBlockUBOs[name].ubo );
+		delete fogBlockUBOs[name];
 	}
 };
 

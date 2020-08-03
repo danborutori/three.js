@@ -132,6 +132,7 @@ function WebGLRenderer( parameters ) {
 
 	let _currentCamera = null;
 	let _currentArrayCamera = null;
+	let _currentFog = null;
 
 	const _currentViewport = new Vector4();
 	const _currentScissor = new Vector4();
@@ -1098,6 +1099,7 @@ function WebGLRenderer( parameters ) {
 		bindingStates.resetDefaultState();
 		_currentMaterialId = - 1;
 		_currentCamera = null;
+		_currentFog = null;
 
 		// update scene graph
 
@@ -1894,6 +1896,11 @@ function WebGLRenderer( parameters ) {
 			p_uniforms.setValue( _gl, 'receiveShadow', object.receiveShadow );
 
 		}
+		
+		if( _currentFog !== fog ){
+			if( p_uniforms.setFogBlock( _gl, fog ) )
+				_currentFog = fog;
+		}
 
 		if ( refreshMaterial ) {
 
@@ -1915,12 +1922,6 @@ function WebGLRenderer( parameters ) {
 			}
 
 			// refresh uniforms common to several materials
-
-			if ( fog && material.fog ) {
-
-				materials.refreshFogUniforms( m_uniforms, fog );
-
-			}
 
 			materials.refreshMaterialUniforms( m_uniforms, material, environment, _pixelRatio, _height );
 
