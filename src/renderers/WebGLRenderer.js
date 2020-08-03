@@ -264,7 +264,7 @@ function WebGLRenderer( parameters ) {
 	let background, morphtargets, bufferRenderer, indexedBufferRenderer;
 
 	let utils, bindingStates;
-
+	
 	function initGLContext() {
 
 		extensions = new WebGLExtensions( _gl );
@@ -309,7 +309,7 @@ function WebGLRenderer( parameters ) {
 
 		bufferRenderer = new WebGLBufferRenderer( _gl, extensions, info, capabilities );
 		indexedBufferRenderer = new WebGLIndexedBufferRenderer( _gl, extensions, info, capabilities );
-
+		
 		info.programs = programCache.programs;
 
 		_this.capabilities = capabilities;
@@ -597,7 +597,7 @@ function WebGLRenderer( parameters ) {
 		properties.dispose();
 		objects.dispose();
 		bindingStates.dispose();
-
+	
 		xr.dispose();
 
 		animation.stop();
@@ -1803,11 +1803,12 @@ function WebGLRenderer( parameters ) {
 			refreshMaterial = true;
 
 		}
-
+		
 		if ( refreshProgram || _currentCamera !== camera ) {
 
-			p_uniforms.setValue( _gl, 'projectionMatrix', camera.projectionMatrix );
-
+			// setup camera uniform block
+			p_uniforms.setCameraBlock( _gl, camera );
+			
 			if ( capabilities.logarithmicDepthBuffer ) {
 
 				p_uniforms.setValue( _gl, 'logDepthBufFC',
@@ -1830,48 +1831,6 @@ function WebGLRenderer( parameters ) {
 
 			// load material specific uniforms
 			// (shader material also gets them for the sake of genericity)
-
-			if ( material.isShaderMaterial ||
-				material.isMeshPhongMaterial ||
-				material.isMeshToonMaterial ||
-				material.isMeshStandardMaterial ||
-				material.envMap ) {
-
-				const uCamPos = p_uniforms.map.cameraPosition;
-
-				if ( uCamPos !== undefined ) {
-
-					uCamPos.setValue( _gl,
-						_vector3.setFromMatrixPosition( camera.matrixWorld ) );
-
-				}
-
-			}
-
-			if ( material.isMeshPhongMaterial ||
-				material.isMeshToonMaterial ||
-				material.isMeshLambertMaterial ||
-				material.isMeshBasicMaterial ||
-				material.isMeshStandardMaterial ||
-				material.isShaderMaterial ) {
-
-				p_uniforms.setValue( _gl, 'isOrthographic', camera.isOrthographicCamera === true );
-
-			}
-
-			if ( material.isMeshPhongMaterial ||
-				material.isMeshToonMaterial ||
-				material.isMeshLambertMaterial ||
-				material.isMeshBasicMaterial ||
-				material.isMeshStandardMaterial ||
-				material.isShaderMaterial ||
-				material.isShadowMaterial ||
-				material.skinning ) {
-
-				p_uniforms.setValue( _gl, 'viewMatrix', camera.matrixWorldInverse );
-
-			}
-
 		}
 
 		// skinning uniforms must be set even if material didn't change

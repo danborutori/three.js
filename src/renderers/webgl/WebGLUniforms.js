@@ -45,6 +45,7 @@ import { CubeTexture } from '../../textures/CubeTexture.js';
 import { Texture } from '../../textures/Texture.js';
 import { DataTexture2DArray } from '../../textures/DataTexture2DArray.js';
 import { DataTexture3D } from '../../textures/DataTexture3D.js';
+import { Vector3 } from '../../math/Vector3.js';
 
 const emptyTexture = new Texture();
 const emptyTexture2dArray = new DataTexture2DArray();
@@ -63,6 +64,11 @@ const arrayCacheI32 = [];
 const mat4array = new Float32Array( 16 );
 const mat3array = new Float32Array( 9 );
 const mat2array = new Float32Array( 4 );
+
+let cameraBlockUBO = null;
+let cameraBlockArray = null;
+const _vector3 = new Vector3();
+
 
 // Flattening for arrays of vectors and matrices
 
@@ -818,12 +824,39 @@ function parseUniform( activeInfo, addr, container ) {
 
 }
 
+function parseUniformBlock( gl, program, container ) {
+	const index = gl.getUniformBlockIndex( program, "CameraBlock");
+	const dataSize = gl.getActiveUniformBlockParameter(program, index, gl.UNIFORM_BLOCK_DATA_SIZE);
+	const indices = gl.getActiveUniformBlockParameter(program, index, gl.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES );
+	if( indices!==null ){
+		const offsets = gl.getActiveUniforms( program, indices, gl.UNIFORM_OFFSET);
+		const uniformOffsets = {};
+		for ( let i = 0; i < indices.length; ++ i ) {
+			const infos = gl.getActiveUniform(program, indices[i]);
+			uniformOffsets[infos.name] = offsets[i];
+		}
+		container.blocks.camera = {
+			size: dataSize,
+			offsets: uniformOffsets
+		};
+		
+		if( cameraBlockUBO===null ){
+			cameraBlockUBO = gl.createBuffer();
+		}
+		
+		gl.bindBufferBase( gl.UNIFORM_BUFFER, index, cameraBlockUBO );
+	}
+}
+
 // Root Container
 
 function WebGLUniforms( gl, program ) {
 
 	this.seq = [];
 	this.map = {};
+	this.blocks = {};
+
+	parseUniformBlock( gl, program, this );
 
 	const n = gl.getProgramParameter( program, gl.ACTIVE_UNIFORMS );
 
@@ -832,7 +865,8 @@ function WebGLUniforms( gl, program ) {
 		const info = gl.getActiveUniform( program, i ),
 			addr = gl.getUniformLocation( program, info.name );
 
-		parseUniform( info, addr, this );
+		if( addr !== null )
+			parseUniform( info, addr, this );
 
 	}
 
@@ -852,6 +886,25 @@ WebGLUniforms.prototype.setOptional = function ( gl, object, name ) {
 
 	if ( v !== undefined ) this.setValue( gl, name, v );
 
+};
+
+WebGLUniforms.prototype.setCameraBlock = function ( gl, camera ) {
+
+	const cameraBlock = this.blocks.camera;
+	if( cameraBlock!==undefined ){
+		gl.bindBuffer( gl.UNIFORM_BUFFER, cameraBlockUBO );
+		if( cameraBlockArray===null ){
+			cameraBlockArray = new Float32Array(cameraBlock.size/4);
+			gl.bufferData( gl.UNIFORM_BUFFER, cameraBlock.size, gl.DYNAMIC_DRAW);
+		}
+		camera.projectionMatrix.toArray( cameraBlockArray, cameraBlock.offsets.projectionMatrix/4 );
+		camera.matrixWorldInverse.toArray( cameraBlockArray,cameraBlock.offsets.viewMatrix/4 );
+		_vector3.setFromMatrixPosition( camera.matrixWorld ).toArray( cameraBlockArray, cameraBlock.offsets.cameraPosition/4 );
+		cameraBlockArray[cameraBlock.offsets.isOrthographic] = camera.isOrthographicCamera?1:0;
+		gl.bindBuffer( gl.UNIFORM_BUFFER, cameraBlockUBO );
+		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, cameraBlockArray );
+		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
+	}
 };
 
 
