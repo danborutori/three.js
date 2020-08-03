@@ -599,6 +599,7 @@ function WebGLRenderer( parameters ) {
 		bindingStates.dispose();
 	
 		xr.dispose();
+		WebGLUniforms.dispose(_gl);
 
 		animation.stop();
 
