@@ -818,12 +818,19 @@ function parseUniform( activeInfo, addr, container ) {
 
 }
 
+function parseUniformBlock( gl, program, container ) {
+	const index = gl.getUniformBlockIndex( program, "CameraBlock");
+	gl.uniformBlockBinding(program, index, 0);
+}
+
 // Root Container
 
 function WebGLUniforms( gl, program ) {
 
 	this.seq = [];
 	this.map = {};
+
+	parseUniformBlock( gl, program, this );
 
 	const n = gl.getProgramParameter( program, gl.ACTIVE_UNIFORMS );
 
@@ -832,7 +839,8 @@ function WebGLUniforms( gl, program ) {
 		const info = gl.getActiveUniform( program, i ),
 			addr = gl.getUniformLocation( program, info.name );
 
-		parseUniform( info, addr, this );
+		if( addr >= 0 )
+			parseUniform( info, addr, this );
 
 	}
 
@@ -852,6 +860,11 @@ WebGLUniforms.prototype.setOptional = function ( gl, object, name ) {
 
 	if ( v !== undefined ) this.setValue( gl, name, v );
 
+};
+
+WebGLUniforms.prototype.setCameraBlock = function ( gl, buffer ) {
+
+	gl.bindBufferBase( gl.UNIFORM_BUFFER, 0, buffer );
 };
 
 
