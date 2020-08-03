@@ -828,11 +828,13 @@ function parseUniform( activeInfo, addr, container ) {
 
 function parseUniformBlock( gl, program, blockName, container ) {
 	const index = gl.getUniformBlockIndex( program, blockName);
+	if( index!=gl.INVALID_INDEX ){
 	const dataSize = gl.getActiveUniformBlockParameter(program, index, gl.UNIFORM_BLOCK_DATA_SIZE);
 	const indices = gl.getActiveUniformBlockParameter(program, index, gl.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES );
-	if( indices!==null ){
 		const offsets = gl.getActiveUniforms( program, indices, gl.UNIFORM_OFFSET);
+		const strides = gl.getActiveUniforms( program, indices, gl.UNIFORM_ARRAY_STRIDE);		
 		const uniformOffsets = {};
+		const uniformStrides = {};
 		for ( let i = 0; i < indices.length; ++ i ) {
 			const infos = gl.getActiveUniform(program, indices[i]);
 			uniformOffsets[infos.name] = offsets[i];
