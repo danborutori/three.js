@@ -514,12 +514,11 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 			'uniform mat4 modelMatrix;',
 			'uniform mat4 modelViewMatrix;',
-			`layout (std140) uniform CameraBlock{	// offset   size
-				mat4 projectionMatrix;				//	0		16
-				mat4 viewMatrix;					//  16		16
-				vec3 cameraPosition;		//	32		4
-				bool isOrthographic;		//  36		1
-			};
+			`
+			uniform mat4 viewMatrix;					//  16		16
+			uniform vec3 cameraPosition;		//	32		4
+			uniform mat4 projectionMatrix;				//	0		16
+			uniform bool isOrthographic;		//  36		1
 			`,
 			'uniform mat3 normalMatrix;',
 
@@ -646,12 +645,10 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 			( ( parameters.extensionShaderTextureLOD || parameters.envMap ) && parameters.rendererExtensionShaderTextureLod ) ? '#define TEXTURE_LOD_EXT' : '',
 
-			`layout (std140) uniform CameraBlock{	// offset   size
-				mat4 projectionMatrix;				//	0		16
-				mat4 viewMatrix;					//  16		16
-				vec3 cameraPosition;		//	32		4
-				bool isOrthographic;		//  36		1
-			};
+			`
+			uniform mat4 viewMatrix;					//  16		16
+			uniform vec3 cameraPosition;		//	32		4
+			uniform bool isOrthographic;		//  36		1
 			`,
 
 			( parameters.toneMapping !== NoToneMapping ) ? '#define TONE_MAPPING' : '',

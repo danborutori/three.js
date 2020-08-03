@@ -266,10 +266,7 @@ function WebGLRenderer( parameters ) {
 	let utils, bindingStates;
 	
 	let cameraBlockUBO = _gl.createBuffer();
-	const cameraBlockArray = new Float32Array(37);
-	_gl.bindBuffer( _gl.UNIFORM_BUFFER, cameraBlockUBO );
-	_gl.bufferData(_gl.UNIFORM_BUFFER, 37*4, _gl.DYNAMIC_DRAW);
-	_gl.bindBuffer( _gl.UNIFORM_BUFFER, null );
+	let cameraBlockArray;
 
 	function initGLContext() {
 
@@ -1814,16 +1811,21 @@ function WebGLRenderer( parameters ) {
 		if ( refreshProgram || _currentCamera !== camera ) {
 
 			// setup camera uniform block
-			camera.projectionMatrix.toArray( cameraBlockArray, 0 );
-			camera.matrixWorldInverse.toArray( cameraBlockArray, 16 );
-			_vector3.setFromMatrixPosition( camera.matrixWorld ).toArray( cameraBlockArray, 32 );
-			cameraBlockArray[36] = camera.isOrthographic?1:0;
+			/*_gl.bindBuffer( _gl.UNIFORM_BUFFER, cameraBlockUBO );
+			if( !cameraBlockArray ){
+				cameraBlockArray = new Float32Array(p_uniforms.blocks.camera.size/4);
+				_gl.bufferData( _gl.UNIFORM_BUFFER, p_uniforms.blocks.camera.size, _gl.DYNAMIC_DRAW);
+			}
+			//camera.projectionMatrix.toArray( cameraBlockArray, p_uniforms.blocks.camera.offsets.projectionMatrix/4 );
+			camera.matrixWorldInverse.toArray( cameraBlockArray, p_uniforms.blocks.camera.offsets.viewMatrix/4 );
+			_vector3.setFromMatrixPosition( camera.matrixWorld ).toArray( cameraBlockArray, p_uniforms.blocks.camera.offsets.cameraPosition/4 );
+			//cameraBlockArray[p_uniforms.blocks.camera.offsets.isOrthographic] = camera.isOrthographicCamera?1:0;
 			_gl.bindBuffer( _gl.UNIFORM_BUFFER, cameraBlockUBO );
 			_gl.bufferSubData( _gl.UNIFORM_BUFFER, 0, cameraBlockArray );
 			_gl.bindBuffer( _gl.UNIFORM_BUFFER, null );
-			p_uniforms.setCameraBlock( _gl, cameraBlockUBO );
+			p_uniforms.setCameraBlock( _gl, cameraBlockUBO );*/
 
-			//p_uniforms.setValue( _gl, 'projectionMatrix', camera.projectionMatrix );
+			p_uniforms.setValue( _gl, 'projectionMatrix', camera.projectionMatrix );
 
 			if ( capabilities.logarithmicDepthBuffer ) {
 
@@ -1848,7 +1850,7 @@ function WebGLRenderer( parameters ) {
 			// load material specific uniforms
 			// (shader material also gets them for the sake of genericity)
 
-			/*if ( material.isShaderMaterial ||
+			if ( material.isShaderMaterial ||
 				material.isMeshPhongMaterial ||
 				material.isMeshToonMaterial ||
 				material.isMeshStandardMaterial ||
@@ -1887,7 +1889,7 @@ function WebGLRenderer( parameters ) {
 
 				p_uniforms.setValue( _gl, 'viewMatrix', camera.matrixWorldInverse );
 
-			}*/
+			}
 
 		}
 

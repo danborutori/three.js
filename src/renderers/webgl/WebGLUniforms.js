@@ -820,7 +820,21 @@ function parseUniform( activeInfo, addr, container ) {
 
 function parseUniformBlock( gl, program, container ) {
 	const index = gl.getUniformBlockIndex( program, "CameraBlock");
-	gl.uniformBlockBinding(program, index, 0);
+	const dataSize = gl.getActiveUniformBlockParameter(program, index, gl.UNIFORM_BLOCK_DATA_SIZE);
+	const indices = gl.getActiveUniformBlockParameter(program, index, gl.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES );
+	const offsets = gl.getActiveUniforms( program, indices, gl.UNIFORM_OFFSET);
+	const uniformOffsets = {};
+	for ( let i = 0; i < indices.length; ++ i ) {
+		const infos = gl.getActiveUniform(program, indices[i]);
+		uniformOffsets[infos.name] = offsets[i];
+	}
+	container.blocks = {
+		camera: {
+			index: index,
+			size: dataSize,
+			offsets: uniformOffsets
+		}
+	}
 }
 
 // Root Container
@@ -830,7 +844,7 @@ function WebGLUniforms( gl, program ) {
 	this.seq = [];
 	this.map = {};
 
-	parseUniformBlock( gl, program, this );
+	//parseUniformBlock( gl, program, this );
 
 	const n = gl.getProgramParameter( program, gl.ACTIVE_UNIFORMS );
 
@@ -864,7 +878,7 @@ WebGLUniforms.prototype.setOptional = function ( gl, object, name ) {
 
 WebGLUniforms.prototype.setCameraBlock = function ( gl, buffer ) {
 
-	gl.bindBufferBase( gl.UNIFORM_BUFFER, 0, buffer );
+	gl.bindBufferBase( gl.UNIFORM_BUFFER, this.blocks.camera.index, buffer );
 };
 
 
