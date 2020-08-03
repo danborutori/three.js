@@ -1806,9 +1806,6 @@ function WebGLRenderer( parameters ) {
 		
 		if ( refreshProgram || _currentCamera !== camera ) {
 
-			// setup camera uniform block
-			p_uniforms.setCameraBlock( _gl, camera );
-			
 			if ( capabilities.logarithmicDepthBuffer ) {
 
 				p_uniforms.setValue( _gl, 'logDepthBufFC',
@@ -1817,6 +1814,8 @@ function WebGLRenderer( parameters ) {
 			}
 
 			if ( _currentCamera !== camera ) {
+				// setup camera uniform block
+				p_uniforms.setCameraBlock( _gl, camera );			
 
 				_currentCamera = camera;
 

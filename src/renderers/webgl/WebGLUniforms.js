@@ -943,4 +943,11 @@ WebGLUniforms.seqWithValue = function ( seq, values ) {
 
 };
 
+WebGLUniforms.dispose = function ( gl ) {
+	if( cameraBlockUBO!==null ){
+		gl.deleteBuffer( cameraBlockUBO );
+		cameraBlockUBO = null;
+	}
+};
+
 export { WebGLUniforms };
