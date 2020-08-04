@@ -65,12 +65,10 @@ const mat4array = new Float32Array( 16 );
 const mat3array = new Float32Array( 9 );
 const mat2array = new Float32Array( 4 );
 
-let cameraBlockUBO = null;
-let cameraBlockArray = null;
+const uboBlocks = {
+	nextBindingIndex: 0
+};
 const _vector3 = new Vector3();
-
-const fogBlockUBOs = {};
-const lightBlockUBOs = {};
 
 
 // Flattening for arrays of vectors and matrices
@@ -841,65 +839,40 @@ function parseUniformBlock( gl, program, blockName, container ) {
 			uniformOffsets[infos.name] = offsets[i];
 			uniformStrides[infos.name] = strides[i];
 		}
+		const uboBlockName = `${blockName}${dataSize}`;
+		let uboBlock = uboBlocks[uboBlockName];
+		if( uboBlock===undefined ){
+			const ubo = gl.createBuffer(dataSize);
+			gl.bindBuffer( gl.UNIFORM_BUFFER, ubo );
+			gl.bufferData( gl.UNIFORM_BUFFER, dataSize, gl.DYNAMIC_DRAW);
+			gl.bindBuffer( gl.UNIFORM_BUFFER, null );
+			const buffer = new ArrayBuffer(dataSize);
+			const f32View = new Float32Array( buffer );
+			const u8View = new Uint8Array( buffer );
+			uboBlock = {
+				index: uboBlocks.nextBindingIndex++,
+				ubo: ubo,
+				f32View: f32View,
+				u8View: u8View
+			};
+			uboBlocks[uboBlockName] = uboBlock;
+			gl.bindBufferBase( gl.UNIFORM_BUFFER, uboBlock.index, ubo );
+		}
 		container.blocks[blockName] = {
 			index: index,
 			size: dataSize,
 			offsets: uniformOffsets,
-			strides: uniformStrides
+			strides: uniformStrides,
+			uboBlock: uboBlock
 		};
+		gl.uniformBlockBinding(program, index, uboBlocks[uboBlockName].index);
 	}
 }
 
 function parseUniformBlocks( gl, program, container ){
 	parseUniformBlock( gl, program, "CameraBlock", container );
-	const cameraBlock = container.blocks["CameraBlock"];
-	if( cameraBlock!==undefined ){
-		if( cameraBlockUBO===null ){
-			cameraBlockUBO = gl.createBuffer();
-		}
-		gl.uniformBlockBinding(program, cameraBlock.index, 0);
-		gl.bindBufferBase( gl.UNIFORM_BUFFER, 0, cameraBlockUBO );
-	}
-	
 	parseUniformBlock( gl, program, "FogBlock", container );
-	const fogBlock = container.blocks["FogBlock"];
-	if( fogBlock!==undefined ){
-		let block = fogBlockUBOs[fogBlock.size];
-		if( block===undefined ){
-			const ubo = gl.createBuffer();
-			const array = new Float32Array( fogBlock.size/4 );
-			block = {
-				ubo: ubo,
-				array: array
-			};
-			fogBlockUBOs[fogBlock.size] = block;
-			gl.bindBuffer( gl.UNIFORM_BUFFER, ubo );
-			gl.bufferData( gl.UNIFORM_BUFFER, fogBlock.size, gl.DYNAMIC_DRAW);
-			gl.bindBuffer( gl.UNIFORM_BUFFER, null );
-		}
-		gl.uniformBlockBinding(program, fogBlock.index, 1);
-		gl.bindBufferBase( gl.UNIFORM_BUFFER, 1, block.ubo );
-	}
-	
 	parseUniformBlock( gl, program, "LightBlock", container );
-	const lightBlock = container.blocks["LightBlock"];
-	if( lightBlock ){
-		let block = lightBlockUBOs[lightBlock.size];
-		if( block===undefined ){
-			const ubo = gl.createBuffer();
-			const array = new Float32Array( lightBlock.size/4 );
-			block = {
-				ubo: ubo,
-				array: array
-			};
-			lightBlockUBOs[lightBlock.size] = block;
-			gl.bindBuffer( gl.UNIFORM_BUFFER, ubo );
-			gl.bufferData( gl.UNIFORM_BUFFER, lightBlock.size, gl.DYNAMIC_DRAW);
-			gl.bindBuffer( gl.UNIFORM_BUFFER, null );
-		}
-		gl.uniformBlockBinding(program, lightBlock.index, 2);
-		gl.bindBufferBase( gl.UNIFORM_BUFFER, 2, block.ubo );
-	}
 }
 
 // Root Container
@@ -946,17 +919,16 @@ WebGLUniforms.prototype.setCameraBlock = function ( gl, camera ) {
 
 	const cameraBlock = this.blocks["CameraBlock"];
 	if( cameraBlock!==undefined ){
-		gl.bindBuffer( gl.UNIFORM_BUFFER, cameraBlockUBO );
-		if( cameraBlockArray===null ){
-			cameraBlockArray = new Float32Array(cameraBlock.size/4);
-			gl.bufferData( gl.UNIFORM_BUFFER, cameraBlock.size, gl.DYNAMIC_DRAW);
-		}
-		camera.projectionMatrix.toArray( cameraBlockArray, cameraBlock.offsets.projectionMatrix/4 );
-		camera.matrixWorldInverse.toArray( cameraBlockArray,cameraBlock.offsets.viewMatrix/4 );
-		_vector3.setFromMatrixPosition( camera.matrixWorld ).toArray( cameraBlockArray, cameraBlock.offsets.cameraPosition/4 );
-		cameraBlockArray[cameraBlock.offsets.isOrthographic] = camera.isOrthographicCamera?1:0;
-		gl.bindBuffer( gl.UNIFORM_BUFFER, cameraBlockUBO );
-		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, cameraBlockArray );
+		const offsets = cameraBlock.offsets;
+		const uboBlock = cameraBlock.uboBlock;		
+		const f32View = uboBlock.f32View;
+		const u8View = uboBlock.u8View;
+		camera.projectionMatrix.toArray( f32View, offsets.projectionMatrix/4 );
+		camera.matrixWorldInverse.toArray( f32View,offsets.viewMatrix/4 );
+		_vector3.setFromMatrixPosition( camera.matrixWorld ).toArray( f32View, offsets.cameraPosition/4 );
+		u8View[offsets.isOrthographic] = camera.isOrthographicCamera?1:0;
+		gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
+		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
 		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
 	}
 };
@@ -965,20 +937,20 @@ WebGLUniforms.prototype.setFogBlock = function ( gl, fog ) {
 	const fogBlock = this.blocks["FogBlock"];
 	if( fogBlock!==undefined ){
 		const offsets = fogBlock.offsets;
-		const block = fogBlockUBOs[fogBlock.size];
-		const array = block.array;
+		const uboBlock = fogBlock.uboBlock;
+		const f32View = uboBlock.f32View;
 		
-		fog.color.toArray( array, offsets.fogColor/4 );
+		fog.color.toArray( f32View, offsets.fogColor/4 );
 
 		if ( fog.isFog ) {
-			array[ offsets.fogNear/4 ] = fog.near;
-			array[ offsets.fogFar/4 ] = fog.far;
+			f32View[ offsets.fogNear/4 ] = fog.near;
+			f32View[ offsets.fogFar/4 ] = fog.far;
 		} else if ( fog.isFogExp2 ) {
-			array[ offsets.fogDensity/4 ] = fog.density;
+			f32View[ offsets.fogDensity/4 ] = fog.density;
 		}
 
-		gl.bindBuffer( gl.UNIFORM_BUFFER, block.ubo );
-		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, array );
+		gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
+		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
 		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
 		return true;
 	}
@@ -990,17 +962,17 @@ WebGLUniforms.prototype.setLights = function( gl, lights ){
 	if( lightBlock!==undefined ){
 		const offsets = lightBlock.offsets;
 		const strides = lightBlock.strides;
-		const block = lightBlockUBOs[lightBlock.size];
-		const array = block.array;
+		const uboBlock = lightBlock.uboBlock;
+		const f32View = uboBlock.f32View;
 		
-		array.set(lights.state.ambient, offsets.ambientLightColor/4);
+		f32View.set(lights.state.ambient, offsets.ambientLightColor/4);
 		for( let i=0; i<lights.state.probe.length; i++ ){
 			const probe = lights.state.probe[i];
-			probe.toArray( array, (offsets.lightProbe+i*strides.lightProbe)/4 );
+			probe.toArray( f32View, (offsets.lightProbe+i*strides.lightProbe)/4 );
 		}
 
-		gl.bindBuffer( gl.UNIFORM_BUFFER, block.ubo );
-		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, array );
+		gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
+		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
 		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
 		return true;
 	}
@@ -1044,18 +1016,13 @@ WebGLUniforms.seqWithValue = function ( seq, values ) {
 };
 
 WebGLUniforms.dispose = function ( gl ) {
-	if( cameraBlockUBO!==null ){
-		gl.deleteBuffer( cameraBlockUBO );
-		cameraBlockUBO = null;
+	for( let name in uboBlocks ){
+		if( uboBlocks[name].ubo!==undefined ){
+			gl.deleteBuffer( uboBlocks[name].ubo );
+			delete uboBlocks[name];
+		}
 	}
-	for( let name in fogBlockUBOs ){
-		gl.deleteBuffer( fogBlockUBOs[name].ubo );
-		delete fogBlockUBOs[name];
-	}
-	for( let name in lightBlockUBOs ){
-		gl.deleteBuffer( lightBlockUBOs[name].ubo );
-		delete lightBlockUBOs[name];
-	}
+	uboBlocks.nextBindingIndex = 0;
 };
 
 export { WebGLUniforms };
