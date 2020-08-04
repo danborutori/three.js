@@ -30,7 +30,7 @@ function UniformsCache() {
 					uniforms = {
 						direction: new Vector3(),
 						color: new Color(),
-						map: false
+						map: -1
 					};
 					break;
 
@@ -39,7 +39,7 @@ function UniformsCache() {
 						position: new Vector3(),
 						direction: new Vector3(),
 						color: new Color(),
-						map: false,
+						map: -1,
 						distance: 0,
 						coneCos: 0,
 						penumbraCos: 0,

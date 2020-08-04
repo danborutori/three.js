@@ -3,7 +3,6 @@ export default /* glsl */`
 
 	#if NUM_DIR_LIGHT_SHADOWS > 0
 
-		uniform mat4 directionalShadowMatrix[ NUM_DIR_LIGHT_SHADOWS ];
 		varying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHT_SHADOWS ];
 
 		struct DirectionalLightShadow {
@@ -13,13 +12,10 @@ export default /* glsl */`
 			vec2 shadowMapSize;
 		};
 
-		uniform DirectionalLightShadow directionalLightShadows[ NUM_DIR_LIGHT_SHADOWS ];
-
 	#endif
 
 	#if NUM_SPOT_LIGHT_SHADOWS > 0
 
-		uniform mat4 spotShadowMatrix[ NUM_SPOT_LIGHT_SHADOWS ];
 		varying vec4 vSpotShadowCoord[ NUM_SPOT_LIGHT_SHADOWS ];
 
 		struct SpotLightShadow {
@@ -28,8 +24,6 @@ export default /* glsl */`
 			float shadowRadius;
 			vec2 shadowMapSize;
 		};
-
-		uniform SpotLightShadow spotLightShadows[ NUM_SPOT_LIGHT_SHADOWS ];
 
 	#endif
 
@@ -58,6 +52,17 @@ export default /* glsl */`
 
 	#endif
 	*/
-
+	
+	layout (std140) uniform ShadowMapBlock{
+		#if NUM_DIR_LIGHT_SHADOWS > 0
+		mat4 directionalShadowMatrix[ NUM_DIR_LIGHT_SHADOWS ];
+		DirectionalLightShadow directionalLightShadows[ NUM_DIR_LIGHT_SHADOWS ];		
+		#endif
+		#if NUM_SPOT_LIGHT_SHADOWS > 0
+		mat4 spotShadowMatrix[ NUM_SPOT_LIGHT_SHADOWS ];
+		SpotLightShadow spotLightShadows[ NUM_SPOT_LIGHT_SHADOWS ];
+		#endif
+	};
+	
 #endif
 `;

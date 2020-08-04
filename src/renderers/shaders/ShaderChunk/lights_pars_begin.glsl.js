@@ -56,7 +56,6 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 
 #if NUM_DIRECTIONAL_MAP > 0
 	uniform sampler2D directionalMap[ NUM_DIRECTIONAL_MAP ];
-	uniform mat4 directionalMapMatrix[ NUM_DIRECTIONAL_MAP ];
 	
 	vec4 sampleDirectionalMap( int index, vec2 uv ){
 		vec4 r = vec4( 1, 1, 1, 1 );
@@ -77,8 +76,6 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		#endif
 	};
 
-	uniform DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
-
 	void getDirectionalDirectLightIrradiance( const in DirectionalLight directionalLight, const in GeometricContext geometry, out IncidentLight directLight ) {
 
 		directLight.color = directionalLight.color;
@@ -98,8 +95,6 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		float distance;
 		float decay;
 	};
-
-	uniform PointLight pointLights[ NUM_POINT_LIGHTS ];
 
 	// directLight is an out parameter as having it as a return value caused compiler errors on some devices
 	void getPointDirectLightIrradiance( const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight directLight ) {
@@ -133,11 +128,9 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		float penumbraCos;
 	};
 
-	uniform SpotLight spotLights[ NUM_SPOT_LIGHTS ];
 	
 #if NUM_SPOT_MAP > 0
 	uniform sampler2D spotMap[ NUM_SPOT_MAP ];
-	uniform mat4 spotMapMatrix[ NUM_SPOT_MAP ];
 	
 	vec4 sampleSpotMap( int index, vec2 uv ){
 		vec4 r = vec4( 1, 1, 1, 1 );
@@ -230,6 +223,26 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 layout (std140) uniform LightBlock {
 	vec3 ambientLightColor;
 	vec3 lightProbe[ 9 ];
+#if NUM_DIR_LIGHTS > 0
+
+#if NUM_DIRECTIONAL_MAP > 0
+	uniform mat4 directionalMapMatrix[ NUM_DIRECTIONAL_MAP ];
+#endif
+	uniform DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
+#endif
+
+#if NUM_POINT_LIGHTS > 0
+	PointLight pointLights[ NUM_POINT_LIGHTS ];
+#endif
+
+#if NUM_SPOT_LIGHTS > 0
+	SpotLight spotLights[ NUM_SPOT_LIGHTS ];
+	
+#if NUM_SPOT_MAP > 0
+	mat4 spotMapMatrix[ NUM_SPOT_MAP ];
+#endif
+#endif
+
 };
 
 `;
