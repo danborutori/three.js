@@ -54,16 +54,6 @@ function WebGLRenderStates( staticLightConfig ) {
 
 	let renderStates = new WeakMap();
 
-	function onSceneDispose( event ) {
-
-		const scene = event.target;
-
-		scene.removeEventListener( 'dispose', onSceneDispose );
-
-		renderStates.delete( scene );
-
-	}
-
 	function get( scene, camera ) {
 
 		let renderState;
@@ -73,8 +63,6 @@ function WebGLRenderStates( staticLightConfig ) {
 			renderState = new WebGLRenderState( staticLightConfig );
 			renderStates.set( scene, new WeakMap() );
 			renderStates.get( scene ).set( camera, renderState );
-
-			scene.addEventListener( 'dispose', onSceneDispose );
 
 		} else {
 
