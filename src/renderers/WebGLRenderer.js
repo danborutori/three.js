@@ -133,6 +133,7 @@ function WebGLRenderer( parameters ) {
 	let _currentCamera = null;
 	let _currentArrayCamera = null;
 	let _currentFog = null;
+	let _currentLights = null;
 
 	const _currentViewport = new Vector4();
 	const _currentScissor = new Vector4();
@@ -1100,6 +1101,7 @@ function WebGLRenderer( parameters ) {
 		_currentMaterialId = - 1;
 		_currentCamera = null;
 		_currentFog = null;
+		_currentLights = null;
 
 		// update scene graph
 
@@ -1530,8 +1532,8 @@ function WebGLRenderer( parameters ) {
 
 			// wire up the material to this renderer's lighting state
 
-			uniforms.ambientLightColor.value = lights.state.ambient;
-			uniforms.lightProbe.value = lights.state.probe;
+			//uniforms.ambientLightColor.value = lights.state.ambient;
+			//uniforms.lightProbe.value = lights.state.probe;
 			uniforms.directionalLights.value = lights.state.directional;
 			uniforms.directionalLightShadows.value = lights.state.directionalShadow;
 			uniforms.spotLights.value = lights.state.spot;
@@ -1681,8 +1683,8 @@ function WebGLRenderer( parameters ) {
 
 				// wire up the material to this renderer's lighting state
 
-				uniforms.ambientLightColor.value = lights.state.ambient;
-				uniforms.lightProbe.value = lights.state.probe;
+				//uniforms.ambientLightColor.value = lights.state.ambient;
+				//uniforms.lightProbe.value = lights.state.probe;
 				uniforms.directionalLights.value = lights.state.directional;
 				uniforms.directionalLightShadows.value = lights.state.directionalShadow;
 				uniforms.spotLights.value = lights.state.spot;
@@ -1726,7 +1728,7 @@ function WebGLRenderer( parameters ) {
 
 		const materialProperties = properties.get( material );
 		const lights = currentRenderState.state.lights;
-
+		
 		if ( _clippingEnabled === true ) {
 
 			if ( _localClippingEnabled === true || camera !== _currentCamera ) {
@@ -1900,6 +1902,12 @@ function WebGLRenderer( parameters ) {
 		if( _currentFog !== fog ){
 			if( p_uniforms.setFogBlock( _gl, fog ) )
 				_currentFog = fog;
+		}
+		
+		if( _currentLights !== lights ){
+			if( p_uniforms.setLights( _gl, lights ) ){
+				_currentLights = lights;
+			}
 		}
 
 		if ( refreshMaterial ) {

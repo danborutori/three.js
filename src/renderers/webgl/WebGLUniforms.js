@@ -70,6 +70,7 @@ let cameraBlockArray = null;
 const _vector3 = new Vector3();
 
 const fogBlockUBOs = {};
+const lightBlockUBOs = {};
 
 
 // Flattening for arrays of vectors and matrices
@@ -829,8 +830,8 @@ function parseUniform( activeInfo, addr, container ) {
 function parseUniformBlock( gl, program, blockName, container ) {
 	const index = gl.getUniformBlockIndex( program, blockName);
 	if( index!=gl.INVALID_INDEX ){
-	const dataSize = gl.getActiveUniformBlockParameter(program, index, gl.UNIFORM_BLOCK_DATA_SIZE);
-	const indices = gl.getActiveUniformBlockParameter(program, index, gl.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES );
+		const dataSize = gl.getActiveUniformBlockParameter(program, index, gl.UNIFORM_BLOCK_DATA_SIZE);
+		const indices = gl.getActiveUniformBlockParameter(program, index, gl.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES );
 		const offsets = gl.getActiveUniforms( program, indices, gl.UNIFORM_OFFSET);
 		const strides = gl.getActiveUniforms( program, indices, gl.UNIFORM_ARRAY_STRIDE);		
 		const uniformOffsets = {};
@@ -838,26 +839,26 @@ function parseUniformBlock( gl, program, blockName, container ) {
 		for ( let i = 0; i < indices.length; ++ i ) {
 			const infos = gl.getActiveUniform(program, indices[i]);
 			uniformOffsets[infos.name] = offsets[i];
+			uniformStrides[infos.name] = strides[i];
 		}
 		container.blocks[blockName] = {
 			index: index,
 			size: dataSize,
-			offsets: uniformOffsets
+			offsets: uniformOffsets,
+			strides: uniformStrides
 		};
 	}
 }
 
 function parseUniformBlocks( gl, program, container ){
-	let bindingLocation = 0;
 	parseUniformBlock( gl, program, "CameraBlock", container );
 	const cameraBlock = container.blocks["CameraBlock"];
 	if( cameraBlock!==undefined ){
 		if( cameraBlockUBO===null ){
 			cameraBlockUBO = gl.createBuffer();
 		}
-		gl.uniformBlockBinding(program, cameraBlock.index, bindingLocation);
-		gl.bindBufferBase( gl.UNIFORM_BUFFER, bindingLocation, cameraBlockUBO );
-		bindingLocation++;
+		gl.uniformBlockBinding(program, cameraBlock.index, 0);
+		gl.bindBufferBase( gl.UNIFORM_BUFFER, 0, cameraBlockUBO );
 	}
 	
 	parseUniformBlock( gl, program, "FogBlock", container );
@@ -876,9 +877,28 @@ function parseUniformBlocks( gl, program, container ){
 			gl.bufferData( gl.UNIFORM_BUFFER, fogBlock.size, gl.DYNAMIC_DRAW);
 			gl.bindBuffer( gl.UNIFORM_BUFFER, null );
 		}
-		gl.uniformBlockBinding(program, fogBlock.index, bindingLocation);
-		gl.bindBufferBase( gl.UNIFORM_BUFFER, bindingLocation, block.ubo );
-		bindingLocation++;
+		gl.uniformBlockBinding(program, fogBlock.index, 1);
+		gl.bindBufferBase( gl.UNIFORM_BUFFER, 1, block.ubo );
+	}
+	
+	parseUniformBlock( gl, program, "LightBlock", container );
+	const lightBlock = container.blocks["LightBlock"];
+	if( lightBlock ){
+		let block = lightBlockUBOs[lightBlock.size];
+		if( block===undefined ){
+			const ubo = gl.createBuffer();
+			const array = new Float32Array( lightBlock.size/4 );
+			block = {
+				ubo: ubo,
+				array: array
+			};
+			lightBlockUBOs[lightBlock.size] = block;
+			gl.bindBuffer( gl.UNIFORM_BUFFER, ubo );
+			gl.bufferData( gl.UNIFORM_BUFFER, lightBlock.size, gl.DYNAMIC_DRAW);
+			gl.bindBuffer( gl.UNIFORM_BUFFER, null );
+		}
+		gl.uniformBlockBinding(program, lightBlock.index, 2);
+		gl.bindBufferBase( gl.UNIFORM_BUFFER, 2, block.ubo );
 	}
 }
 
@@ -965,6 +985,28 @@ WebGLUniforms.prototype.setFogBlock = function ( gl, fog ) {
 	return false;
 };
 
+WebGLUniforms.prototype.setLights = function( gl, lights ){
+	const lightBlock = this.blocks["LightBlock"];
+	if( lightBlock!==undefined ){
+		const offsets = lightBlock.offsets;
+		const strides = lightBlock.strides;
+		const block = lightBlockUBOs[lightBlock.size];
+		const array = block.array;
+		
+		array.set(lights.state.ambient, offsets.ambientLightColor/4);
+		for( let i=0; i<lights.state.probe.length; i++ ){
+			const probe = lights.state.probe[i];
+			probe.toArray( array, (offsets.lightProbe+i*strides.lightProbe)/4 );
+		}
+
+		gl.bindBuffer( gl.UNIFORM_BUFFER, block.ubo );
+		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, array );
+		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
+		return true;
+	}
+	return false;
+}
+
 
 // Static interface
 
@@ -1009,6 +1051,10 @@ WebGLUniforms.dispose = function ( gl ) {
 	for( let name in fogBlockUBOs ){
 		gl.deleteBuffer( fogBlockUBOs[name].ubo );
 		delete fogBlockUBOs[name];
+	}
+	for( let name in lightBlockUBOs ){
+		gl.deleteBuffer( lightBlockUBOs[name].ubo );
+		delete lightBlockUBOs[name];
 	}
 };
 
