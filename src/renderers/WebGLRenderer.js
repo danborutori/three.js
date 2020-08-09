@@ -1553,13 +1553,13 @@ function WebGLRenderer( parameters ) {
 			//uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
 			// TODO (abelnation): add area lights shadow info to uniforms
 			
-			uniforms.directionalMap.value = lights.state.directionalMap;
+			//uniforms.directionalMap.value = lights.state.directionalMap;
 			//uniforms.directionalMapMatrix.value = lights.state.directionalMapMatrix;
 			uniforms.spotMap.value = lights.state.spotMap;
 			//uniforms.spotMapMatrix.value = lights.state.spotMapMatrix;
 		}
 
-		const progUniforms = materialProperties.program.getUniforms(),
+		const progUniforms = materialProperties.program.getUniforms(lights.staticSamplers),
 			uniformsList =
 				WebGLUniforms.seqWithValue( progUniforms.seq, uniforms );
 
@@ -1704,13 +1704,13 @@ function WebGLRenderer( parameters ) {
 				//uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
 				// TODO (abelnation): add area lights shadow info to uniforms
 				
-				uniforms.directionalMap.value = lights.state.directionalMap;
+				//uniforms.directionalMap.value = lights.state.directionalMap;
 				//uniforms.directionalMapMatrix.value = lights.state.directionalMapMatrix;
 				uniforms.spotMap.value = lights.state.spotMap;
 				//uniforms.spotMapMatrix.value = lights.state.spotMapMatrix;
 			}
 
-			const progUniforms = materialProperties.program.getUniforms(),
+			const progUniforms = materialProperties.program.getUniforms(lights.staticSamplers),
 				uniformsList =
 					WebGLUniforms.seqWithValue( progUniforms.seq, uniforms );
 
@@ -1722,7 +1722,7 @@ function WebGLRenderer( parameters ) {
 
 		if ( scene.isScene !== true ) scene = _emptyScene; // scene could be a Mesh, Line, Points, ...
 
-		textures.resetTextureUnits();
+		textures.resetTextureUnits( currentRenderState.state.lights.state.staticSamplerUnitCount );
 
 		const fog = scene.fog;
 		const environment = material.isMeshStandardMaterial ? scene.environment : null;
@@ -1792,7 +1792,7 @@ function WebGLRenderer( parameters ) {
 		let refreshLights = false;
 
 		const program = materialProperties.program,
-			p_uniforms = program.getUniforms(),
+			p_uniforms = program.getUniforms(lights.staticSamplers),
 			m_uniforms = materialProperties.uniforms;
 
 		if ( state.useProgram( program.program ) ) {
@@ -1810,6 +1810,8 @@ function WebGLRenderer( parameters ) {
 			refreshMaterial = true;
 
 		}
+		
+		p_uniforms.uploadStaticSamplers( _gl );
 		
 		if ( refreshProgram || _currentCamera !== camera ) {
 
@@ -1907,7 +1909,7 @@ function WebGLRenderer( parameters ) {
 		}
 		
 		if( _currentLights !== lights ){
-			if( p_uniforms.setLights( _gl, lights ) ){
+			if( p_uniforms.setLights( _gl, lights, textures ) ){
 				_currentLights = lights;
 			}
 		}
@@ -1921,21 +1923,6 @@ function WebGLRenderer( parameters ) {
 		if ( refreshMaterial ) {
 
 			p_uniforms.setValue( _gl, 'toneMappingExposure', _this.toneMappingExposure );
-
-			if ( materialProperties.needsLights ) {
-
-				// the current material requires lighting info
-
-				// note: all lighting uniforms are always set correctly
-				// they simply reference the renderer's state for their
-				// values
-				//
-				// use the current material's .needsUpdate flags to set
-				// the GL state when required
-
-				markUniformsLightsNeedsUpdate( m_uniforms, refreshLights );
-
-			}
 
 			// refresh uniforms common to several materials
 
@@ -1975,24 +1962,6 @@ function WebGLRenderer( parameters ) {
 	}
 
 	// If uniforms are marked as clean, they don't need to be loaded to the GPU.
-
-	function markUniformsLightsNeedsUpdate( uniforms, value ) {
-
-		//uniforms.ambientLightColor.needsUpdate = value;
-		//uniforms.lightProbe.needsUpdate = value;
-
-		//uniforms.directionalLights.needsUpdate = value;
-		uniforms.directionalLightShadows.needsUpdate = value;
-		//uniforms.pointLights.needsUpdate = value;
-		uniforms.pointLightShadows.needsUpdate = value;
-		//uniforms.spotLights.needsUpdate = value;
-		uniforms.spotLightShadows.needsUpdate = value;
-//		uniforms.spotMap.needsUpdate = value;
-//		uniforms.spotMapMatrix.needsUpdate = value;
-		//uniforms.rectAreaLights.needsUpdate = value;
-		//uniforms.hemisphereLights.needsUpdate = value;
-
-	}
 
 	function materialNeedsLights( material ) {
 

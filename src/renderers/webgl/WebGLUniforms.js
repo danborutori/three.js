@@ -70,7 +70,6 @@ const uboBlocks = {
 };
 const _vector3 = new Vector3();
 
-
 // Flattening for arrays of vectors and matrices
 
 function flatten( array, nBlocks, blockSize ) {
@@ -825,6 +824,13 @@ function parseUniform( activeInfo, addr, container ) {
 
 }
 
+function parseStaticSamplerUniform( addr, units, container ){
+	container.staticSamplers.samplers.push({
+		addr: addr,
+		units: units
+	});
+}
+
 function parseUniformBlock( gl, program, blockName, container ) {
 	const index = gl.getUniformBlockIndex( program, blockName);
 	if( index!=gl.INVALID_INDEX ){
@@ -880,11 +886,15 @@ function parseUniformBlocks( gl, program, container ){
 
 // Root Container
 
-function WebGLUniforms( gl, program ) {
+function WebGLUniforms( gl, program, staticSamplers ) {
 
 	this.seq = [];
 	this.map = {};
 	this.blocks = {};
+	this.staticSamplers = {
+		needsUpdate: true,
+		samplers: []
+	};
 
 	parseUniformBlocks( gl, program, this );
 
@@ -895,11 +905,27 @@ function WebGLUniforms( gl, program ) {
 		const info = gl.getActiveUniform( program, i ),
 			addr = gl.getUniformLocation( program, info.name );
 
-		if( addr !== null )
-			parseUniform( info, addr, this );
+		if( addr !== null ){
+			const staticSampler = staticSamplers[info.name];
+			if( staticSampler!==undefined ){
+				parseStaticSamplerUniform( addr, staticSampler, this );
+			}else{
+				parseUniform( info, addr, this );
+			}
+		}
 
 	}
 
+}
+
+WebGLUniforms.prototype.uploadStaticSamplers = function( gl ){
+	if( this.staticSamplers.needsUpdate ){
+		for( let i=0; i<this.staticSamplers.samplers.length; i++ ){
+			const sampler = this.staticSamplers.samplers[i];
+			gl.uniform1iv( sampler.addr, sampler.units );
+		}
+		this.staticSamplers.needsUpdate = false;
+	}
 }
 
 WebGLUniforms.prototype.setValue = function ( gl, name, value, textures ) {
@@ -986,7 +1012,35 @@ function fillViewProperty( uniforms, namePrefix, propertyName, src, view ){
 	}
 }
 
-WebGLUniforms.prototype.setLights = function( gl, lights ){
+WebGLUniforms.prototype.setLights = function( gl, lights, textures ){
+	//set light map
+	for( let name in lights.staticSamplers ){
+		const units = lights.staticSamplers[name];
+		let texs;
+		switch(name){
+		case "directionalMap[0]":
+			texs = lights.state.directionalMap;
+			break;
+		case "spotMap[0]":
+			texs = lights.state.spotMap;
+			break;
+		case "directionalShadowMap[0]":
+			texs = lights.state.directionalShadowMap;
+			break;
+		case "spotShadowMap[0]":
+			texs = lights.state.spotShadowMap;
+			break;
+		case "pointShadowMap[0]":
+			texs = lights.state.pointShadowMap;
+			break;
+		}
+		
+		for( let i=0; i<units.length; i++ ){
+			textures.safeSetTexture2D( texs[i] || emptyTexture, units[i] );
+		}
+	}
+
+	//set light block
 	const lightBlock = this.blocks["LightBlock"];
 	if( lightBlock!==undefined ){
 		const uniforms = lightBlock.uniforms;
@@ -1032,6 +1086,7 @@ WebGLUniforms.prototype.setLights = function( gl, lights ){
 		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
 		return true;
 	}
+	
 	return false;
 }
 

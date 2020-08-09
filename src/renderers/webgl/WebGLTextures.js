@@ -321,9 +321,9 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 	let textureUnits = 0;
 
-	function resetTextureUnits() {
+	function resetTextureUnits( occupiedUnits ) {
 
-		textureUnits = 0;
+		textureUnits = occupiedUnits;
 
 	}
 

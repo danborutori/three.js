@@ -870,11 +870,11 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 	let cachedUniforms;
 
-	this.getUniforms = function () {
+	this.getUniforms = function ( staticSamplers ) {
 
 		if ( cachedUniforms === undefined ) {
 
-			cachedUniforms = new WebGLUniforms( gl, program );
+			cachedUniforms = new WebGLUniforms( gl, program, staticSamplers );
 
 		}
 

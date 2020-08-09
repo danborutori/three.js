@@ -235,11 +235,14 @@ function WebGLLights( staticLightConfig ) {
 		directionalMapMatrix: [],
 		spotMap: [],
 		spotMapMatrix: [],
-		hemi: []
-
+		hemi: [],
+		
+		staticSamplerUnitCount: 0
 	};
 
 	for ( let i = 0; i < 9; i ++ ) state.probe.push( new Vector3() );
+	
+	const staticSamplers = {};
 
 	const vector3 = new Vector3();
 	const matrix4 = new Matrix4();
@@ -605,15 +608,25 @@ function WebGLLights( staticLightConfig ) {
 			hash.numDirectionalMaps = numDirectionalMaps;
 			hash.numSpotMaps = numSpotMaps;
 			
+			state.staticSamplerUnitCount = 0;
+			if( state.directionalMap.length>0 ){
+				staticSamplers["directionalMap[0]"] = state.directionalMap.map(function(){
+					return state.staticSamplerUnitCount++;
+				});
+			}else{
+				delete staticSamplers["directionalMap[0]"];
+			}
+			
 			state.version = nextVersion ++;
 
 		}
 
 	}
-
+	
 	return {
 		setup: setup,
-		state: state
+		state: state,
+		staticSamplers: staticSamplers
 	};
 
 }
