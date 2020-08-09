@@ -186,8 +186,6 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 	uniform sampler2D ltc_1; // RGBA Float
 	uniform sampler2D ltc_2; // RGBA Float
 
-	uniform RectAreaLight rectAreaLights[ NUM_RECT_AREA_LIGHTS ];
-
 #endif
 
 
@@ -198,8 +196,6 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		vec3 skyColor;
 		vec3 groundColor;
 	};
-
-	uniform HemisphereLight hemisphereLights[ NUM_HEMI_LIGHTS ];
 
 	vec3 getHemisphereLightIrradiance( const in HemisphereLight hemiLight, const in GeometricContext geometry ) {
 
@@ -241,6 +237,14 @@ layout (std140) uniform LightBlock {
 #if NUM_SPOT_MAP > 0
 	mat4 spotMapMatrix[ NUM_SPOT_MAP ];
 #endif
+#endif
+
+#if NUM_RECT_AREA_LIGHTS > 0
+	uniform RectAreaLight rectAreaLights[ NUM_RECT_AREA_LIGHTS ];
+#endif
+
+#if NUM_HEMI_LIGHTS > 0
+	uniform HemisphereLight hemisphereLights[ NUM_HEMI_LIGHTS ];
 #endif
 
 };

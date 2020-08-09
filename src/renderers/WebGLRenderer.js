@@ -1540,10 +1540,10 @@ function WebGLRenderer( parameters ) {
 			//uniforms.directionalLightShadows.value = lights.state.directionalShadow;
 			//uniforms.spotLights.value = lights.state.spot;
 			//uniforms.spotLightShadows.value = lights.state.spotShadow;
-			uniforms.rectAreaLights.value = lights.state.rectArea;
+			//uniforms.rectAreaLights.value = lights.state.rectArea;
 			//uniforms.pointLights.value = lights.state.point;
 			uniforms.pointLightShadows.value = lights.state.pointShadow;
-			uniforms.hemisphereLights.value = lights.state.hemi;
+			//uniforms.hemisphereLights.value = lights.state.hemi;
 
 			uniforms.directionalShadowMap.value = lights.state.directionalShadowMap;
 			//uniforms.directionalShadowMatrix.value = lights.state.directionalShadowMatrix;
@@ -1691,10 +1691,10 @@ function WebGLRenderer( parameters ) {
 				//uniforms.directionalLightShadows.value = lights.state.directionalShadow;
 				//uniforms.spotLights.value = lights.state.spot;
 				//uniforms.spotLightShadows.value = lights.state.spotShadow;
-				uniforms.rectAreaLights.value = lights.state.rectArea;
+				//uniforms.rectAreaLights.value = lights.state.rectArea;
 				//uniforms.pointLights.value = lights.state.point;
 				uniforms.pointLightShadows.value = lights.state.pointShadow;
-				uniforms.hemisphereLights.value = lights.state.hemi;
+				//uniforms.hemisphereLights.value = lights.state.hemi;
 
 				uniforms.directionalShadowMap.value = lights.state.directionalShadowMap;
 				//uniforms.directionalShadowMatrix.value = lights.state.directionalShadowMatrix;
@@ -1978,19 +1978,19 @@ function WebGLRenderer( parameters ) {
 
 	function markUniformsLightsNeedsUpdate( uniforms, value ) {
 
-		uniforms.ambientLightColor.needsUpdate = value;
-		uniforms.lightProbe.needsUpdate = value;
+		//uniforms.ambientLightColor.needsUpdate = value;
+		//uniforms.lightProbe.needsUpdate = value;
 
-		uniforms.directionalLights.needsUpdate = value;
+		//uniforms.directionalLights.needsUpdate = value;
 		uniforms.directionalLightShadows.needsUpdate = value;
-		uniforms.pointLights.needsUpdate = value;
+		//uniforms.pointLights.needsUpdate = value;
 		uniforms.pointLightShadows.needsUpdate = value;
-		uniforms.spotLights.needsUpdate = value;
+		//uniforms.spotLights.needsUpdate = value;
 		uniforms.spotLightShadows.needsUpdate = value;
 //		uniforms.spotMap.needsUpdate = value;
 //		uniforms.spotMapMatrix.needsUpdate = value;
-		uniforms.rectAreaLights.needsUpdate = value;
-		uniforms.hemisphereLights.needsUpdate = value;
+		//uniforms.rectAreaLights.needsUpdate = value;
+		//uniforms.hemisphereLights.needsUpdate = value;
 
 	}
 

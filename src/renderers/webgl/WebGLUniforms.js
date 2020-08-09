@@ -1018,6 +1018,15 @@ WebGLUniforms.prototype.setLights = function( gl, lights ){
 		fillViewProperty(uniforms, "spotLights", "decay", lights.state.spot, f32View );
 		arrayToArrayView( uniforms["spotMapMatrix[0]"], lights.state.spotMapMatrix, f32View );
 
+		arrayToArrayViewProperty(uniforms, "rectAreaLights", "color", lights.state.rectArea, f32View );
+		arrayToArrayViewProperty(uniforms, "rectAreaLights", "position", lights.state.rectArea, f32View );
+		arrayToArrayViewProperty(uniforms, "rectAreaLights", "halfWidth", lights.state.rectArea, f32View );
+		arrayToArrayViewProperty(uniforms, "rectAreaLights", "halfHeight", lights.state.rectArea, f32View );
+
+		arrayToArrayViewProperty(uniforms, "hemisphereLights", "direction", lights.state.hemi, f32View );
+		arrayToArrayViewProperty(uniforms, "hemisphereLights", "skyColor", lights.state.hemi, f32View );
+		arrayToArrayViewProperty(uniforms, "hemisphereLights", "groundColor", lights.state.hemi, f32View );
+
 		gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
 		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
 		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
