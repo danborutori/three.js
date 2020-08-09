@@ -16501,8 +16501,6 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 	uniform sampler2D ltc_1; // RGBA Float
 	uniform sampler2D ltc_2; // RGBA Float
 
-	uniform RectAreaLight rectAreaLights[ NUM_RECT_AREA_LIGHTS ];
-
 #endif
 
 
@@ -16513,8 +16511,6 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		vec3 skyColor;
 		vec3 groundColor;
 	};
-
-	uniform HemisphereLight hemisphereLights[ NUM_HEMI_LIGHTS ];
 
 	vec3 getHemisphereLightIrradiance( const in HemisphereLight hemiLight, const in GeometricContext geometry ) {
 
@@ -16541,9 +16537,9 @@ layout (std140) uniform LightBlock {
 #if NUM_DIR_LIGHTS > 0
 
 #if NUM_DIRECTIONAL_MAP > 0
-	uniform mat4 directionalMapMatrix[ NUM_DIRECTIONAL_MAP ];
+	mat4 directionalMapMatrix[ NUM_DIRECTIONAL_MAP ];
 #endif
-	uniform DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
+	DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
 #endif
 
 #if NUM_POINT_LIGHTS > 0
@@ -16556,6 +16552,14 @@ layout (std140) uniform LightBlock {
 #if NUM_SPOT_MAP > 0
 	mat4 spotMapMatrix[ NUM_SPOT_MAP ];
 #endif
+#endif
+
+#if NUM_RECT_AREA_LIGHTS > 0
+	RectAreaLight rectAreaLights[ NUM_RECT_AREA_LIGHTS ];
+#endif
+
+#if NUM_HEMI_LIGHTS > 0
+	HemisphereLight hemisphereLights[ NUM_HEMI_LIGHTS ];
 #endif
 
 };
@@ -17783,8 +17787,6 @@ var shadowmap_pars_fragment = /* glsl */`
 			float shadowCameraFar;
 		};
 
-		uniform PointLightShadow pointLightShadows[ NUM_POINT_LIGHT_SHADOWS ];
-
 	#endif
 
 	/*
@@ -18051,6 +18053,10 @@ var shadowmap_pars_fragment = /* glsl */`
 		mat4 spotShadowMatrix[ NUM_SPOT_LIGHT_SHADOWS ];
 		SpotLightShadow spotLightShadows[ NUM_SPOT_LIGHT_SHADOWS ];
 		#endif
+		#if NUM_POINT_LIGHT_SHADOWS > 0
+		mat4 pointShadowMatrix[ NUM_POINT_LIGHT_SHADOWS ];
+		PointLightShadow pointLightShadows[ NUM_POINT_LIGHT_SHADOWS ];
+		#endif
 	};
 
 #endif
@@ -18087,7 +18093,6 @@ var shadowmap_pars_vertex = /* glsl */`
 
 	#if NUM_POINT_LIGHT_SHADOWS > 0
 
-		uniform mat4 pointShadowMatrix[ NUM_POINT_LIGHT_SHADOWS ];
 		varying vec4 vPointShadowCoord[ NUM_POINT_LIGHT_SHADOWS ];
 
 		struct PointLightShadow {
@@ -18120,6 +18125,11 @@ var shadowmap_pars_vertex = /* glsl */`
 		mat4 spotShadowMatrix[ NUM_SPOT_LIGHT_SHADOWS ];
 		SpotLightShadow spotLightShadows[ NUM_SPOT_LIGHT_SHADOWS ];
 		#endif
+		#if NUM_POINT_LIGHT_SHADOWS > 0
+		mat4 pointShadowMatrix[ NUM_POINT_LIGHT_SHADOWS ];
+		PointLightShadow pointLightShadows[ NUM_POINT_LIGHT_SHADOWS ];
+		#endif
+
 	};
 	
 #endif
@@ -22382,7 +22392,6 @@ const uboBlocks = {
 };
 const _vector3 = new Vector3();
 
-
 // Flattening for arrays of vectors and matrices
 
 function flatten( array, nBlocks, blockSize ) {
@@ -23137,6 +23146,13 @@ function parseUniform( activeInfo, addr, container ) {
 
 }
 
+function parseStaticSamplerUniform( addr, units, container ){
+	container.staticSamplers.samplers.push({
+		addr: addr,
+		units: units
+	});
+}
+
 function parseUniformBlock( gl, program, blockName, container ) {
 	const index = gl.getUniformBlockIndex( program, blockName);
 	if( index!=gl.INVALID_INDEX ){
@@ -23192,11 +23208,15 @@ function parseUniformBlocks( gl, program, container ){
 
 // Root Container
 
-function WebGLUniforms( gl, program ) {
+function WebGLUniforms( gl, program, staticSamplers ) {
 
 	this.seq = [];
 	this.map = {};
 	this.blocks = {};
+	this.staticSamplers = {
+		needsUpdate: true,
+		samplers: []
+	};
 
 	parseUniformBlocks( gl, program, this );
 
@@ -23207,12 +23227,28 @@ function WebGLUniforms( gl, program ) {
 		const info = gl.getActiveUniform( program, i ),
 			addr = gl.getUniformLocation( program, info.name );
 
-		if( addr !== null )
-			parseUniform( info, addr, this );
+		if( addr !== null ){
+			const staticSampler = staticSamplers[info.name];
+			if( staticSampler!==undefined ){
+				parseStaticSamplerUniform( addr, staticSampler, this );
+			}else {
+				parseUniform( info, addr, this );
+			}
+		}
 
 	}
 
 }
+
+WebGLUniforms.prototype.uploadStaticSamplers = function( gl ){
+	if( this.staticSamplers.needsUpdate ){
+		for( let i=0; i<this.staticSamplers.samplers.length; i++ ){
+			const sampler = this.staticSamplers.samplers[i];
+			gl.uniform1iv( sampler.addr, sampler.units );
+		}
+		this.staticSamplers.needsUpdate = false;
+	}
+};
 
 WebGLUniforms.prototype.setValue = function ( gl, name, value, textures ) {
 
@@ -23298,7 +23334,35 @@ function fillViewProperty( uniforms, namePrefix, propertyName, src, view ){
 	}
 }
 
-WebGLUniforms.prototype.setLights = function( gl, lights ){
+WebGLUniforms.prototype.setLights = function( gl, lights, textures ){
+	//set light map
+	for( let name in lights.staticSamplers ){
+		const units = lights.staticSamplers[name];
+		let texs;
+		switch(name){
+		case "directionalMap[0]":
+			texs = lights.state.directionalMap;
+			break;
+		case "spotMap[0]":
+			texs = lights.state.spotMap;
+			break;
+		case "directionalShadowMap[0]":
+			texs = lights.state.directionalShadowMap;
+			break;
+		case "spotShadowMap[0]":
+			texs = lights.state.spotShadowMap;
+			break;
+		case "pointShadowMap[0]":
+			texs = lights.state.pointShadowMap;
+			break;
+		}
+		
+		for( let i=0; i<units.length; i++ ){
+			textures.safeSetTexture2D( texs[i] || emptyTexture, units[i] );
+		}
+	}
+
+	//set light block
 	const lightBlock = this.blocks["LightBlock"];
 	if( lightBlock!==undefined ){
 		const uniforms = lightBlock.uniforms;
@@ -23330,11 +23394,21 @@ WebGLUniforms.prototype.setLights = function( gl, lights ){
 		fillViewProperty(uniforms, "spotLights", "decay", lights.state.spot, f32View );
 		arrayToArrayView( uniforms["spotMapMatrix[0]"], lights.state.spotMapMatrix, f32View );
 
+		arrayToArrayViewProperty(uniforms, "rectAreaLights", "color", lights.state.rectArea, f32View );
+		arrayToArrayViewProperty(uniforms, "rectAreaLights", "position", lights.state.rectArea, f32View );
+		arrayToArrayViewProperty(uniforms, "rectAreaLights", "halfWidth", lights.state.rectArea, f32View );
+		arrayToArrayViewProperty(uniforms, "rectAreaLights", "halfHeight", lights.state.rectArea, f32View );
+
+		arrayToArrayViewProperty(uniforms, "hemisphereLights", "direction", lights.state.hemi, f32View );
+		arrayToArrayViewProperty(uniforms, "hemisphereLights", "skyColor", lights.state.hemi, f32View );
+		arrayToArrayViewProperty(uniforms, "hemisphereLights", "groundColor", lights.state.hemi, f32View );
+
 		gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
 		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
 		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
 		return true;
 	}
+	
 	return false;
 };
 
@@ -23358,6 +23432,14 @@ WebGLUniforms.prototype.setShadows = function( gl, lights ){
 		fillViewProperty(uniforms, "spotLightShadows", "shadowNormalBias", lights.state.spotShadow, f32View );
 		fillViewProperty(uniforms, "spotLightShadows", "shadowRadius", lights.state.spotShadow, f32View );
 		arrayToArrayViewProperty(uniforms, "spotLightShadows", "shadowMapSize", lights.state.spotShadow, f32View );
+
+		arrayToArrayView( uniforms["pointLightShadows[0]"], lights.state.pointShadowMatrix, f32View );
+		fillViewProperty(uniforms, "pointLightShadows", "shadowBias", lights.state.pointShadow, f32View );
+		fillViewProperty(uniforms, "pointLightShadows", "shadowNormalBias", lights.state.pointShadow, f32View );
+		fillViewProperty(uniforms, "pointLightShadows", "shadowRadius", lights.state.pointShadow, f32View );
+		arrayToArrayViewProperty(uniforms, "pointLightShadows", "shadowMapSize", lights.state.pointShadow, f32View );
+		fillViewProperty(uniforms, "pointLightShadows", "shadowCameraNear", lights.state.pointShadow, f32View );
+		fillViewProperty(uniforms, "pointLightShadows", "shadowCameraFar", lights.state.pointShadow, f32View );
 
 		gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
 		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
@@ -24289,11 +24371,11 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 	let cachedUniforms;
 
-	this.getUniforms = function () {
+	this.getUniforms = function ( staticSamplers ) {
 
 		if ( cachedUniforms === undefined ) {
 
-			cachedUniforms = new WebGLUniforms( gl, program );
+			cachedUniforms = new WebGLUniforms( gl, program, staticSamplers );
 
 		}
 
@@ -25918,11 +26000,14 @@ function WebGLLights( staticLightConfig ) {
 		directionalMapMatrix: [],
 		spotMap: [],
 		spotMapMatrix: [],
-		hemi: []
-
+		hemi: [],
+		
+		staticSamplerUnitCount: 0
 	};
 
 	for ( let i = 0; i < 9; i ++ ) state.probe.push( new Vector3() );
+	
+	const staticSamplers = {};
 
 	const vector3 = new Vector3();
 	const matrix4 = new Matrix4();
@@ -26288,15 +26373,53 @@ function WebGLLights( staticLightConfig ) {
 			hash.numDirectionalMaps = numDirectionalMaps;
 			hash.numSpotMaps = numSpotMaps;
 			
+			state.staticSamplerUnitCount = 0;
+			if( state.directionalMap.length>0 ){
+				staticSamplers["directionalMap[0]"] = state.directionalMap.map(function(){
+					return state.staticSamplerUnitCount++;
+				});
+			}else {
+				delete staticSamplers["directionalMap[0]"];
+			}
+			if( state.spotMap.length>0 ){
+				staticSamplers["spotMap[0]"] = state.spotMap.map(function(){
+					return state.staticSamplerUnitCount++;
+				});
+			}else {
+				delete staticSamplers["spotMap[0]"];
+			}
+			if( state.directionalShadowMap.length>0 ){
+				staticSamplers["directionalShadowMap[0]"] = state.directionalShadowMap.map(function(){
+					return state.staticSamplerUnitCount++;
+				});
+			}else {
+				delete staticSamplers["directionalShadowMap[0]"];
+			}
+			if( state.pointShadowMap.length>0 ){
+				staticSamplers["pointShadowMap[0]"] = state.pointShadowMap.map(function(){
+					return state.staticSamplerUnitCount++;
+				});
+			}else {
+				delete staticSamplers["pointShadowMap[0]"];
+			}
+			if( state.spotShadowMap.length>0 ){
+				staticSamplers["spotShadowMap[0]"] = state.spotShadowMap.map(function(){
+					return state.staticSamplerUnitCount++;
+				});
+			}else {
+				delete staticSamplers["spotShadowMap[0]"];
+			}
+			
 			state.version = nextVersion ++;
 
 		}
 
 	}
-
+	
 	return {
 		setup: setup,
-		state: state
+		state: state,
+		staticSamplers: staticSamplers
 	};
 
 }
@@ -28287,9 +28410,9 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 	let textureUnits = 0;
 
-	function resetTextureUnits() {
+	function resetTextureUnits( occupiedUnits ) {
 
-		textureUnits = 0;
+		textureUnits = occupiedUnits;
 
 	}
 
@@ -32467,26 +32590,26 @@ function WebGLRenderer( parameters ) {
 			//uniforms.directionalLightShadows.value = lights.state.directionalShadow;
 			//uniforms.spotLights.value = lights.state.spot;
 			//uniforms.spotLightShadows.value = lights.state.spotShadow;
-			uniforms.rectAreaLights.value = lights.state.rectArea;
+			//uniforms.rectAreaLights.value = lights.state.rectArea;
 			//uniforms.pointLights.value = lights.state.point;
-			uniforms.pointLightShadows.value = lights.state.pointShadow;
-			uniforms.hemisphereLights.value = lights.state.hemi;
+			//uniforms.pointLightShadows.value = lights.state.pointShadow;
+			//uniforms.hemisphereLights.value = lights.state.hemi;
 
 			uniforms.directionalShadowMap.value = lights.state.directionalShadowMap;
 			//uniforms.directionalShadowMatrix.value = lights.state.directionalShadowMatrix;
 			uniforms.spotShadowMap.value = lights.state.spotShadowMap;
 			//uniforms.spotShadowMatrix.value = lights.state.spotShadowMatrix;
 			uniforms.pointShadowMap.value = lights.state.pointShadowMap;
-			uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
+			//uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
 			// TODO (abelnation): add area lights shadow info to uniforms
 			
-			uniforms.directionalMap.value = lights.state.directionalMap;
+			//uniforms.directionalMap.value = lights.state.directionalMap;
 			//uniforms.directionalMapMatrix.value = lights.state.directionalMapMatrix;
 			uniforms.spotMap.value = lights.state.spotMap;
 			//uniforms.spotMapMatrix.value = lights.state.spotMapMatrix;
 		}
 
-		const progUniforms = materialProperties.program.getUniforms(),
+		const progUniforms = materialProperties.program.getUniforms(lights.staticSamplers),
 			uniformsList =
 				WebGLUniforms.seqWithValue( progUniforms.seq, uniforms );
 
@@ -32618,26 +32741,26 @@ function WebGLRenderer( parameters ) {
 				//uniforms.directionalLightShadows.value = lights.state.directionalShadow;
 				//uniforms.spotLights.value = lights.state.spot;
 				//uniforms.spotLightShadows.value = lights.state.spotShadow;
-				uniforms.rectAreaLights.value = lights.state.rectArea;
+				//uniforms.rectAreaLights.value = lights.state.rectArea;
 				//uniforms.pointLights.value = lights.state.point;
-				uniforms.pointLightShadows.value = lights.state.pointShadow;
-				uniforms.hemisphereLights.value = lights.state.hemi;
+				//uniforms.pointLightShadows.value = lights.state.pointShadow;
+				//uniforms.hemisphereLights.value = lights.state.hemi;
 
 				uniforms.directionalShadowMap.value = lights.state.directionalShadowMap;
 				//uniforms.directionalShadowMatrix.value = lights.state.directionalShadowMatrix;
 				uniforms.spotShadowMap.value = lights.state.spotShadowMap;
 				//uniforms.spotShadowMatrix.value = lights.state.spotShadowMatrix;
 				uniforms.pointShadowMap.value = lights.state.pointShadowMap;
-				uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
+				//uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
 				// TODO (abelnation): add area lights shadow info to uniforms
 				
-				uniforms.directionalMap.value = lights.state.directionalMap;
+				//uniforms.directionalMap.value = lights.state.directionalMap;
 				//uniforms.directionalMapMatrix.value = lights.state.directionalMapMatrix;
 				uniforms.spotMap.value = lights.state.spotMap;
 				//uniforms.spotMapMatrix.value = lights.state.spotMapMatrix;
 			}
 
-			const progUniforms = materialProperties.program.getUniforms(),
+			const progUniforms = materialProperties.program.getUniforms(lights.staticSamplers),
 				uniformsList =
 					WebGLUniforms.seqWithValue( progUniforms.seq, uniforms );
 
@@ -32649,7 +32772,7 @@ function WebGLRenderer( parameters ) {
 
 		if ( scene.isScene !== true ) scene = _emptyScene; // scene could be a Mesh, Line, Points, ...
 
-		textures.resetTextureUnits();
+		textures.resetTextureUnits( currentRenderState.state.lights.state.staticSamplerUnitCount );
 
 		const fog = scene.fog;
 		const environment = material.isMeshStandardMaterial ? scene.environment : null;
@@ -32716,17 +32839,15 @@ function WebGLRenderer( parameters ) {
 
 		let refreshProgram = false;
 		let refreshMaterial = false;
-		let refreshLights = false;
 
 		const program = materialProperties.program,
-			p_uniforms = program.getUniforms(),
+			p_uniforms = program.getUniforms(lights.staticSamplers),
 			m_uniforms = materialProperties.uniforms;
 
 		if ( state.useProgram( program.program ) ) {
 
 			refreshProgram = true;
 			refreshMaterial = true;
-			refreshLights = true;
 
 		}
 
@@ -32737,6 +32858,8 @@ function WebGLRenderer( parameters ) {
 			refreshMaterial = true;
 
 		}
+		
+		p_uniforms.uploadStaticSamplers( _gl );
 		
 		if ( refreshProgram || _currentCamera !== camera ) {
 
@@ -32758,7 +32881,6 @@ function WebGLRenderer( parameters ) {
 				// the next material that does gets activated:
 
 				refreshMaterial = true;		// set to true on material change
-				refreshLights = true;		// remains set until update done
 
 			}
 
@@ -32834,7 +32956,7 @@ function WebGLRenderer( parameters ) {
 		}
 		
 		if( _currentLights !== lights ){
-			if( p_uniforms.setLights( _gl, lights ) ){
+			if( p_uniforms.setLights( _gl, lights, textures ) ){
 				_currentLights = lights;
 			}
 		}
@@ -32848,21 +32970,6 @@ function WebGLRenderer( parameters ) {
 		if ( refreshMaterial ) {
 
 			p_uniforms.setValue( _gl, 'toneMappingExposure', _this.toneMappingExposure );
-
-			if ( materialProperties.needsLights ) {
-
-				// the current material requires lighting info
-
-				// note: all lighting uniforms are always set correctly
-				// they simply reference the renderer's state for their
-				// values
-				//
-				// use the current material's .needsUpdate flags to set
-				// the GL state when required
-
-				markUniformsLightsNeedsUpdate( m_uniforms, refreshLights );
-
-			}
 
 			// refresh uniforms common to several materials
 
@@ -32902,24 +33009,6 @@ function WebGLRenderer( parameters ) {
 	}
 
 	// If uniforms are marked as clean, they don't need to be loaded to the GPU.
-
-	function markUniformsLightsNeedsUpdate( uniforms, value ) {
-
-		uniforms.ambientLightColor.needsUpdate = value;
-		uniforms.lightProbe.needsUpdate = value;
-
-		uniforms.directionalLights.needsUpdate = value;
-		uniforms.directionalLightShadows.needsUpdate = value;
-		uniforms.pointLights.needsUpdate = value;
-		uniforms.pointLightShadows.needsUpdate = value;
-		uniforms.spotLights.needsUpdate = value;
-		uniforms.spotLightShadows.needsUpdate = value;
-//		uniforms.spotMap.needsUpdate = value;
-//		uniforms.spotMapMatrix.needsUpdate = value;
-		uniforms.rectAreaLights.needsUpdate = value;
-		uniforms.hemisphereLights.needsUpdate = value;
-
-	}
 
 	function materialNeedsLights( material ) {
 
