@@ -1542,7 +1542,7 @@ function WebGLRenderer( parameters ) {
 			//uniforms.spotLightShadows.value = lights.state.spotShadow;
 			//uniforms.rectAreaLights.value = lights.state.rectArea;
 			//uniforms.pointLights.value = lights.state.point;
-			uniforms.pointLightShadows.value = lights.state.pointShadow;
+			//uniforms.pointLightShadows.value = lights.state.pointShadow;
 			//uniforms.hemisphereLights.value = lights.state.hemi;
 
 			uniforms.directionalShadowMap.value = lights.state.directionalShadowMap;
@@ -1550,7 +1550,7 @@ function WebGLRenderer( parameters ) {
 			uniforms.spotShadowMap.value = lights.state.spotShadowMap;
 			//uniforms.spotShadowMatrix.value = lights.state.spotShadowMatrix;
 			uniforms.pointShadowMap.value = lights.state.pointShadowMap;
-			uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
+			//uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
 			// TODO (abelnation): add area lights shadow info to uniforms
 			
 			uniforms.directionalMap.value = lights.state.directionalMap;
@@ -1693,7 +1693,7 @@ function WebGLRenderer( parameters ) {
 				//uniforms.spotLightShadows.value = lights.state.spotShadow;
 				//uniforms.rectAreaLights.value = lights.state.rectArea;
 				//uniforms.pointLights.value = lights.state.point;
-				uniforms.pointLightShadows.value = lights.state.pointShadow;
+				//uniforms.pointLightShadows.value = lights.state.pointShadow;
 				//uniforms.hemisphereLights.value = lights.state.hemi;
 
 				uniforms.directionalShadowMap.value = lights.state.directionalShadowMap;
@@ -1701,7 +1701,7 @@ function WebGLRenderer( parameters ) {
 				uniforms.spotShadowMap.value = lights.state.spotShadowMap;
 				//uniforms.spotShadowMatrix.value = lights.state.spotShadowMatrix;
 				uniforms.pointShadowMap.value = lights.state.pointShadowMap;
-				uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
+				//uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
 				// TODO (abelnation): add area lights shadow info to uniforms
 				
 				uniforms.directionalMap.value = lights.state.directionalMap;

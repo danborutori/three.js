@@ -222,9 +222,9 @@ layout (std140) uniform LightBlock {
 #if NUM_DIR_LIGHTS > 0
 
 #if NUM_DIRECTIONAL_MAP > 0
-	uniform mat4 directionalMapMatrix[ NUM_DIRECTIONAL_MAP ];
+	mat4 directionalMapMatrix[ NUM_DIRECTIONAL_MAP ];
 #endif
-	uniform DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
+	DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
 #endif
 
 #if NUM_POINT_LIGHTS > 0
@@ -240,11 +240,11 @@ layout (std140) uniform LightBlock {
 #endif
 
 #if NUM_RECT_AREA_LIGHTS > 0
-	uniform RectAreaLight rectAreaLights[ NUM_RECT_AREA_LIGHTS ];
+	RectAreaLight rectAreaLights[ NUM_RECT_AREA_LIGHTS ];
 #endif
 
 #if NUM_HEMI_LIGHTS > 0
-	uniform HemisphereLight hemisphereLights[ NUM_HEMI_LIGHTS ];
+	HemisphereLight hemisphereLights[ NUM_HEMI_LIGHTS ];
 #endif
 
 };

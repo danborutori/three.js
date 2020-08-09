@@ -43,8 +43,6 @@ export default /* glsl */`
 			float shadowCameraFar;
 		};
 
-		uniform PointLightShadow pointLightShadows[ NUM_POINT_LIGHT_SHADOWS ];
-
 	#endif
 
 	/*
@@ -310,6 +308,10 @@ export default /* glsl */`
 		#if NUM_SPOT_LIGHT_SHADOWS > 0
 		mat4 spotShadowMatrix[ NUM_SPOT_LIGHT_SHADOWS ];
 		SpotLightShadow spotLightShadows[ NUM_SPOT_LIGHT_SHADOWS ];
+		#endif
+		#if NUM_POINT_LIGHT_SHADOWS > 0
+		mat4 pointShadowMatrix[ NUM_POINT_LIGHT_SHADOWS ];
+		PointLightShadow pointLightShadows[ NUM_POINT_LIGHT_SHADOWS ];
 		#endif
 	};
 

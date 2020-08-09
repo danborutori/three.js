@@ -1056,6 +1056,14 @@ WebGLUniforms.prototype.setShadows = function( gl, lights ){
 		fillViewProperty(uniforms, "spotLightShadows", "shadowRadius", lights.state.spotShadow, f32View );
 		arrayToArrayViewProperty(uniforms, "spotLightShadows", "shadowMapSize", lights.state.spotShadow, f32View );
 
+		arrayToArrayView( uniforms["pointLightShadows[0]"], lights.state.pointShadowMatrix, f32View );
+		fillViewProperty(uniforms, "pointLightShadows", "shadowBias", lights.state.pointShadow, f32View );
+		fillViewProperty(uniforms, "pointLightShadows", "shadowNormalBias", lights.state.pointShadow, f32View );
+		fillViewProperty(uniforms, "pointLightShadows", "shadowRadius", lights.state.pointShadow, f32View );
+		arrayToArrayViewProperty(uniforms, "pointLightShadows", "shadowMapSize", lights.state.pointShadow, f32View );
+		fillViewProperty(uniforms, "pointLightShadows", "shadowCameraNear", lights.state.pointShadow, f32View );
+		fillViewProperty(uniforms, "pointLightShadows", "shadowCameraFar", lights.state.pointShadow, f32View );
+
 		gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
 		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
 		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
