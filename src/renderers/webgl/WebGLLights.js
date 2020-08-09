@@ -616,6 +616,34 @@ function WebGLLights( staticLightConfig ) {
 			}else{
 				delete staticSamplers["directionalMap[0]"];
 			}
+			if( state.spotMap.length>0 ){
+				staticSamplers["spotMap[0]"] = state.spotMap.map(function(){
+					return state.staticSamplerUnitCount++;
+				});
+			}else{
+				delete staticSamplers["spotMap[0]"];
+			}
+			if( state.directionalShadowMap.length>0 ){
+				staticSamplers["directionalShadowMap[0]"] = state.directionalShadowMap.map(function(){
+					return state.staticSamplerUnitCount++;
+				});
+			}else{
+				delete staticSamplers["directionalShadowMap[0]"];
+			}
+			if( state.pointShadowMap.length>0 ){
+				staticSamplers["pointShadowMap[0]"] = state.pointShadowMap.map(function(){
+					return state.staticSamplerUnitCount++;
+				});
+			}else{
+				delete staticSamplers["pointShadowMap[0]"];
+			}
+			if( state.spotShadowMap.length>0 ){
+				staticSamplers["spotShadowMap[0]"] = state.spotShadowMap.map(function(){
+					return state.staticSamplerUnitCount++;
+				});
+			}else{
+				delete staticSamplers["spotShadowMap[0]"];
+			}
 			
 			state.version = nextVersion ++;
 
