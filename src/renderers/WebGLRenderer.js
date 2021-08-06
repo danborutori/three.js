@@ -52,7 +52,6 @@ import { PlaneBufferGeometry } from "../geometries/PlaneGeometry.js";
 import { Mesh } from "../objects/Mesh.js";
 import { MeshBasicMaterial } from "../materials/MeshBasicMaterial.js";
 import { OrthographicCamera } from "../cameras/OrthographicCamera.js";
-import { Color } from "../math/Color.js";
 import { ShaderMaterial } from "../materials/ShaderMaterial.js";
 
 function WebGLRenderer( parameters ) {
