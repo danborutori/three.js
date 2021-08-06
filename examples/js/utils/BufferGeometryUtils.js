@@ -16,8 +16,14 @@ THREE.BufferGeometryUtils = {
 
 		var isIndexed = geometries[ 0 ].index !== null;
 
-		var attributesUsed = new Set( Object.keys( geometries[ 0 ].attributes ) );
-		var morphAttributesUsed = new Set( Object.keys( geometries[ 0 ].morphAttributes ) );
+		var attributesUsed = geometries.reduce(function(a,b){
+			const setB = new Set(Object.keys( b.attributes ));
+			return new Set([...a].filter(i => setB.has(i)));
+		}, new Set( Object.keys( geometries[ 0 ].attributes )));
+		var morphAttributesUsed = geometries.reduce(function(a,b){
+			const setB = new Set(Object.keys( b.morphAttributes ));
+			return new Set([...a].filter(i => setB.has(i)));
+		}, new Set( Object.keys( geometries[ 0 ].morphAttributes )));
 
 		var attributes = {};
 		var morphAttributes = {};
@@ -48,8 +54,7 @@ THREE.BufferGeometryUtils = {
 
 				if ( ! attributesUsed.has( name ) ) {
 
-					console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. All geometries must have compatible attributes; make sure "' + name + '" attribute exists among all geometries, or in none of them.' );
-					return null;
+					continue;
 
 				}
 
@@ -83,8 +88,7 @@ THREE.BufferGeometryUtils = {
 
 				if ( ! morphAttributesUsed.has( name ) ) {
 
-					console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '.  .morphAttributes must be consistent throughout all geometries.' );
-					return null;
+					continue;
 
 				}
 
