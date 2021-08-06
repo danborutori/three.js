@@ -1562,11 +1562,17 @@ function WebGLRenderer( parameters ) {
 
 		const lightsStateVersion = lights.state.version;
 
-		const parameters = programCache.getParameters( material, lights.state, shadowsArray, scene, _clipping.numPlanes, _clipping.numIntersection, object );
+		const parameters = programCache.getParameters( material, lights.state, shadowsArray, scene, object );
 		const programCacheKey = programCache.getProgramCacheKey( parameters );
 
 		let program = materialProperties.program;
 		let programChange = true;
+
+		// always update environment and fog - changing these trigger an initMaterial call, but it's possible that the program doesn't change
+
+		materialProperties.environment = material.isMeshStandardMaterial ? scene.environment : null;
+		materialProperties.fog = scene.fog;
+		materialProperties.envMap = cubemaps.get( material.envMap || materialProperties.environment );
 
 		if ( program === undefined ) {
 
@@ -1579,8 +1585,6 @@ function WebGLRenderer( parameters ) {
 			releaseMaterialProgramReference( material );
 
 		} else if ( materialProperties.lightsStateVersion !== lightsStateVersion ) {
-
-			materialProperties.lightsStateVersion = lightsStateVersion;
 
 			programChange = false;
 
@@ -1598,7 +1602,7 @@ function WebGLRenderer( parameters ) {
 
 		if ( programChange ) {
 
-			parameters.uniforms = programCache.getUniforms( material, parameters );
+			parameters.uniforms = programCache.getUniforms( material );
 
 			material.onBeforeCompile( parameters, _this ); 
 
@@ -1613,52 +1617,17 @@ function WebGLRenderer( parameters ) {
 		return program.completion.then( function(){
 			const programAttributes = program.getAttributes();
 
-			if ( material.morphTargets ) {
-
-				material.numSupportedMorphTargets = 0;
-
-				for ( let i = 0; i < _this.maxMorphTargets; i ++ ) {
-
-					if ( programAttributes[ 'morphTarget' + i ] >= 0 ) {
-
-						material.numSupportedMorphTargets ++;
-
-					}
-
-				}
-
-			}
-
-			if ( material.morphNormals ) {
-
-				material.numSupportedMorphNormals = 0;
-
-				for ( let i = 0; i < _this.maxMorphNormals; i ++ ) {
-
-					if ( programAttributes[ 'morphNormal' + i ] >= 0 ) {
-
-						material.numSupportedMorphNormals ++;
-
-					}
-
-				}
-
-			}
-
 			const uniforms = materialProperties.uniforms;
 
 			if ( ! material.isShaderMaterial &&
 				! material.isRawShaderMaterial ||
 				material.clipping === true ) {
 
-				materialProperties.numClippingPlanes = _clipping.numPlanes;
-				materialProperties.numIntersection = _clipping.numIntersection;
-				uniforms.clippingPlanes = _clipping.uniform;
+				materialProperties.numClippingPlanes = clipping.numPlanes;
+				materialProperties.numIntersection = clipping.numIntersection;
+				uniforms.clippingPlanes = clipping.uniform;
 
 			}
-
-			materialProperties.environment = material.isMeshStandardMaterial ? scene.environment : null;
-			materialProperties.fog = scene.fog;
 
 			// store the light setup it was created for
 
@@ -1669,16 +1638,18 @@ function WebGLRenderer( parameters ) {
 
 				// wire up the material to this renderer's lighting state
 
-				//uniforms.ambientLightColor.value = lights.state.ambient;
-				//uniforms.lightProbe.value = lights.state.probe;
-				//uniforms.directionalLights.value = lights.state.directional;
-				//uniforms.directionalLightShadows.value = lights.state.directionalShadow;
-				//uniforms.spotLights.value = lights.state.spot;
-				//uniforms.spotLightShadows.value = lights.state.spotShadow;
-				//uniforms.rectAreaLights.value = lights.state.rectArea;
-				//uniforms.pointLights.value = lights.state.point;
-				//uniforms.pointLightShadows.value = lights.state.pointShadow;
-				//uniforms.hemisphereLights.value = lights.state.hemi;
+				// uniforms.ambientLightColor.value = lights.state.ambient;
+				// uniforms.lightProbe.value = lights.state.probe;
+				// uniforms.directionalLights.value = lights.state.directional;
+				// uniforms.directionalLightShadows.value = lights.state.directionalShadow;
+				// uniforms.spotLights.value = lights.state.spot;
+				// uniforms.spotLightShadows.value = lights.state.spotShadow;
+				// uniforms.rectAreaLights.value = lights.state.rectArea;
+				uniforms.ltc_1.value = lights.state.rectAreaLTC1;
+				uniforms.ltc_2.value = lights.state.rectAreaLTC2;
+				// uniforms.pointLights.value = lights.state.point;
+				// uniforms.pointLightShadows.value = lights.state.pointShadow;
+				// uniforms.hemisphereLights.value = lights.state.hemi;
 
 				uniforms.directionalShadowMap.value = lights.state.directionalShadowMap;
 				//uniforms.directionalShadowMatrix.value = lights.state.directionalShadowMatrix;
@@ -1694,9 +1665,8 @@ function WebGLRenderer( parameters ) {
 				//uniforms.spotMapMatrix.value = lights.state.spotMapMatrix;
 			}
 
-			const progUniforms = materialProperties.program.getUniforms(lights.staticSamplers),
-				uniformsList =
-					WebGLUniforms.seqWithValue( progUniforms.seq, uniforms );
+			const progUniforms = materialProperties.program.getUniforms(lights.staticSamplers);
+			const uniformsList = WebGLUniforms.seqWithValue( progUniforms.seq, uniforms );
 
 			materialProperties.uniformsList = uniformsList;
 		});

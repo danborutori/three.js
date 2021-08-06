@@ -270,10 +270,8 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 		let numDirectionalMaps = 0;
 		let numSpotMaps = 0;
 
-		const viewMatrix = camera.matrixWorldInverse;
-		
 		if(staticLightConfig && staticLightConfig.sortFunc){
-			lights.sort( function(a,b){ return staticLightConfig.sortFunc(camera,a,b) } );
+			lights.sort( function(a,b){ return staticLightConfig.sortFunc(a,b) } );
 		}else{
 			lights.sort( shadowCastingLightsFirst );
 		}
@@ -335,17 +333,6 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 				
 				if(light.map && (!staticLightConfig || numDirectionalMaps<staticLightConfig.numDirectionalMaps) ){
 					uniforms.map = numDirectionalMaps;
-					
-					const cam = light.shadow.camera;
-					const dimension = light.mapDimension || cam;
-					light.mapMatrix.makeOrthographic(
-						dimension.left,
-						dimension.right,
-						dimension.top,
-						dimension.bottom,
-						1, 10 )
-					.multiply(cam.matrixWorldInverse)
-					.multiply(camera.matrixWorld);
 					state.directionalMap[numDirectionalMaps] = light.map;
 					state.directionalMapMatrix[numDirectionalMaps] = light.mapMatrix;
 					numDirectionalMaps++;
@@ -392,10 +379,6 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 				
 				if(light.map && (!staticLightConfig || numSpotMaps<staticLightConfig.numSpotMaps)){
 					uniforms.map = numSpotMaps;
-					var tanAngle = Math.tan(light.angle);
-					light.mapMatrix.makePerspective( -tanAngle, tanAngle, tanAngle, -tanAngle, 1, 10 );
-					light.mapMatrix.multiply( matrix4.getInverse(light.matrixWorld) );
-					light.mapMatrix.multiply( camera.matrixWorld );
 					state.spotMap[numSpotMaps] = light.map;
 					state.spotMapMatrix[numSpotMaps] = light.mapMatrix;
 					numSpotMaps++;
@@ -673,6 +656,19 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 
 				const uniforms = state.directional[ directionalLength ];
 
+				if(light.map){
+					const cam = light.shadow.camera;
+					const dimension = light.mapDimension || cam;
+					light.mapMatrix.makeOrthographic(
+						dimension.left,
+						dimension.right,
+						dimension.top,
+						dimension.bottom,
+						1, 10 )
+					.multiply(cam.matrixWorldInverse)
+					.multiply(camera.matrixWorld);
+				}
+
 				uniforms.direction.setFromMatrixPosition( light.matrixWorld );
 				vector3.setFromMatrixPosition( light.target.matrixWorld );
 				uniforms.direction.sub( vector3 );
@@ -683,6 +679,14 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 			} else if ( light.isSpotLight ) {
 
 				const uniforms = state.spot[ spotLength ];
+
+				if(light.map){
+					uniforms.map = numSpotMaps;
+					var tanAngle = Math.tan(light.angle);
+					light.mapMatrix.makePerspective( -tanAngle, tanAngle, tanAngle, -tanAngle, 1, 10 );
+					light.mapMatrix.multiply( matrix4.copy(light.matrixWorld).invert() );
+					light.mapMatrix.multiply( camera.matrixWorld );
+				}
 
 				uniforms.position.setFromMatrixPosition( light.matrixWorld );
 				uniforms.position.applyMatrix4( viewMatrix );

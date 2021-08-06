@@ -486,7 +486,7 @@ function WebGLMaterials( properties ) {
 		}
 
 		if ( material.displacementMap ) {
-
+ 
 			uniforms.displacementMap.value = material.displacementMap;
 			uniforms.displacementScale.value = material.displacementScale;
 			uniforms.displacementBias.value = material.displacementBias;
@@ -689,6 +689,7 @@ function WebGLMaterials( properties ) {
 	}
 
 	return {
+		refreshFogUniforms: refreshFogUniforms,
 		refreshMaterialUniforms: refreshMaterialUniforms
 	};
 
