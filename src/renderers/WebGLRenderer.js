@@ -988,6 +988,8 @@ function WebGLRenderer( parameters ) {
 		currentRenderState.setupLights();
 
 		const compiled = new WeakMap();
+		const tasks = [];
+        let completedCnt = 0;
 
 		scene.traverse( function ( object ) {
 
@@ -1003,8 +1005,13 @@ function WebGLRenderer( parameters ) {
 
 						if ( compiled.has( material2 ) === false ) {
 
-							initMaterial( material2, scene, object );
-							compiled.set( material2 );
+							tasks.push( initMaterialAsync( material2, scene, object ).then( function(){
+                                progress && progress( ++completedCnt/tasks.length );
+                            }));
+                            tasks.push( compileTextureAsync( material2 ).then( function(){
+                                progress && progress( ++completedCnt/tasks.length );
+                            }));
+                            compiled.set( material2 );
 
 						}
 
@@ -1012,16 +1019,36 @@ function WebGLRenderer( parameters ) {
 
 				} else if ( compiled.has( material ) === false ) {
 
-					initMaterial( material, scene, object );
+                    tasks.push( initMaterialAsync( material, scene, object ).then( function(){
+                        progress && progress( ++completedCnt/tasks.length );
+                    }));
+                    tasks.push( compileTextureAsync( material ).then( function(){
+                        progress && progress( ++completedCnt/tasks.length );
+                    }));
 					compiled.set( material );
-
 				}
 
+				let customDepthMaterial = object.customDepthMaterial;
+				if ( customDepthMaterial ) {
+					if ( compiled.has(customDepthMaterial) === false ) {
+	
+						tasks.push( initMaterialAsync( customDepthMaterial, scene, object ).then( function(){
+							progress && progress( ++completedCnt/tasks.length );
+						}));
+						tasks.push( compileTextureAsync( customDepthMaterial ).then( function(){
+							progress && progress( ++completedCnt/tasks.length );
+						}));
+						compiled.set( customDepthMaterial );
+	
+					}
+				}
+
+				if( object.isMesh ) objects.update( object );
 			}
 
 		} );
 
-		return Promise.resolve();
+		return Promise.all(tasks);
 	}
 
 	// Animation Loop
