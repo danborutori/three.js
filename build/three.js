@@ -15668,11 +15668,10 @@
 			var numSpotShadows = 0;
 			var numDirectionalMaps = 0;
 			var numSpotMaps = 0;
-			var viewMatrix = camera.matrixWorldInverse;
 
 			if (staticLightConfig && staticLightConfig.sortFunc) {
 				lights.sort(function (a, b) {
-					return staticLightConfig.sortFunc(camera, a, b);
+					return staticLightConfig.sortFunc(a, b);
 				});
 			} else {
 				lights.sort(shadowCastingLightsFirst);
@@ -15718,9 +15717,6 @@
 
 					if (light.map && (!staticLightConfig || numDirectionalMaps < staticLightConfig.numDirectionalMaps)) {
 						uniforms.map = numDirectionalMaps;
-						var cam = light.shadow.camera;
-						var dimension = light.mapDimension || cam;
-						light.mapMatrix.makeOrthographic(dimension.left, dimension.right, dimension.top, dimension.bottom, 1, 10).multiply(cam.matrixWorldInverse).multiply(camera.matrixWorld);
 						state.directionalMap[numDirectionalMaps] = light.map;
 						state.directionalMapMatrix[numDirectionalMaps] = light.mapMatrix;
 						numDirectionalMaps++;
@@ -15761,10 +15757,6 @@
 
 					if (light.map && (!staticLightConfig || numSpotMaps < staticLightConfig.numSpotMaps)) {
 						_uniforms.map = numSpotMaps;
-						var tanAngle = Math.tan(light.angle);
-						light.mapMatrix.makePerspective(-tanAngle, tanAngle, tanAngle, -tanAngle, 1, 10);
-						light.mapMatrix.multiply(matrix4.getInverse(light.matrixWorld));
-						light.mapMatrix.multiply(camera.matrixWorld);
 						state.spotMap[numSpotMaps] = light.map;
 						state.spotMapMatrix[numSpotMaps] = light.mapMatrix;
 						numSpotMaps++;
@@ -16002,9 +15994,17 @@
 
 			for (var _i3 = 0, l = lights.length; _i3 < l; _i3++) {
 				var light = lights[_i3];
+				if (!light.lightInUse) continue;
 
 				if (light.isDirectionalLight) {
 					var uniforms = state.directional[directionalLength];
+
+					if (light.map) {
+						var cam = light.shadow.camera;
+						var dimension = light.mapDimension || cam;
+						light.mapMatrix.makeOrthographic(dimension.left, dimension.right, dimension.top, dimension.bottom, 1, 10).multiply(cam.matrixWorldInverse).multiply(camera.matrixWorld);
+					}
+
 					uniforms.direction.setFromMatrixPosition(light.matrixWorld);
 					vector3.setFromMatrixPosition(light.target.matrixWorld);
 					uniforms.direction.sub(vector3);
@@ -16012,6 +16012,14 @@
 					directionalLength++;
 				} else if (light.isSpotLight) {
 					var _uniforms5 = state.spot[spotLength];
+
+					if (light.map) {
+						_uniforms5.map = numSpotMaps;
+						var tanAngle = Math.tan(light.angle);
+						light.mapMatrix.makePerspective(-tanAngle, tanAngle, tanAngle, -tanAngle, 1, 10);
+						light.mapMatrix.multiply(matrix4.copy(light.matrixWorld).invert());
+						light.mapMatrix.multiply(camera.matrixWorld);
+					}
 
 					_uniforms5.position.setFromMatrixPosition(light.matrixWorld);
 
@@ -18898,6 +18906,16 @@
 	Object.assign(WebXRManager.prototype, EventDispatcher.prototype);
 
 	function WebGLMaterials(properties) {
+		function refreshFogUniforms(uniforms, fog) {
+			uniforms.fogColor.value.copy(fog.color);
+
+			if (fog.isFog) {
+				uniforms.fogNear.value = fog.near;
+				uniforms.fogFar.value = fog.far;
+			} else if (fog.isFogExp2) {
+				uniforms.fogDensity.value = fog.density;
+			}
+		}
 
 		function refreshMaterialUniforms(uniforms, material, pixelRatio, height) {
 			if (material.isMeshBasicMaterial) {
@@ -19354,6 +19372,7 @@
 		}
 
 		return {
+			refreshFogUniforms: refreshFogUniforms,
 			refreshMaterialUniforms: refreshMaterialUniforms
 		};
 	}
@@ -19991,30 +20010,11 @@
 			});
 		}; // Compile async
 
-
-		function compileTextureAsync(material) {
-			return new Promise(function (resolve, reject) {
-				setTimeout(function () {
-					material.map && textures.setTexture2D(material.map, 0);
-					setTimeout(function () {
-						material.normalMap && textures.setTexture2D(material.normalMap, 0);
-						setTimeout(function () {
-							material.roughnessMap && textures.setTexture2D(material.roughnessMap, 0);
-							setTimeout(function () {
-								material.metalnessMap && textures.setTexture2D(material.metalnessMap, 0);
-								resolve();
-							}, 100);
-						}, 100);
-					}, 100);
-				}, 100);
-			});
-		}
-
 		this.compileAsync = function (scene, camera, object, progress) {
-			currentRenderState = renderStates.get(scene, camera);
+			currentRenderState = renderStates.get(scene);
 			currentRenderState.init();
-			scene.traverse(function (object) {
-				if (object.isLight) {
+			scene.traverseVisible(function (object) {
+				if (object.isLight && object.layers.test(camera.layers)) {
 					currentRenderState.pushLight(object);
 
 					if (object.castShadow) {
@@ -20022,11 +20022,9 @@
 					}
 				}
 			});
-			currentRenderState.setupLights(camera);
-			var compiled = {};
-			var tasks = [];
-			var completedCnt = 0;
-			object.traverse(function (object) {
+			currentRenderState.setupLights();
+			var compiled = new WeakMap();
+			scene.traverse(function (object) {
 				var material = object.material;
 
 				if (material) {
@@ -20034,44 +20032,18 @@
 						for (var i = 0; i < material.length; i++) {
 							var material2 = material[i];
 
-							if (material2.uuid in compiled === false) {
-								tasks.push(initMaterialAsync(material2, scene, object).then(function () {
-									progress && progress(++completedCnt / tasks.length);
-								}));
-								tasks.push(compileTextureAsync(material2).then(function () {
-									progress && progress(++completedCnt / tasks.length);
-								}));
-								compiled[material2.uuid] = true;
+							if (compiled.has(material2) === false) {
+								initMaterial(material2, scene, object);
+								compiled.set(material2);
 							}
 						}
-					} else if (material.uuid in compiled === false) {
-						tasks.push(initMaterialAsync(material, scene, object).then(function () {
-							progress && progress(++completedCnt / tasks.length);
-						}));
-						tasks.push(compileTextureAsync(material).then(function () {
-							progress && progress(++completedCnt / tasks.length);
-						}));
-						compiled[material.uuid] = true;
+					} else if (compiled.has(material) === false) {
+						initMaterial(material, scene, object);
+						compiled.set(material);
 					}
 				}
-
-				var customDepthMaterial = object.customDepthMaterial;
-
-				if (customDepthMaterial) {
-					if (customDepthMaterial.uuid in compiled === false) {
-						tasks.push(initMaterialAsync(customDepthMaterial, scene, object).then(function () {
-							progress && progress(++completedCnt / tasks.length);
-						}));
-						tasks.push(compileTextureAsync(customDepthMaterial).then(function () {
-							progress && progress(++completedCnt / tasks.length);
-						}));
-						compiled[customDepthMaterial.uuid] = true;
-					}
-				}
-
-				if (object.isMesh) objects.update(object);
 			});
-			return Promise.all(tasks);
+			return Promise.resolve();
 		}; // Animation Loop
 
 
@@ -20405,111 +20377,6 @@
 			var progUniforms = materialProperties.program.getUniforms(lights.staticSamplers);
 			var uniformsList = WebGLUniforms.seqWithValue(progUniforms.seq, uniforms);
 			materialProperties.uniformsList = uniformsList;
-		}
-
-		function initMaterialAsync(material, scene, object) {
-			if (scene.isScene !== true) scene = _emptyScene; // scene could be a Mesh, Line, Points, ...
-
-			var materialProperties = properties.get(material);
-			var lights = currentRenderState.state.lights;
-			var shadowsArray = currentRenderState.state.shadowsArray;
-			var lightsStateVersion = lights.state.version;
-			var parameters = programCache.getParameters(material, lights.state, shadowsArray, scene, _clipping.numPlanes, _clipping.numIntersection, object);
-			var programCacheKey = programCache.getProgramCacheKey(parameters);
-			var program = materialProperties.program;
-			var programChange = true;
-
-			if (program === undefined) {
-				// new material
-				material.addEventListener('dispose', onMaterialDispose);
-			} else if (program.cacheKey !== programCacheKey) {
-				// changed glsl or parameters
-				releaseMaterialProgramReference(material);
-			} else if (materialProperties.lightsStateVersion !== lightsStateVersion) {
-				materialProperties.lightsStateVersion = lightsStateVersion;
-				programChange = false;
-			} else if (parameters.shaderID !== undefined) {
-				// same glsl and uniform list
-				return Promise.resolve();
-			} else {
-				// only rebuild uniform list
-				programChange = false;
-			}
-
-			if (programChange) {
-				parameters.uniforms = programCache.getUniforms(material, parameters);
-				material.onBeforeCompile(parameters, _this);
-				program = programCache.acquireProgram(parameters, programCacheKey);
-				materialProperties.program = program;
-				materialProperties.uniforms = parameters.uniforms;
-				materialProperties.outputEncoding = parameters.outputEncoding;
-			}
-
-			return program.completion.then(function () {
-				var programAttributes = program.getAttributes();
-
-				if (material.morphTargets) {
-					material.numSupportedMorphTargets = 0;
-
-					for (var i = 0; i < _this.maxMorphTargets; i++) {
-						if (programAttributes['morphTarget' + i] >= 0) {
-							material.numSupportedMorphTargets++;
-						}
-					}
-				}
-
-				if (material.morphNormals) {
-					material.numSupportedMorphNormals = 0;
-
-					for (var _i2 = 0; _i2 < _this.maxMorphNormals; _i2++) {
-						if (programAttributes['morphNormal' + _i2] >= 0) {
-							material.numSupportedMorphNormals++;
-						}
-					}
-				}
-
-				var uniforms = materialProperties.uniforms;
-
-				if (!material.isShaderMaterial && !material.isRawShaderMaterial || material.clipping === true) {
-					materialProperties.numClippingPlanes = _clipping.numPlanes;
-					materialProperties.numIntersection = _clipping.numIntersection;
-					uniforms.clippingPlanes = _clipping.uniform;
-				}
-
-				materialProperties.environment = material.isMeshStandardMaterial ? scene.environment : null;
-				materialProperties.fog = scene.fog; // store the light setup it was created for
-
-				materialProperties.needsLights = materialNeedsLights(material);
-				materialProperties.lightsStateVersion = lightsStateVersion;
-
-				if (materialProperties.needsLights) {
-					// wire up the material to this renderer's lighting state
-					//uniforms.ambientLightColor.value = lights.state.ambient;
-					//uniforms.lightProbe.value = lights.state.probe;
-					//uniforms.directionalLights.value = lights.state.directional;
-					//uniforms.directionalLightShadows.value = lights.state.directionalShadow;
-					//uniforms.spotLights.value = lights.state.spot;
-					//uniforms.spotLightShadows.value = lights.state.spotShadow;
-					//uniforms.rectAreaLights.value = lights.state.rectArea;
-					//uniforms.pointLights.value = lights.state.point;
-					//uniforms.pointLightShadows.value = lights.state.pointShadow;
-					//uniforms.hemisphereLights.value = lights.state.hemi;
-					uniforms.directionalShadowMap.value = lights.state.directionalShadowMap; //uniforms.directionalShadowMatrix.value = lights.state.directionalShadowMatrix;
-
-					uniforms.spotShadowMap.value = lights.state.spotShadowMap; //uniforms.spotShadowMatrix.value = lights.state.spotShadowMatrix;
-
-					uniforms.pointShadowMap.value = lights.state.pointShadowMap; //uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
-					// TODO (abelnation): add area lights shadow info to uniforms
-					//uniforms.directionalMap.value = lights.state.directionalMap;
-					//uniforms.directionalMapMatrix.value = lights.state.directionalMapMatrix;
-
-					uniforms.spotMap.value = lights.state.spotMap; //uniforms.spotMapMatrix.value = lights.state.spotMapMatrix;
-				}
-
-				var progUniforms = materialProperties.program.getUniforms(lights.staticSamplers),
-						uniformsList = WebGLUniforms.seqWithValue(progUniforms.seq, uniforms);
-				materialProperties.uniformsList = uniformsList;
-			});
 		}
 
 		function setProgram(camera, scene, material, object) {
