@@ -652,6 +652,8 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 
 			const light = lights[ i ];
 
+			if( !light.lightInUse ) continue;
+
 			if ( light.isDirectionalLight ) {
 
 				const uniforms = state.directional[ directionalLength ];
