@@ -966,12 +966,12 @@ function WebGLRenderer( parameters ) {
 	}
 	
 	this.compileAsync = function ( scene, camera, object, progress ) {
-		currentRenderState = renderStates.get( scene, camera );
+		currentRenderState = renderStates.get( scene );
 		currentRenderState.init();
 
-		scene.traverse( function ( object ) {
+		scene.traverseVisible( function ( object ) {
 
-			if ( object.isLight ) {
+			if ( object.isLight && object.layers.test( camera.layers ) ) {
 
 				currentRenderState.pushLight( object );
 
@@ -985,71 +985,43 @@ function WebGLRenderer( parameters ) {
 
 		} );
 
-		currentRenderState.setupLights( camera );
+		currentRenderState.setupLights();
 
-		const compiled = {};
-		const tasks = [];
-		let completedCnt = 0;
+		const compiled = new WeakMap();
 
-		object.traverse( function ( object ) {
+		scene.traverse( function ( object ) {
 
-			let material = object.material;
-			
+			const material = object.material;
+
 			if ( material ) {
 
 				if ( Array.isArray( material ) ) {
 
 					for ( let i = 0; i < material.length; i ++ ) {
 
-						let material2 = material[ i ];
+						const material2 = material[ i ];
 
-						if ( material2.uuid in compiled === false ) {
+						if ( compiled.has( material2 ) === false ) {
 
-							tasks.push( initMaterialAsync( material2, scene, object ).then( function(){
-								progress && progress( ++completedCnt/tasks.length );
-							}));
-							tasks.push( compileTextureAsync( material2 ).then( function(){
-								progress && progress( ++completedCnt/tasks.length );
-							}));
-							compiled[ material2.uuid ] = true;
+							initMaterial( material2, scene, object );
+							compiled.set( material2 );
 
 						}
 
 					}
 
-				} else if ( material.uuid in compiled === false ) {
+				} else if ( compiled.has( material ) === false ) {
 
-					tasks.push( initMaterialAsync( material, scene, object ).then( function(){
-						progress && progress( ++completedCnt/tasks.length );
-					}));
-					tasks.push( compileTextureAsync( material ).then( function(){
-						progress && progress( ++completedCnt/tasks.length );
-					}));
-					compiled[ material.uuid ] = true;
+					initMaterial( material, scene, object );
+					compiled.set( material );
 
 				}
 
 			}
-			
-			let customDepthMaterial = object.customDepthMaterial;
-			if ( customDepthMaterial ) {
-				if ( customDepthMaterial.uuid in compiled === false ) {
 
-					tasks.push( initMaterialAsync( customDepthMaterial, scene, object ).then( function(){
-						progress && progress( ++completedCnt/tasks.length );
-					}));
-					tasks.push( compileTextureAsync( customDepthMaterial ).then( function(){
-						progress && progress( ++completedCnt/tasks.length );
-					}));
-					compiled[ customDepthMaterial.uuid ] = true;
-
-				}
-			}
-
-			if( object.isMesh ) objects.update( object );
 		} );
-		
-		return Promise.all(tasks);
+
+		return Promise.resolve();
 	}
 
 	// Animation Loop
