@@ -1,4 +1,5 @@
 import { Vector } from './../../math/Vector2';
+import { Vector3 } from './../../math/Vector3';
 
 // Extras / Core /////////////////////////////////////////////////////////////////////
 
@@ -9,9 +10,14 @@ import { Vector } from './../../math/Vector2';
 export class Curve<T extends Vector> {
 
 	/**
+	 * @default 'Curve'
+	 */
+	type: string;
+
+	/**
 	 * This value determines the amount of divisions when calculating the cumulative segment lengths of a curve via .getLengths.
 	 * To ensure precision when using methods like .getSpacedPoints, it is recommended to increase .arcLengthDivisions if the curve is very large.
-	 * Default is 200.
+	 * @default 200
 	 */
 	arcLengthDivisions: number;
 
@@ -70,6 +76,15 @@ export class Curve<T extends Vector> {
 	 * getTangentAt(u: number, optionalTarget?: T): T;
 	 */
 	getTangentAt( u: number, optionalTarget?: T ): T;
+
+	/**
+	 * Generate Frenet frames of the curve
+	 */
+	computeFrenetFrames( segments: number, closed?: boolean ): {
+		tangents: Vector3[],
+		normals: Vector3[],
+		binormals: Vector3[]
+	};
 
 	clone(): Curve<T>;
 	copy( source: Curve<T> ): this;

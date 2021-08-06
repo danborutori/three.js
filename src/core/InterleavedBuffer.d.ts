@@ -2,7 +2,7 @@ import { InterleavedBufferAttribute } from './InterleavedBufferAttribute';
 import { Usage } from '../constants';
 
 /**
- * @see {@link https://github.com/mrdoob/three.js/blob/master/src/core/InterleavedBuffer.js|src/core/InterleavedBuffer.js}
+ * see {@link https://github.com/mrdoob/three.js/blob/master/src/core/InterleavedBuffer.js|src/core/InterleavedBuffer.js}
  */
 export class InterleavedBuffer {
 
@@ -10,16 +10,33 @@ export class InterleavedBuffer {
 
 	array: ArrayLike<number>;
 	stride: number;
+
+	/**
+	 * @default THREE.StaticDrawUsage
+	 */
 	usage: Usage;
+
+	/**
+	 * @default { offset: number; count: number }
+	 */
 	updateRange: { offset: number; count: number };
+
+	/**
+	 * @default 0
+	 */
 	version: number;
+
 	length: number;
+
+	/**
+	 * @default 0
+	 */
 	count: number;
 	needsUpdate: boolean;
 	uuid: string;
 
 	setUsage( usage: Usage ): InterleavedBuffer;
-	clone( data: object ): this;
+	clone( data: object ): InterleavedBuffer;
 	copy( source: InterleavedBuffer ): this;
 	copyAt(
 		index1: number,

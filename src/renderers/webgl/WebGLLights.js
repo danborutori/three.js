@@ -7,6 +7,7 @@ import { SpotLight } from '../../lights/SpotLight.js';
 import { PointLight } from '../../lights/PointLight.js';
 import { RectAreaLight } from '../../lights/RectAreaLight.js';
 import { HemisphereLight } from '../../lights/HemisphereLight.js';
+import { UniformsLib } from '../shaders/UniformsLib.js';
 
 function UniformsCache() {
 
@@ -156,8 +157,8 @@ function shadowCastingLightsFirst( lightA, lightB ) {
 
 }
 
-function WebGLLights( staticLightConfig ) {
-	
+function WebGLLights( extensions, capabilities, staticLightConfig ) {
+
 	if(staticLightConfig){
 		staticLightConfig.directionalLength = staticLightConfig.directionalLength || 0;
 		staticLightConfig.numDirectionalShadows = staticLightConfig.numDirectionalShadows || 0;
@@ -170,7 +171,7 @@ function WebGLLights( staticLightConfig ) {
 		staticLightConfig.numSpotMaps = staticLightConfig.numSpotMaps || 0;
 		staticLightConfig.numDirectionalMaps = staticLightConfig.numDirectionalMaps || 0;
 	}
-	
+
 	const cache = new UniformsCache();
 
 	const shadowCache = ShadowUniformsCache();
@@ -227,6 +228,8 @@ function WebGLLights( staticLightConfig ) {
 		spotShadowMap: [],
 		spotShadowMatrix: [],
 		rectArea: [],
+		rectAreaLTC1: null,
+		rectAreaLTC2: null,
 		point: [],
 		pointShadow: [],
 		pointShadowMap: [],
@@ -248,7 +251,7 @@ function WebGLLights( staticLightConfig ) {
 	const matrix4 = new Matrix4();
 	const matrix42 = new Matrix4();
 
-	function setup( lights, shadows, camera ) {
+	function setup( lights ) {
 
 		let r = 0, g = 0, b = 0;
 
@@ -310,10 +313,6 @@ function WebGLLights( staticLightConfig ) {
 				const uniforms = cache.get( light );
 
 				uniforms.color.copy( light.color ).multiplyScalar( light.intensity );
-				uniforms.direction.setFromMatrixPosition( light.matrixWorld );
-				vector3.setFromMatrixPosition( light.target.matrixWorld );
-				uniforms.direction.sub( vector3 );
-				uniforms.direction.transformDirection( viewMatrix );
 
 				if ( light.castShadow && (!staticLightConfig || numDirectionalShadows<staticLightConfig.numDirectionalShadows) ) {
 
@@ -364,15 +363,9 @@ function WebGLLights( staticLightConfig ) {
 				const uniforms = cache.get( light );
 
 				uniforms.position.setFromMatrixPosition( light.matrixWorld );
-				uniforms.position.applyMatrix4( viewMatrix );
 
 				uniforms.color.copy( color ).multiplyScalar( intensity );
 				uniforms.distance = distance;
-
-				uniforms.direction.setFromMatrixPosition( light.matrixWorld );
-				vector3.setFromMatrixPosition( light.target.matrixWorld );
-				uniforms.direction.sub( vector3 );
-				uniforms.direction.transformDirection( viewMatrix );
 
 				uniforms.coneCos = Math.cos( light.angle );
 				uniforms.penumbraCos = Math.cos( light.angle * ( 1 - light.penumbra ) );
@@ -425,23 +418,8 @@ function WebGLLights( staticLightConfig ) {
 				// (b) intensity is the brightness of the light
 				uniforms.color.copy( color ).multiplyScalar( intensity );
 
-				uniforms.position.setFromMatrixPosition( light.matrixWorld );
-				uniforms.position.applyMatrix4( viewMatrix );
-
-				// extract local rotation of light to derive width/height half vectors
-				matrix42.identity();
-				matrix4.copy( light.matrixWorld );
-				matrix4.premultiply( viewMatrix );
-				matrix42.extractRotation( matrix4 );
-
 				uniforms.halfWidth.set( light.width * 0.5, 0.0, 0.0 );
 				uniforms.halfHeight.set( 0.0, light.height * 0.5, 0.0 );
-
-				uniforms.halfWidth.applyMatrix4( matrix42 );
-				uniforms.halfHeight.applyMatrix4( matrix42 );
-
-				// TODO (abelnation): RectAreaLight distance?
-				// uniforms.distance = distance;
 
 				state.rectArea[ rectAreaLength ] = uniforms;
 
@@ -451,9 +429,6 @@ function WebGLLights( staticLightConfig ) {
 			} else if ( light.isPointLight && (!staticLightConfig || pointLength<staticLightConfig.pointLength) ) {
 
 				const uniforms = cache.get( light );
-
-				uniforms.position.setFromMatrixPosition( light.matrixWorld );
-				uniforms.position.applyMatrix4( viewMatrix );
 
 				uniforms.color.copy( light.color ).multiplyScalar( light.intensity );
 				uniforms.distance = light.distance;
@@ -489,10 +464,6 @@ function WebGLLights( staticLightConfig ) {
 
 				const uniforms = cache.get( light );
 
-				uniforms.direction.setFromMatrixPosition( light.matrixWorld );
-				uniforms.direction.transformDirection( viewMatrix );
-				uniforms.direction.normalize();
-
 				uniforms.skyColor.copy( light.color ).multiplyScalar( intensity );
 				uniforms.groundColor.copy( light.groundColor ).multiplyScalar( intensity );
 
@@ -501,6 +472,39 @@ function WebGLLights( staticLightConfig ) {
 				hemiLength ++;
 				light.lightInUse = true;
 				
+			}
+
+		}
+
+		if ( rectAreaLength > 0 ) {
+
+			if ( capabilities.isWebGL2 ) {
+
+				// WebGL 2
+
+				state.rectAreaLTC1 = UniformsLib.LTC_FLOAT_1;
+				state.rectAreaLTC2 = UniformsLib.LTC_FLOAT_2;
+
+			} else {
+
+				// WebGL 1
+
+				if ( extensions.has( 'OES_texture_float_linear' ) === true ) {
+
+					state.rectAreaLTC1 = UniformsLib.LTC_FLOAT_1;
+					state.rectAreaLTC2 = UniformsLib.LTC_FLOAT_2;
+
+				} else if ( extensions.has( 'OES_texture_half_float_linear' ) === true ) {
+
+					state.rectAreaLTC1 = UniformsLib.LTC_HALF_1;
+					state.rectAreaLTC2 = UniformsLib.LTC_HALF_2;
+
+				} else {
+
+					console.error( 'THREE.WebGLRenderer: Unable to use RectAreaLight. Missing WebGL extensions.' );
+
+				}
+
 			}
 
 		}
@@ -650,9 +654,95 @@ function WebGLLights( staticLightConfig ) {
 		}
 
 	}
-	
+
+	function setupView( lights, camera ) {
+
+		let directionalLength = 0;
+		let pointLength = 0;
+		let spotLength = 0;
+		let rectAreaLength = 0;
+		let hemiLength = 0;
+
+		const viewMatrix = camera.matrixWorldInverse;
+
+		for ( let i = 0, l = lights.length; i < l; i ++ ) {
+
+			const light = lights[ i ];
+
+			if ( light.isDirectionalLight ) {
+
+				const uniforms = state.directional[ directionalLength ];
+
+				uniforms.direction.setFromMatrixPosition( light.matrixWorld );
+				vector3.setFromMatrixPosition( light.target.matrixWorld );
+				uniforms.direction.sub( vector3 );
+				uniforms.direction.transformDirection( viewMatrix );
+
+				directionalLength ++;
+
+			} else if ( light.isSpotLight ) {
+
+				const uniforms = state.spot[ spotLength ];
+
+				uniforms.position.setFromMatrixPosition( light.matrixWorld );
+				uniforms.position.applyMatrix4( viewMatrix );
+
+				uniforms.direction.setFromMatrixPosition( light.matrixWorld );
+				vector3.setFromMatrixPosition( light.target.matrixWorld );
+				uniforms.direction.sub( vector3 );
+				uniforms.direction.transformDirection( viewMatrix );
+
+				spotLength ++;
+
+			} else if ( light.isRectAreaLight ) {
+
+				const uniforms = state.rectArea[ rectAreaLength ];
+
+				uniforms.position.setFromMatrixPosition( light.matrixWorld );
+				uniforms.position.applyMatrix4( viewMatrix );
+
+				// extract local rotation of light to derive width/height half vectors
+				matrix42.identity();
+				matrix4.copy( light.matrixWorld );
+				matrix4.premultiply( viewMatrix );
+				matrix42.extractRotation( matrix4 );
+
+				uniforms.halfWidth.set( light.width * 0.5, 0.0, 0.0 );
+				uniforms.halfHeight.set( 0.0, light.height * 0.5, 0.0 );
+
+				uniforms.halfWidth.applyMatrix4( matrix42 );
+				uniforms.halfHeight.applyMatrix4( matrix42 );
+
+				rectAreaLength ++;
+
+			} else if ( light.isPointLight ) {
+
+				const uniforms = state.point[ pointLength ];
+
+				uniforms.position.setFromMatrixPosition( light.matrixWorld );
+				uniforms.position.applyMatrix4( viewMatrix );
+
+				pointLength ++;
+
+			} else if ( light.isHemisphereLight ) {
+
+				const uniforms = state.hemi[ hemiLength ];
+
+				uniforms.direction.setFromMatrixPosition( light.matrixWorld );
+				uniforms.direction.transformDirection( viewMatrix );
+				uniforms.direction.normalize();
+
+				hemiLength ++;
+
+			}
+
+		}
+
+	}
+
 	return {
 		setup: setup,
+		setupView: setupView,
 		state: state,
 		staticSamplers: staticSamplers
 	};

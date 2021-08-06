@@ -1,7 +1,7 @@
 import { WebGLUniforms } from './WebGLUniforms.js';
 import { WebGLShader } from './WebGLShader.js';
 import { ShaderChunk } from '../shaders/ShaderChunk.js';
-import { NoToneMapping, AddOperation, MixOperation, MultiplyOperation, EquirectangularRefractionMapping, CubeRefractionMapping, EquirectangularReflectionMapping, CubeUVRefractionMapping, CubeUVReflectionMapping, CubeReflectionMapping, PCFSoftShadowMap, PCFShadowMap, VSMShadowMap, ACESFilmicToneMapping, CineonToneMapping, CustomToneMapping, ReinhardToneMapping, LinearToneMapping, GammaEncoding, RGBDEncoding, RGBM16Encoding, RGBM7Encoding, RGBEEncoding, sRGBEncoding, LinearEncoding, LogLuvEncoding } from '../../constants.js';
+import { NoToneMapping, AddOperation, MixOperation, MultiplyOperation, CubeRefractionMapping, CubeUVRefractionMapping, CubeUVReflectionMapping, CubeReflectionMapping, PCFSoftShadowMap, PCFShadowMap, VSMShadowMap, ACESFilmicToneMapping, CineonToneMapping, CustomToneMapping, ReinhardToneMapping, LinearToneMapping, GammaEncoding, RGBDEncoding, RGBM16Encoding, RGBM7Encoding, RGBEEncoding, sRGBEncoding, LinearEncoding, LogLuvEncoding, GLSL3 } from '../../constants.js';
 
 let programIdCount = 0;
 
@@ -222,7 +222,7 @@ function includeReplacer( match, include ) {
 // Unroll Loops
 
 const deprecatedUnrollLoopPattern = /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
-const unrollLoopPattern = /#pragma unroll_loop_start[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}[\s]+?#pragma unroll_loop_end/g;
+const unrollLoopPattern = /#pragma unroll_loop_start\s+for\s*\(\s*int\s+i\s*=\s*(\d+)\s*;\s*i\s*<\s*(\d+)\s*;\s*i\s*\+\+\s*\)\s*{([\s\S]+?)}\s+#pragma unroll_loop_end/g;
 
 function unrollLoops( string ) {
 
@@ -246,7 +246,7 @@ function loopReplacer( match, start, end, snippet ) {
 	for ( let i = parseInt( start ); i < parseInt( end ); i ++ ) {
 
 		string += snippet
-			.replace( /\[ i \]/g, '[ ' + i + ' ]' )
+			.replace( /\[\s*i\s*\]/g, '[ ' + i + ' ]' )
 			.replace( /UNROLLED_LOOP_INDEX/g, i );
 
 	}
@@ -259,19 +259,19 @@ function loopReplacer( match, start, end, snippet ) {
 
 function generatePrecision( parameters ) {
 
-	let precisionstring = "precision " + parameters.precision + " float;\nprecision " + parameters.precision + " int;";
+	let precisionstring = 'precision ' + parameters.precision + ' float;\nprecision ' + parameters.precision + ' int;';
 
-	if ( parameters.precision === "highp" ) {
+	if ( parameters.precision === 'highp' ) {
 
-		precisionstring += "\n#define HIGH_PRECISION";
+		precisionstring += '\n#define HIGH_PRECISION';
 
-	} else if ( parameters.precision === "mediump" ) {
+	} else if ( parameters.precision === 'mediump' ) {
 
-		precisionstring += "\n#define MEDIUM_PRECISION";
+		precisionstring += '\n#define MEDIUM_PRECISION';
 
-	} else if ( parameters.precision === "lowp" ) {
+	} else if ( parameters.precision === 'lowp' ) {
 
-		precisionstring += "\n#define LOW_PRECISION";
+		precisionstring += '\n#define LOW_PRECISION';
 
 	}
 
@@ -319,11 +319,6 @@ function generateEnvMapTypeDefine( parameters ) {
 				envMapTypeDefine = 'ENVMAP_TYPE_CUBE_UV';
 				break;
 
-			case EquirectangularReflectionMapping:
-			case EquirectangularRefractionMapping:
-				envMapTypeDefine = 'ENVMAP_TYPE_EQUIREC';
-				break;
-
 		}
 
 	}
@@ -341,7 +336,6 @@ function generateEnvMapModeDefine( parameters ) {
 		switch ( parameters.envMapMode ) {
 
 			case CubeRefractionMapping:
-			case EquirectangularRefractionMapping:
 			case CubeUVRefractionMapping:
 
 				envMapModeDefine = 'ENVMAP_MODE_REFRACTION';
@@ -421,6 +415,7 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 	const program = gl.createProgram();
 
 	let prefixVertex, prefixFragment;
+	let versionString = parameters.glslVersion ? '#version ' + parameters.glslVersion + '\n' : '';
 
 	if ( parameters.isRawShaderMaterial ) {
 
@@ -699,19 +694,19 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 	
 	const outputFragmentType = (defines && defines.FRAGMENT_OUTPUT_TYPE) || "vec4";
 
-	if ( parameters.isWebGL2 && ! parameters.isRawShaderMaterial ) {
+	if ( parameters.isWebGL2 && parameters.isRawShaderMaterial !== true ) {
 
-		// GLSL 3.0 conversion
+		// GLSL 3.0 conversion for built-in materials and ShaderMaterial
+
+		versionString = '#version 300 es\n';
 
 		prefixVertex = [
-			'#version 300 es\n',
 			'#define attribute in',
 			'#define varying out',
 			'#define texture2D texture'
 		].join( '\n' ) + '\n' + prefixVertex;
 
 		prefixFragment = [
-			'#version 300 es\n',
 			'#define varying in',
 			`layout(location = 0) out highp ${outputFragmentType} pc_fragColor;`,
 			`layout(location = 1) out highp ${outputFragmentType} pc_fragNormal;`,
@@ -735,8 +730,8 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 	}
 	
-	const vertexGlsl = prefixVertex + vertexShader;
-	const fragmentGlsl = prefixFragment + fragmentShader.replace( /void\s+main\s*\(\s*\)\s*{/, function(match){
+	const vertexGlsl = versionString + prefixVertex + vertexShader;
+	const fragmentGlsl = versionString + prefixFragment + fragmentShader.replace( /void\s+main\s*\(\s*\)\s*{/, function(match){
 		return match+`
 			#ifdef gl_FragNormal
 				gl_FragNormal = ${outputFragmentType}(0.5,0.5,1,1);

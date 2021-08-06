@@ -1,8 +1,8 @@
 import { WebGLLights } from './WebGLLights.js';
 
-function WebGLRenderState( staticLightConfig ) {
-	
-	const lights = new WebGLLights( staticLightConfig );
+function WebGLRenderState( extensions, capabilities, staticLightConfig ) {
+
+	const lights = new WebGLLights( extensions, capabilities, staticLightConfig );
 
 	const lightsArray = [];
 	const shadowsArray = [];
@@ -26,9 +26,15 @@ function WebGLRenderState( staticLightConfig ) {
 
 	}
 
-	function setupLights( camera ) {
+	function setupLights() {
 
-		lights.setup( lightsArray, shadowsArray, camera );
+		lights.setup( lightsArray );
+
+	}
+
+	function setupLightsView( camera ) {
+
+		lights.setupView( lightsArray, camera );
 
 	}
 
@@ -43,6 +49,7 @@ function WebGLRenderState( staticLightConfig ) {
 		init: init,
 		state: state,
 		setupLights: setupLights,
+		setupLightsView: setupLightsView,
 
 		pushLight: pushLight,
 		pushShadow: pushShadow
@@ -50,30 +57,30 @@ function WebGLRenderState( staticLightConfig ) {
 
 }
 
-function WebGLRenderStates( staticLightConfig ) {
+function WebGLRenderStates( extensions, capabilities, staticLightConfig ) {
 
 	let renderStates = new WeakMap();
 
-	function get( scene, camera ) {
+	function get( scene, renderCallDepth = 0 ) {
 
 		let renderState;
 
 		if ( renderStates.has( scene ) === false ) {
 
-			renderState = new WebGLRenderState( staticLightConfig );
-			renderStates.set( scene, new WeakMap() );
-			renderStates.get( scene ).set( camera, renderState );
+			renderState = new WebGLRenderState( extensions, capabilities, staticLightConfig );
+			renderStates.set( scene, [] );
+			renderStates.get( scene ).push( renderState );
 
 		} else {
 
-			if ( renderStates.get( scene ).has( camera ) === false ) {
+			if ( renderCallDepth >= renderStates.get( scene ).length ) {
 
-				renderState = new WebGLRenderState( staticLightConfig );
-				renderStates.get( scene ).set( camera, renderState );
+				renderState = new WebGLRenderState( extensions, capabilities, staticLightConfig );
+				renderStates.get( scene ).push( renderState );
 
 			} else {
 
-				renderState = renderStates.get( scene ).get( camera );
+				renderState = renderStates.get( scene )[ renderCallDepth ];
 
 			}
 

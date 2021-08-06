@@ -13,7 +13,7 @@ export interface WebGLRenderTargetOptions {
 	type?: TextureDataType; // UnsignedByteType;
 	anisotropy?: number; // 1;
 	depthBuffer?: boolean; // true;
-	stencilBuffer?: boolean; // true;
+	stencilBuffer?: boolean; // false;
 	generateMipmaps?: boolean; // true;
 	depthTexture?: DepthTexture;
 	normalTexture?: Texture;
@@ -34,11 +34,27 @@ export class WebGLRenderTarget extends EventDispatcher {
 	width: number;
 	height: number;
 	scissor: Vector4;
+
+	/**
+	 * @default false
+	 */
 	scissorTest: boolean;
 	viewport: Vector4;
 	texture: Texture;
+
+	/**
+	 * @default true
+	 */
 	depthBuffer: boolean;
+
+	/**
+	 * @default true
+	 */
 	stencilBuffer: boolean;
+
+	/**
+	 * @default null
+	 */
 	depthTexture: DepthTexture;
 	normalTexture: Texture | null;
 	metalnessTexture: Texture | null;
@@ -87,7 +103,7 @@ export class WebGLRenderTarget extends EventDispatcher {
 	generateMipmaps: any;
 
 	setSize( width: number, height: number ): void;
-	clone(): this;
+	clone(): WebGLRenderTarget;
 	copy( source: WebGLRenderTarget ): this;
 	dispose(): void;
 
