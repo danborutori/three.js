@@ -3423,7 +3423,7 @@ THREE.GLTFLoader = ( function () {
 			var sampler = animationDef.samplers[ channel.sampler ];
 			var target = channel.target;
 			var name = target.node !== undefined ? target.node : target.id; // NOTE: target.id is deprecated.
-			if( name ){
+			if( name !== undefined ){
 				var input = animationDef.parameters !== undefined ? animationDef.parameters[ sampler.input ] : sampler.input;
 				var output = animationDef.parameters !== undefined ? animationDef.parameters[ sampler.output ] : sampler.output;
 	
