@@ -1507,7 +1507,7 @@ function WebGLRenderer( parameters = {} ) {
 
 	}
 
-	initMaterialAsync( material, scene, object ){
+	function initMaterialAsync( material, scene, object ){
 
 		if ( scene.isScene !== true ) scene = _emptyScene; // scene could be a Mesh, Line, Points, ...
 

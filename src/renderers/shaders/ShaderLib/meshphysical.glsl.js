@@ -185,7 +185,18 @@ void main() {
 
 	#endif
 
-	#include <output_fragment>
+	#include <output_fragment>	
+	gl_FragColor = vec4( outgoingLight, diffuseColor.a );
+	#ifdef gl_FragNormal
+	gl_FragNormal = vec4( normal*0.5+0.5, diffuseColor.a );
+	#endif
+	#ifdef gl_FragMetalness
+	gl_FragMetalness = vec4( roughnessFactor, metalnessFactor, 0, diffuseColor.a );
+	#endif
+	#ifdef gl_FragDiffuseColor
+	gl_FragDiffuseColor = diffuseColor;
+	#endif
+
 	#include <tonemapping_fragment>
 	#include <encodings_fragment>
 	#include <fog_fragment>
