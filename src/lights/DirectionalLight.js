@@ -3,43 +3,45 @@ import { DirectionalLightShadow } from './DirectionalLightShadow.js';
 import { Object3D } from '../core/Object3D.js';
 import { Matrix4 } from '../math/Matrix4.js';
 
-function DirectionalLight( color, intensity ) {
-	
-	const colorTexture = color && color.isTexture;	
-	Light.call( this, colorTexture?0xffffff:color, intensity );
+class DirectionalLight extends Light {
 
-	this.type = 'DirectionalLight';
+	constructor( color, intensity ) {
+		const colorTexture = color && color.isTexture;	
 
-	this.map = colorTexture?color:undefined;
-	this.mapMatrix = new Matrix4();
-	this.position.copy( Object3D.DefaultUp );
-	this.updateMatrix();
+		super( color, intensity );
 
-	this.target = new Object3D();
+		this.type = 'DirectionalLight';
 
-	this.shadow = new DirectionalLightShadow();
+		this.map = colorTexture?color:undefined;
+		this.mapMatrix = new Matrix4();
+		this.position.copy( Object3D.DefaultUp );
+		this.updateMatrix();
 
-}
+		this.target = new Object3D();
 
-DirectionalLight.prototype = Object.assign( Object.create( Light.prototype ), {
+		this.shadow = new DirectionalLightShadow();
 
-	constructor: DirectionalLight,
+	}
 
-	isDirectionalLight: true,
+	dispose() {
 
-	copy: function ( source ) {
+		this.shadow.dispose();
 
-		Light.prototype.copy.call( this, source );
+	}
+
+	copy( source ) {
+
+		super.copy( source );
 
 		this.target = source.target.clone();
-
 		this.shadow = source.shadow.clone();
 
 		return this;
 
 	}
 
-} );
+}
 
+DirectionalLight.prototype.isDirectionalLight = true;
 
 export { DirectionalLight };

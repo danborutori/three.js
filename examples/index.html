@@ -4,7 +4,8 @@
 		<meta charset="utf-8">
 		<title>three.js examples</title>
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<link rel="shortcut icon" href="../files/favicon.ico" />
+		<link rel="shortcut icon" href="../files/favicon_white.ico" media="(prefers-color-scheme: dark)"/>
+		<link rel="shortcut icon" href="../files/favicon.ico" media="(prefers-color-scheme: light)" />
 		<link rel="stylesheet" type="text/css" href="../files/main.css">
 	</head>
 	<body>
@@ -38,7 +39,7 @@
 
 		</div>
 
-		<iframe id="viewer" name="viewer" allowfullscreen allowvr onmousewheel=""></iframe>
+		<iframe id="viewer" name="viewer" allow="fullscreen; xr-spatial-tracking;"></iframe>
 
 		<a id="button" target="_blank"><img src="../files/ic_code_black_24dp.svg"></a>
 
@@ -52,8 +53,10 @@
 		const expandButton = document.getElementById( 'expandButton' );
 		const viewSrcButton = document.getElementById( 'button' );
 		const panelScrim = document.getElementById( 'panelScrim' );
-
 		const previewsToggler = document.getElementById( 'previewsToggler' );
+
+		const sectionLink = document.querySelector( '#sections > a' );
+		const sectionDefaultHref = sectionLink.href;
 
 		const links = {};
 		const validRedirects = new Map();
@@ -105,6 +108,7 @@
 
 					selectFile( file );
 					viewer.src = validRedirects.get( file );
+					viewer.style.display = 'unset';
 
 				}
 
@@ -116,9 +120,13 @@
 
 				panel.classList.add( 'searchFocused' );
 
-			}
+				updateFilter( files, tags );
 
-			updateFilter( files, tags );
+			} else {
+
+				updateLink( '' );
+
+			}
 
 			// Events
 
@@ -221,6 +229,7 @@
 
 			window.location.hash = file;
 			viewer.focus();
+			viewer.style.display = 'unset';
 
 			panel.classList.remove( 'open' );
 
@@ -263,6 +272,25 @@
 			}
 
 			layoutList( files );
+
+			updateLink( v );
+
+		}
+
+		function updateLink( search ) {
+
+			// update docs link
+
+			if ( search ) {
+
+				let link = sectionLink.href.split( /[?#]/ )[ 0 ];
+				sectionLink.href = `${link}?q=${search}`;
+
+			} else {
+
+				sectionLink.href = sectionDefaultHref;
+
+			}
 
 		}
 
@@ -342,18 +370,17 @@
 
 		function extractQuery() {
 
-			const p = window.location.search.indexOf( '?q=' );
+			const search = window.location.search;
 
-			if ( p !== - 1 ) {
+			if ( search.indexOf( '?q=' ) !== - 1 ) {
 
-				return decodeURI( window.location.search.substr( 3 ) );
+				return decodeURI( search.substr( 3 ) );
 
 			}
 
 			return '';
 
 		}
-
 
 		function createElementFromHTML( htmlString ) {
 

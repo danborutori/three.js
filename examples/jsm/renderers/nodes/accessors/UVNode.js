@@ -2,37 +2,24 @@ import AttributeNode from '../core/AttributeNode.js';
 
 class UVNode extends AttributeNode {
 
-	constructor( index = 0 ) {
+	constructor( value = 0 ) {
 
-		super( 'vec2' );
+		super( null, 'vec2' );
 
-		this.index = index;
-
-	}
-
-	getIndexProperty( prefix ) {
-
-		return prefix + ( this.index > 0 ? this.index + 1 : '' );
+		this.value = value;
 
 	}
 
 	getAttributeName( /*builder*/ ) {
 
-		return this.getIndexProperty( 'uv' );
+		const value = this.value;
 
-	}
-
-	getAttributeProperty( builder ) {
-
-		// customize 'uv' property
-		const property = this.getIndexProperty( 'vUv' );
-
-		this.setAttributeProperty( property );
-
-		return super.getAttributeProperty( builder );
+		return 'uv' + ( value > 0 ? value + 1 : '' );
 
 	}
 
 }
+
+UVNode.prototype.isUVNode = true;
 
 export default UVNode;

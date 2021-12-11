@@ -3,56 +3,55 @@ import { SpotLightShadow } from './SpotLightShadow.js';
 import { Object3D } from '../core/Object3D.js';
 import { Matrix4 } from '../math/Matrix4.js';
 
-function SpotLight( color, intensity, distance, angle, penumbra, decay ) {
+class SpotLight extends Light {
 
-	const colorTexture = color && color.isTexture
+	constructor( color, intensity, distance = 0, angle = Math.PI / 3, penumbra = 0, decay = 1 ) {
+		const colorTexture = color && color.isTexture
+		
+		super( color, intensity );
+
+		this.type = 'SpotLight';
+
+		this.position.copy( Object3D.DefaultUp );
+		this.updateMatrix();
+		this.map = colorTexture?color:undefined
+		this.mapMatrix = new Matrix4()
 	
-	Light.call( this, colorTexture?0xffffff:color, intensity );
+		this.target = new Object3D();
 
-	this.type = 'SpotLight';
+		this.distance = distance;
+		this.angle = angle;
+		this.penumbra = penumbra;
+		this.decay = decay; // for physically correct lights, should be 2.
 
-	this.position.copy( Object3D.DefaultUp );
-	this.updateMatrix();
-	this.map = colorTexture?color:undefined
-	this.mapMatrix = new Matrix4()
+		this.shadow = new SpotLightShadow();
 
-	this.target = new Object3D();
+	}
 
-	Object.defineProperty( this, 'power', {
-		get: function () {
+	get power() {
 
-			// intensity = power per solid angle.
-			// ref: equation (17) from https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
-			return this.intensity * Math.PI;
+		// compute the light's luminous power (in lumens) from its intensity (in candela)
+		// by convention for a spotlight, luminous power (lm) = π * luminous intensity (cd)
+		return this.intensity * Math.PI;
 
-		},
-		set: function ( power ) {
+	}
 
-			// intensity = power per solid angle.
-			// ref: equation (17) from https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
-			this.intensity = power / Math.PI;
+	set power( power ) {
 
-		}
-	} );
+		// set the light's intensity (in candela) from the desired luminous power (in lumens)
+		this.intensity = power / Math.PI;
 
-	this.distance = ( distance !== undefined ) ? distance : 0;
-	this.angle = ( angle !== undefined ) ? angle : Math.PI / 3;
-	this.penumbra = ( penumbra !== undefined ) ? penumbra : 0;
-	this.decay = ( decay !== undefined ) ? decay : 1;	// for physically correct lights, should be 2.
+	}
 
-	this.shadow = new SpotLightShadow();
+	dispose() {
 
-}
+		this.shadow.dispose();
 
-SpotLight.prototype = Object.assign( Object.create( Light.prototype ), {
+	}
 
-	constructor: SpotLight,
+	copy( source ) {
 
-	isSpotLight: true,
-
-	copy: function ( source ) {
-
-		Light.prototype.copy.call( this, source );
+		super.copy( source );
 
 		this.map = source.map;
 		this.mapMatrix.copy( source.mapMatrix );
@@ -69,7 +68,8 @@ SpotLight.prototype = Object.assign( Object.create( Light.prototype ), {
 
 	}
 
-} );
+}
 
+SpotLight.prototype.isSpotLight = true;
 
 export { SpotLight };

@@ -26,9 +26,9 @@ function WebGLRenderState( extensions, capabilities, staticLightConfig ) {
 
 	}
 
-	function setupLights() {
+	function setupLights( physicallyCorrectLights ) {
 
-		lights.setup( lightsArray );
+		lights.setup( lightsArray, physicallyCorrectLights );
 
 	}
 
@@ -68,8 +68,7 @@ function WebGLRenderStates( extensions, capabilities, staticLightConfig ) {
 		if ( renderStates.has( scene ) === false ) {
 
 			renderState = new WebGLRenderState( extensions, capabilities, staticLightConfig );
-			renderStates.set( scene, [] );
-			renderStates.get( scene ).push( renderState );
+			renderStates.set( scene, [ renderState ] );
 
 		} else {
 

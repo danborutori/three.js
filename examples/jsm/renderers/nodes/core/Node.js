@@ -1,18 +1,40 @@
+import { NodeUpdateType } from './constants.js';
+
+import { MathUtils } from '../../../../../build/three.module.js';
+
 class Node {
 
-	constructor( type = null ) {
+	constructor( nodeType = null ) {
 
-		this.type = type;
+		this.nodeType = nodeType;
 
-		this.needsUpdate = false;
+		this.updateType = NodeUpdateType.None;
 
-		Object.defineProperty( this, 'isNode', { value: true } );
+		this.uuid = MathUtils.generateUUID();
 
 	}
 
-	getType( /*builder*/ ) {
+	get type() {
 
-		return this.type;
+		return this.constructor.name;
+
+	}
+
+	getHash( /*builder*/ ) {
+
+		return this.uuid;
+
+	}
+
+	getUpdateType( /*builder*/ ) {
+
+		return this.updateType;
+
+	}
+
+	getNodeType( /*builder*/ ) {
+
+		return this.nodeType;
 
 	}
 
@@ -28,14 +50,55 @@ class Node {
 
 	}
 
-	build( builder, output ) {
+	build( builder, output = null ) {
+
+		const hash = this.getHash( builder );
+		const sharedNode = builder.getNodeFromHash( hash );
+
+		if ( sharedNode !== undefined && this !== sharedNode ) {
+
+			return sharedNode.build( builder, output );
+
+		}
 
 		builder.addNode( this );
+		builder.addStack( this );
 
-		return this.generate( builder, output );
+		const isGenerateOnce = this.generate.length === 1;
+
+		let snippet = null;
+
+		if ( isGenerateOnce ) {
+
+			const type = this.getNodeType( builder );
+			const nodeData = builder.getDataFromNode( this );
+
+			snippet = nodeData.snippet;
+
+			if ( snippet === undefined ) {
+
+				snippet = this.generate( builder ) || '';
+
+				nodeData.snippet = snippet;
+
+			}
+
+			snippet = builder.format( snippet, type, output );
+
+		} else {
+
+			snippet = this.generate( builder, output ) || '';
+
+		}
+
+		builder.removeStack( this );
+
+		return snippet;
 
 	}
 
 }
+
+Node.prototype.isNode = true;
 
 export default Node;

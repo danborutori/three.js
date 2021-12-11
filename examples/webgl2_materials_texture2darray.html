@@ -56,7 +56,7 @@
 			import * as THREE from '../build/three.module.js';
 
 			import Stats from './jsm/libs/stats.module.js';
-			import { unzipSync } from './jsm/libs/fflate.module.min.js';
+			import { unzipSync } from './jsm/libs/fflate.module.js';
 
 			import { WEBGL } from './jsm/WebGL.js';
 
@@ -97,7 +97,7 @@
 
 						const texture = new THREE.DataTexture2DArray( array, 256, 256, 109 );
 						texture.format = THREE.RedFormat;
-						texture.type = THREE.UnsignedByteType;
+						texture.needsUpdate = true;
 
 						const material = new THREE.ShaderMaterial( {
 							uniforms: {

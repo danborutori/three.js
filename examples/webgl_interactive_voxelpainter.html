@@ -28,7 +28,7 @@
 
 			let camera, scene, renderer;
 			let plane;
-			let mouse, raycaster, isShiftDown = false;
+			let pointer, raycaster, isShiftDown = false;
 
 			let rollOverMesh, rollOverMaterial;
 			let cubeGeo, cubeMaterial;
@@ -67,7 +67,7 @@
 				//
 
 				raycaster = new THREE.Raycaster();
-				mouse = new THREE.Vector2();
+				pointer = new THREE.Vector2();
 
 				const geometry = new THREE.PlaneGeometry( 1000, 1000 );
 				geometry.rotateX( - Math.PI / 2 );
@@ -91,8 +91,8 @@
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				document.body.appendChild( renderer.domElement );
 
-				document.addEventListener( 'mousemove', onDocumentMouseMove );
-				document.addEventListener( 'mousedown', onDocumentMouseDown );
+				document.addEventListener( 'pointermove', onPointerMove );
+				document.addEventListener( 'pointerdown', onPointerDown );
 				document.addEventListener( 'keydown', onDocumentKeyDown );
 				document.addEventListener( 'keyup', onDocumentKeyUp );
 
@@ -109,17 +109,17 @@
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
 
+				render();
+
 			}
 
-			function onDocumentMouseMove( event ) {
+			function onPointerMove( event ) {
 
-				event.preventDefault();
+				pointer.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
 
-				mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
+				raycaster.setFromCamera( pointer, camera );
 
-				raycaster.setFromCamera( mouse, camera );
-
-				const intersects = raycaster.intersectObjects( objects );
+				const intersects = raycaster.intersectObjects( objects, false );
 
 				if ( intersects.length > 0 ) {
 
@@ -134,15 +134,13 @@
 
 			}
 
-			function onDocumentMouseDown( event ) {
+			function onPointerDown( event ) {
 
-				event.preventDefault();
+				pointer.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
 
-				mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
+				raycaster.setFromCamera( pointer, camera );
 
-				raycaster.setFromCamera( mouse, camera );
-
-				const intersects = raycaster.intersectObjects( objects );
+				const intersects = raycaster.intersectObjects( objects, false );
 
 				if ( intersects.length > 0 ) {
 

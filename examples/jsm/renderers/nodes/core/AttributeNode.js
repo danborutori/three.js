@@ -1,19 +1,25 @@
 import Node from './Node.js';
+import VaryNode from './VaryNode.js';
 
 class AttributeNode extends Node {
 
-	constructor( type, name = null, property = null ) {
+	constructor( attributeName, nodeType ) {
 
-		super( type );
+		super( nodeType );
 
-		this.name = name;
-		this.property = property;
+		this._attributeName = attributeName;
 
 	}
 
-	setAttributeName( name ) {
+	getHash( builder ) {
 
-		this.name = name;
+		return this.getAttributeName( builder );
+
+	}
+
+	setAttributeName( attributeName ) {
+
+		this._attributeName = attributeName;
 
 		return this;
 
@@ -21,31 +27,25 @@ class AttributeNode extends Node {
 
 	getAttributeName( /*builder*/ ) {
 
-		return this.name;
+		return this._attributeName;
 
 	}
 
-	setAttributeProperty( name ) {
+	generate( builder ) {
 
-		this.property = name;
+		const attribute = builder.getAttribute( this.getAttributeName( builder ), this.getNodeType( builder ) );
 
-		return this;
+		if ( builder.isShaderStage( 'vertex' ) ) {
 
-	}
+			return attribute.name;
 
-	getAttributeProperty( builder ) {
+		} else {
 
-		const attribute = builder.getAttribute( this.getType( builder ), this.getAttributeName( builder ), this.property );
+			const nodeVary = new VaryNode( this );
 
-		return attribute.property;
+			return nodeVary.build( builder, attribute.type );
 
-	}
-
-	generate( builder, output ) {
-
-		const attributeProperty = this.getAttributeProperty( builder );
-
-		return builder.format( attributeProperty, this.getType( builder ), output );
+		}
 
 	}
 

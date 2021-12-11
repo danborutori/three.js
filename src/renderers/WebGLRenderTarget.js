@@ -10,29 +10,26 @@ import { Vector4 } from '../math/Vector4.js';
 */
 class WebGLRenderTarget extends EventDispatcher {
 
-	constructor( width, height, options ) {
+	constructor( width, height, options = {} ) {
 
 		super();
 
-		Object.defineProperty( this, 'isWebGLRenderTarget', { value: true } );
-
 		this.width = width;
 		this.height = height;
+		this.depth = 1;
 
 		this.scissor = new Vector4( 0, 0, width, height );
 		this.scissorTest = false;
 
 		this.viewport = new Vector4( 0, 0, width, height );
 
-		options = options || {};
-
 		this.texture = new Texture( undefined, options.mapping, options.wrapS, options.wrapT, options.magFilter, options.minFilter, options.format, options.type, options.anisotropy, options.encoding );
+		this.texture.isRenderTargetTexture = true;
 
-		this.texture.image = {};
-		this.texture.image.width = width;
-		this.texture.image.height = height;
+		this.texture.image = { width: width, height: height, depth: 1 };
 
 		this.texture.generateMipmaps = options.generateMipmaps !== undefined ? options.generateMipmaps : false;
+		this.texture.internalFormat = options.internalFormat !== undefined ? options.internalFormat : null;
 		this.texture.minFilter = options.minFilter !== undefined ? options.minFilter : LinearFilter;
 
 		this.depthBuffer = options.depthBuffer !== undefined ? options.depthBuffer : true;
@@ -62,15 +59,29 @@ class WebGLRenderTarget extends EventDispatcher {
 
 	}
 
-	setSize( width, height ) {
+	setTexture( texture ) {
 
-		if ( this.width !== width || this.height !== height ) {
+		texture.image = {
+			width: this.width,
+			height: this.height,
+			depth: this.depth
+		};
+
+		this.texture = texture;
+
+	}
+
+	setSize( width, height, depth = 1 ) {
+
+		if ( this.width !== width || this.height !== height || this.depth !== depth ) {
 
 			this.width = width;
 			this.height = height;
+			this.depth = depth;
 
 			this.texture.image.width = width;
 			this.texture.image.height = height;
+			this.texture.image.depth = depth;
 			
 			if(this.normalTexture !==null){
 				this.normalTexture.image.width = width;
@@ -104,10 +115,12 @@ class WebGLRenderTarget extends EventDispatcher {
 
 		this.width = source.width;
 		this.height = source.height;
+		this.depth = source.depth;
 
 		this.viewport.copy( source.viewport );
 
 		this.texture = source.texture.clone();
+		this.texture.image = { ...this.texture.image }; // See #20328.
 
 		this.depthBuffer = source.depthBuffer;
 		this.stencilBuffer = source.stencilBuffer;
@@ -128,5 +141,6 @@ class WebGLRenderTarget extends EventDispatcher {
 
 }
 
+WebGLRenderTarget.prototype.isWebGLRenderTarget = true;
 
 export { WebGLRenderTarget };
