@@ -67,9 +67,8 @@ function WebGLRenderStates( extensions, capabilities, staticLightConfig ) {
 
 		if ( renderStates.has( scene ) === false ) {
 
-			renderState = new WebGLRenderState( extensions, capabilities, staticLightConfig );
-			renderStates.set( scene, [] );
-			renderStates.get( scene ).push( renderState );
+			renderState = new WebGLRenderState( extensions, capabilities, staticLightConfig  );
+			renderStates.set( scene, [ renderState ] );
 
 		} else {
 
