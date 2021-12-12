@@ -701,6 +701,7 @@ Object3D.prototype = Object.assign( Object.create( EventDispatcher.prototype ), 
 			object.type = 'InstancedMesh';
 			object.count = this.count;
 			object.instanceMatrix = this.instanceMatrix.toJSON();
+			if ( this.instanceColor !== null ) object.instanceColor = this.instanceColor.toJSON();
 
 		}
 

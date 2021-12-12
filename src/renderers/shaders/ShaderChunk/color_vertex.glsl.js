@@ -1,5 +1,9 @@
 export default /* glsl */`
-#if defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR )
+#if defined( USE_COLOR_ALPHA )
+
+	vColor = vec4( 1.0 );
+
+#elif defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR )
 
 	vColor = vec4( 1.0 );
 
@@ -7,7 +11,7 @@ export default /* glsl */`
 
 #ifdef USE_COLOR
 
-	vColor.xyzw *= color.xyzw;
+	vColor *= color;
 
 #endif
 
