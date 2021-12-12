@@ -19003,7 +19003,14 @@
 				return;
 			}
 
-			if (_isContextLost === true) return; // update scene graph
+			if (_isContextLost === true) return; // reset caching for this frame
+
+			bindingStates.resetDefaultState();
+			_currentMaterialId = -1;
+			_currentCamera = null;
+			_currentFog = null;
+			_currentLights = null;
+			_currentShadows = null; // update scene graph
 
 			if (scene.autoUpdate === true) scene.updateMatrixWorld(); // update camera matrices and frustum
 
