@@ -1091,22 +1091,6 @@ function WebGLRenderer( parameters ) {
 	// Rendering
 	this.render = function ( scene, camera ) {
 
-		let renderTarget, forceClear;
-
-		if ( arguments[ 2 ] !== undefined ) {
-
-			console.warn( 'THREE.WebGLRenderer.render(): the renderTarget argument has been removed. Use .setRenderTarget() instead.' );
-			renderTarget = arguments[ 2 ];
-
-		}
-
-		if ( arguments[ 3 ] !== undefined ) {
-
-			console.warn( 'THREE.WebGLRenderer.render(): the forceClear argument has been removed. Use .clear() instead.' );
-			forceClear = arguments[ 3 ];
-
-		}
-
 		if ( camera !== undefined && camera.isCamera !== true ) {
 
 			console.error( 'THREE.WebGLRenderer.render: camera is not an instance of THREE.Camera.' );
@@ -1132,7 +1116,7 @@ function WebGLRenderer( parameters ) {
 		}
 
 		//
-		if ( scene.isScene === true ) scene.onBeforeRender( _this, scene, camera, renderTarget || _currentRenderTarget );
+		if ( scene.isScene === true ) scene.onBeforeRender( _this, scene, camera, _currentRenderTarget );
 
 		currentRenderState = renderStates.get( scene, renderStateStack.length );
 		currentRenderState.init();
@@ -1177,15 +1161,9 @@ function WebGLRenderer( parameters ) {
 
 		if ( this.info.autoReset === true ) this.info.reset();
 
-		if ( renderTarget !== undefined ) {
-
-			this.setRenderTarget( renderTarget );
-
-		}
-
 		//
 
-		background.render( currentRenderList, scene, camera, forceClear );
+		background.render( currentRenderList, scene );
 
 		// render scene
 
@@ -1580,6 +1558,7 @@ function WebGLRenderer( parameters ) {
 
 		materialProperties.outputEncoding = parameters.outputEncoding;
 		materialProperties.instancing = parameters.instancing;
+		materialProperties.skinning = parameters.skinning;
 		materialProperties.numClippingPlanes = parameters.numClippingPlanes;
 		materialProperties.numIntersection = parameters.numClipIntersection;
 		materialProperties.vertexAlphas = parameters.vertexAlphas;
@@ -1761,6 +1740,14 @@ function WebGLRenderer( parameters ) {
 
 				needsProgramChange = true;
 
+			} else if ( object.isSkinnedMesh && materialProperties.skinning === false ) {
+
+				needsProgramChange = true;
+
+			} else if ( ! object.isSkinnedMesh && materialProperties.skinning === true ) {
+
+				needsProgramChange = true;
+
 			} else if ( materialProperties.envMap !== envMap ) {
 
 				needsProgramChange = true;
@@ -1849,13 +1836,14 @@ function WebGLRenderer( parameters ) {
 
 			// load material specific uniforms
 			// (shader material also gets them for the sake of genericity)
+
 		}
 
 		// skinning uniforms must be set even if material didn't change
 		// auto-setting of texture unit for bone texture must go before other textures
 		// otherwise textures used for skinning can take over texture units reserved for other material textures
 
-		if ( material.skinning ) {
+		if ( object.isSkinnedMesh ) {
 
 			p_uniforms.setOptional( _gl, object, 'bindMatrix' );
 			p_uniforms.setOptional( _gl, object, 'bindMatrixInverse' );
