@@ -1,9 +1,12 @@
 import TempNode from '../core/Node.js';
-import { ShaderNode, vec3, pow, mul, add, mix, join, lessThanEqual } from '../ShaderNode.js';
+import { ShaderNode,
+	vec3,
+	pow, mul, add, sub, mix, join,
+	lessThanEqual } from '../ShaderNode.js';
 
 import { LinearEncoding,
 	sRGBEncoding/*, RGBEEncoding, RGBM7Encoding, RGBM16Encoding,
-	RGBDEncoding, GammaEncoding*/ } from 'three';
+	RGBDEncoding, GammaEncoding*/ } from '../../../../../build/three.module.js';
 
 export const LinearToLinear = new ShaderNode( ( inputs ) => {
 
@@ -27,12 +30,29 @@ export const sRGBToLinear = new ShaderNode( ( inputs ) => {
 
 } );
 
+export const LinearTosRGB = new ShaderNode( ( inputs ) => {
+
+	const { value } = inputs;
+
+	const rgb = value.rgb;
+
+	const a = sub( mul( pow( value.rgb, vec3( 0.41666 ) ), 1.055 ), vec3( 0.055 ) );
+	const b = mul( rgb, 12.92 );
+	const factor = vec3( lessThanEqual( rgb, vec3( 0.0031308 ) ) );
+
+	const rgbResult = mix( a, b, factor );
+
+	return join( rgbResult.r, rgbResult.g, rgbResult.b, value.a );
+
+} );
+
 const EncodingLib = {
 	LinearToLinear,
-	sRGBToLinear
+	sRGBToLinear,
+	LinearTosRGB
 };
 
-function getEncodingComponents ( encoding ) {
+function getEncodingComponents( encoding ) {
 
 	switch ( encoding ) {
 
@@ -52,6 +72,7 @@ function getEncodingComponents ( encoding ) {
 		case GammaEncoding:
 			return [ 'Gamma', new CodeNode( 'float( GAMMA_FACTOR )' ) ];
 */
+
 	}
 
 }
@@ -62,7 +83,7 @@ class ColorSpaceNode extends TempNode {
 
 	static SRGB_TO_LINEAR = 'sRGBToLinear';
 	static LINEAR_TO_SRGB = 'LinearTosRGB';
-/*
+	/*
 	static GAMMA_TO_LINEAR = 'GammaToLinear';
 	static LINEAR_TO_GAMMA = 'LinearToGamma';
 
@@ -117,7 +138,7 @@ class ColorSpaceNode extends TempNode {
 
 		if ( method !== ColorSpaceNode.LINEAR_TO_LINEAR ) {
 
-			const encodingFunctionNode = EncodingLib[ method ];			
+			const encodingFunctionNode = EncodingLib[ method ];
 			const factor = this.factor;
 
 			return encodingFunctionNode( {

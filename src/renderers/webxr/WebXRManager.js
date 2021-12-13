@@ -269,7 +269,7 @@ class WebXRManager extends EventDispatcher {
 
 					if ( attributes.depth ) {
 
-						glDepthFormat = attributes.stencil ? gl.DEPTH24_STENCIL8 : gl.DEPTH_COMPONENT16;
+						glDepthFormat = attributes.stencil ? gl.DEPTH24_STENCIL8 : gl.DEPTH_COMPONENT24;
 						depthFormat = attributes.stencil ? DepthStencilFormat : DepthFormat;
 						depthType = attributes.stencil ? UnsignedInt248Type : UnsignedShortType;
 
@@ -299,6 +299,7 @@ class WebXRManager extends EventDispatcher {
 								stencilBuffer: attributes.stencil,
 								ignoreDepth: glProjLayer.ignoreDepthValues,
 								useRenderToTexture: hasMultisampledRenderToTexture,
+								encoding: renderer.outputEncoding
 							} );
 
 					} else {
@@ -312,6 +313,7 @@ class WebXRManager extends EventDispatcher {
 								depthTexture: new DepthTexture( glProjLayer.textureWidth, glProjLayer.textureHeight, depthType, undefined, undefined, undefined, undefined, undefined, undefined, depthFormat ),
 								stencilBuffer: attributes.stencil,
 								ignoreDepth: glProjLayer.ignoreDepthValues,
+								encoding: renderer.outputEncoding
 							} );
 
 					}
@@ -319,7 +321,7 @@ class WebXRManager extends EventDispatcher {
 				}
 
 				// Set foveation to maximum.
-				this.setFoveation( 0 );
+				this.setFoveation( 1.0 );
 
 				referenceSpace = await session.requestReferenceSpace( referenceSpaceType );
 
