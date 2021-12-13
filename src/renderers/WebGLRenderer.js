@@ -2104,7 +2104,8 @@ function WebGLRenderer( parameters ) {
 
 				if ( capabilities.isWebGL2 ) {
 
-					_gl.drawBuffers( _currentDrawBuffers );
+					// FIXME: temporary solution for conflicted mrt
+					// _gl.drawBuffers( _currentDrawBuffers );
 
 				} else {
 
