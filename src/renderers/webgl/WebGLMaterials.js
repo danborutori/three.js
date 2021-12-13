@@ -253,9 +253,9 @@ function WebGLMaterials( properties ) {
 
 			uvScaleMap = material.specularIntensityMap;
 
-		} else if ( material.specularTintMap ) {
+		} else if ( material.specularColorMap ) {
 
-			uvScaleMap = material.specularTintMap;
+			uvScaleMap = material.specularColorMap;
 
 		} else if ( material.transmissionMap ) {
 
@@ -264,6 +264,14 @@ function WebGLMaterials( properties ) {
 		} else if ( material.thicknessMap ) {
 
 			uvScaleMap = material.thicknessMap;
+
+		} else if ( material.sheenColorMap ) {
+
+			uvScaleMap = material.sheenColorMap;
+
+		} else if ( material.sheenRoughnessMap ) {
+
+			uvScaleMap = material.sheenRoughnessMap;
 
 		}
 
@@ -600,9 +608,21 @@ function WebGLMaterials( properties ) {
 
 		if ( material.sheen > 0 ) {
 
-			uniforms.sheenTint.value.copy( material.sheenTint ).multiplyScalar( material.sheen );
+			uniforms.sheenColor.value.copy( material.sheenColor ).multiplyScalar( material.sheen );
 
 			uniforms.sheenRoughness.value = material.sheenRoughness;
+
+			if ( material.sheenColorMap ) {
+
+				uniforms.sheenColorMap.value = material.sheenColorMap;
+
+			}
+
+			if ( material.sheenRoughnessMap ) {
+
+				uniforms.sheenRoughnessMap.value = material.sheenRoughnessMap;
+
+			}
 
 		}
 
@@ -659,12 +679,12 @@ function WebGLMaterials( properties ) {
 			}
 
 			uniforms.attenuationDistance.value = material.attenuationDistance;
-			uniforms.attenuationTint.value.copy( material.attenuationTint );
+			uniforms.attenuationColor.value.copy( material.attenuationColor );
 
 		}
 
 		uniforms.specularIntensity.value = material.specularIntensity;
-		uniforms.specularTint.value.copy( material.specularTint );
+		uniforms.specularColor.value.copy( material.specularColor );
 
 		if ( material.specularIntensityMap ) {
 
@@ -672,9 +692,9 @@ function WebGLMaterials( properties ) {
 
 		}
 
-		if ( material.specularTintMap ) {
+		if ( material.specularColorMap ) {
 
-			uniforms.specularTintMap.value = material.specularTintMap;
+			uniforms.specularColorMap.value = material.specularColorMap;
 
 		}
 
