@@ -24,7 +24,6 @@
 			const setB = new Set(Object.keys( b.morphAttributes ));
 			return new Set([...a].filter(i => setB.has(i)));
 		}, new Set( Object.keys( geometries[ 0 ].morphAttributes )));
-			const attributes = {};
 		const attributes = {};
 		const morphAttributes = {};
 		const morphTargetsRelative = geometries[ 0 ].morphTargetsRelative;
