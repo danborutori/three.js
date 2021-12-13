@@ -638,7 +638,7 @@
 
 	}
 	/**
- * BasisU Texture Extension
+ * BasisU THREE.Texture Extension
  *
  * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_texture_basisu
  */
@@ -690,7 +690,7 @@
 
 	}
 	/**
- * WebP Texture Extension
+ * WebP THREE.Texture Extension
  *
  * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/EXT_texture_webp
  */
@@ -990,7 +990,7 @@
 
 	}
 	/**
- * Texture Transform Extension
+ * THREE.Texture Transform Extension
  *
  * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_texture_transform
  */
@@ -2346,7 +2346,9 @@
 
 						onLoad = function ( imageBitmap ) {
 
-							resolve( new THREE.CanvasTexture( imageBitmap ) );
+							const texture = new THREE.Texture( imageBitmap );
+							texture.needsUpdate = true;
+							resolve( texture );
 
 						};
 
@@ -2358,7 +2360,7 @@
 
 			} ).then( function ( texture ) {
 
-				// Clean up resources and configure Texture.
+				// Clean up resources and configure THREE.Texture.
 				if ( isObjectURL === true ) {
 
 					URL.revokeObjectURL( sourceURI );
@@ -2380,6 +2382,11 @@
 					index: textureIndex
 				} );
 				return texture;
+
+			} ).catch( function () {
+
+				console.error( 'THREE.GLTFLoader: Couldn\'t load texture', sourceURI );
+				return null;
 
 			} );
 			this.textureCache[ cacheKey ] = promise;
