@@ -15,7 +15,7 @@ export default /* glsl */`
 
 		#endif
 	};
-	varying float fogDepth;
+	varying float vFogDepth;
 
 #endif
 `;

@@ -26,9 +26,9 @@ function WebGLRenderState( extensions, capabilities, staticLightConfig ) {
 
 	}
 
-	function setupLights() {
+	function setupLights( physicallyCorrectLights ) {
 
-		lights.setup( lightsArray );
+		lights.setup( lightsArray, physicallyCorrectLights );
 
 	}
 

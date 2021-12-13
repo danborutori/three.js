@@ -1246,7 +1246,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			}
 
-			state.bindTexture( _gl.TEXTURE_CUBE_MAP, null );
+			state.unbindTexture();
 
 		} else if ( isMultipleRenderTargets ) {
 
@@ -1269,7 +1269,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			}
 
-			state.bindTexture( _gl.TEXTURE_2D, null );
+			state.unbindTexture();
 
 		} else {
 
@@ -1302,7 +1302,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			}
 
-			state.bindTexture( glTextureType, null );
+			state.unbindTexture();
 
 			if(renderTarget.normalTexture!==null){
 				const nTextureProperties = properties.get( renderTarget.normalTexture );
@@ -1379,7 +1379,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 				state.bindTexture( target, webglTexture );
 				generateMipmap( target, texture, renderTarget.width, renderTarget.height );
-				state.bindTexture( target, null );
+				state.unbindTexture();
 
 			}
 
