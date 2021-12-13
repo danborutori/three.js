@@ -175,6 +175,16 @@ void main() {
 
 	vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;
 
+	#ifdef USE_CLEARCOAT
+
+		float dotNVcc = saturate( dot( geometry.clearcoatNormal, geometry.viewDir ) );
+
+		vec3 Fcc = F_Schlick( material.clearcoatF0, material.clearcoatF90, dotNVcc );
+
+		outgoingLight = outgoingLight * ( 1.0 - material.clearcoat * Fcc ) + clearcoatSpecular * material.clearcoat;
+
+	#endif
+
 	#include <output_fragment>
 	#ifdef gl_FragNormal
 		gl_FragNormal = vec4( normal*0.5+0.5, diffuseColor.a );
