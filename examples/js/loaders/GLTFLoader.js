@@ -1314,7 +1314,7 @@
 	/**
  * Specular-Glossiness Extension
  *
- * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness
+ * Specification: https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Archived/KHR_materials_pbrSpecularGlossiness
  */
 
 	/**
@@ -2012,7 +2012,7 @@
 
 			if( options.textureLoader  ){
 				this.textureLoader = options.textureLoader
-			}else if ( typeof createImageBitmap !== 'undefined' && /Firefox/.test( navigator.userAgent ) === false ) {
+			}else if ( typeof createImageBitmap !== 'undefined' && /Firefox|Safari/.test( navigator.userAgent ) === false ) {
 
 				this.textureLoader = new THREE.ImageBitmapLoader( this.options.manager );
 
