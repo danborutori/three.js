@@ -16284,7 +16284,6 @@
 					const uniforms = state.spot[spotLength];
 
 					if (light.map) {
-						uniforms.map = numSpotMaps;
 						var tanAngle = Math.tan(light.angle);
 						light.mapMatrix.makePerspective(-tanAngle, tanAngle, tanAngle, -tanAngle, 1, 10);
 						light.mapMatrix.multiply(matrix4.copy(light.matrixWorld).invert());
