@@ -1008,6 +1008,7 @@ function parseUniformBlocks( gl, program, container ){
 	parseUniformBlock( gl, program, "FogBlock", container );
 	parseUniformBlock( gl, program, "LightBlock", container );
 	parseUniformBlock( gl, program, "ShadowMapBlock", container );
+	parseUniformBlock( gl, program, "CommonBlock", container );
 }
 
 // Root Container
@@ -1110,6 +1111,34 @@ WebGLUniforms.prototype.setFogBlock = function ( gl, fog ) {
 		return true;
 	}
 	return false;
+};
+
+WebGLUniforms.prototype.setCommonBlock = function ( gl, object ) {
+
+	const commonBlock = this.blocks["CommonBlock"];
+	if( commonBlock!==undefined ){
+		const uniforms = commonBlock.uniforms;
+		const uboBlock = commonBlock.uboBlock;		
+		const f32View = uboBlock.f32View;
+		object.matrixWorld.toArray( f32View, uniforms.modelMatrix.offset/4 );
+		object.modelViewMatrix.toArray( f32View, uniforms.modelViewMatrix.offset/4 );
+		const offset = uniforms.normalMatrix.offset/4;
+		f32View[offset] = object.normalMatrix.elements[0];
+		f32View[offset+1] = object.normalMatrix.elements[1];
+		f32View[offset+2] = object.normalMatrix.elements[2];
+		f32View[offset+3] = 0;
+		f32View[offset+4] = object.normalMatrix.elements[3];
+		f32View[offset+5] = object.normalMatrix.elements[4];
+		f32View[offset+6] = object.normalMatrix.elements[5];
+		f32View[offset+7] = 0;
+		f32View[offset+8] = object.normalMatrix.elements[6];
+		f32View[offset+9] = object.normalMatrix.elements[7];
+		f32View[offset+10] = object.normalMatrix.elements[8];
+		f32View[offset+11] = 0;
+		gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
+		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
+		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
+	}
 };
 
 function arrayToArrayView( uniform, src, view ){

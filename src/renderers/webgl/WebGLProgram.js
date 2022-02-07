@@ -516,8 +516,13 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			parameters.logarithmicDepthBuffer ? '#define USE_LOGDEPTHBUF' : '',
 			( parameters.logarithmicDepthBuffer && parameters.rendererExtensionFragDepth ) ? '#define USE_LOGDEPTHBUF_EXT' : '',
 
-			'uniform mat4 modelMatrix;',
-			'uniform mat4 modelViewMatrix;',
+			`
+			layout (std140) uniform CommonBlock{
+				mat4 modelMatrix;
+				mat4 modelViewMatrix;
+				mat3 normalMatrix;
+			};
+			`,
 			`
 			layout (std140) uniform CameraBlock{
 				mat4 viewMatrix;
@@ -526,8 +531,6 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 				bool isOrthographic;
 			};
 			`,
-			'uniform mat3 normalMatrix;',
-
 			'#ifdef USE_INSTANCING',
 
 			'	attribute mat4 instanceMatrix;',
