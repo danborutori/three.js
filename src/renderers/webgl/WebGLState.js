@@ -526,7 +526,8 @@ function WebGLState( gl, extensions, capabilities ) {
 
 			if ( capabilities.isWebGL2 ) {
 
-				gl.drawBuffers( drawBuffers );
+				// FIXME: temporary solution for conflicted mrt
+				// gl.drawBuffers( drawBuffers );
 
 			} else {
 
