@@ -13875,7 +13875,6 @@
 	}
 
 	function parseUniformBlocks(gl, program, container) {
-		parseUniformBlock(gl, program, "CameraBlock", container);
 		parseUniformBlock(gl, program, "FogBlock", container);
 		parseUniformBlock(gl, program, "LightBlock", container);
 		parseUniformBlock(gl, program, "ShadowMapBlock", container);
@@ -13931,26 +13930,6 @@
 		if (v !== undefined) this.setValue(gl, name, v);
 	};
 
-	WebGLUniforms.prototype.setCameraBlock = function (gl, camera) {
-		const cameraBlock = this.blocks["CameraBlock"];
-
-		if (cameraBlock !== undefined) {
-			const uniforms = cameraBlock.uniforms;
-			const uboBlock = cameraBlock.uboBlock;
-			const f32View = uboBlock.f32View;
-			const u8View = uboBlock.u8View;
-			camera.projectionMatrix.toArray(f32View, uniforms.projectionMatrix.offset / 4);
-			camera.matrixWorldInverse.toArray(f32View, uniforms.viewMatrix.offset / 4);
-
-			_vector3.setFromMatrixPosition(camera.matrixWorld).toArray(f32View, uniforms.cameraPosition.offset / 4);
-
-			u8View[uniforms.isOrthographic.offset] = camera.isOrthographicCamera ? 1 : 0;
-			gl.bindBuffer(gl.UNIFORM_BUFFER, uboBlock.ubo);
-			gl.bufferSubData(gl.UNIFORM_BUFFER, 0, f32View);
-			gl.bindBuffer(gl.UNIFORM_BUFFER, null);
-		}
-	};
-
 	WebGLUniforms.prototype.setFogBlock = function (gl, fog) {
 		const fogBlock = this.blocks["FogBlock"];
 
@@ -13976,13 +13955,14 @@
 		return false;
 	};
 
-	WebGLUniforms.prototype.setCommonBlock = function (gl, object) {
+	WebGLUniforms.prototype.setCommonBlock = function (gl, object, camera) {
 		const commonBlock = this.blocks["CommonBlock"];
 
 		if (commonBlock !== undefined) {
 			const uniforms = commonBlock.uniforms;
 			const uboBlock = commonBlock.uboBlock;
 			const f32View = uboBlock.f32View;
+			const u8View = uboBlock.u8View;
 			object.matrixWorld.toArray(f32View, uniforms.modelMatrix.offset / 4);
 			object.modelViewMatrix.toArray(f32View, uniforms.modelViewMatrix.offset / 4);
 			const offset = uniforms.normalMatrix.offset / 4;
@@ -13998,6 +13978,12 @@
 			f32View[offset + 9] = object.normalMatrix.elements[7];
 			f32View[offset + 10] = object.normalMatrix.elements[8];
 			f32View[offset + 11] = 0;
+			camera.projectionMatrix.toArray(f32View, uniforms.projectionMatrix.offset / 4);
+			camera.matrixWorldInverse.toArray(f32View, uniforms.viewMatrix.offset / 4);
+
+			_vector3.setFromMatrixPosition(camera.matrixWorld).toArray(f32View, uniforms.cameraPosition.offset / 4);
+
+			u8View[uniforms.isOrthographic.offset] = camera.isOrthographicCamera ? 1 : 0;
 			gl.bindBuffer(gl.UNIFORM_BUFFER, uboBlock.ubo);
 			gl.bufferSubData(gl.UNIFORM_BUFFER, 0, f32View);
 			gl.bindBuffer(gl.UNIFORM_BUFFER, null);
@@ -14491,9 +14477,6 @@
 				mat4 modelMatrix;
 				mat4 modelViewMatrix;
 				mat3 normalMatrix;
-			};
-			`, `
-			layout (std140) uniform CameraBlock{
 				mat4 viewMatrix;
 				mat4 projectionMatrix;
 				vec3 cameraPosition;
@@ -14501,7 +14484,10 @@
 			};
 			`, '#ifdef USE_INSTANCING', '	attribute mat4 instanceMatrix;', '#endif', '#ifdef USE_INSTANCING_COLOR', '	attribute vec3 instanceColor;', '#endif', 'attribute vec3 position;', 'attribute vec3 normal;', 'attribute vec2 uv;', '#ifdef USE_TANGENT', '	attribute vec4 tangent;', '#endif', '#if defined( USE_COLOR_ALPHA )', '	attribute vec4 color;', '#elif defined( USE_COLOR )', '	attribute vec4 color;', '#endif', '#if ( defined( USE_MORPHTARGETS ) && ! defined( MORPHTARGETS_TEXTURE ) )', '	attribute vec3 morphTarget0;', '	attribute vec3 morphTarget1;', '	attribute vec3 morphTarget2;', '	attribute vec3 morphTarget3;', '	#ifdef USE_MORPHNORMALS', '		attribute vec3 morphNormal0;', '		attribute vec3 morphNormal1;', '		attribute vec3 morphNormal2;', '		attribute vec3 morphNormal3;', '	#else', '		attribute vec3 morphTarget4;', '		attribute vec3 morphTarget5;', '		attribute vec3 morphTarget6;', '		attribute vec3 morphTarget7;', '	#endif', '#endif', '#ifdef USE_SKINNING', '	attribute vec4 skinIndex;', '	attribute vec4 skinWeight;', '#endif', '\n'].filter(filterEmptyLine).join('\n');
 			prefixFragment = [customExtensions, generatePrecision(parameters), '#define SHADER_NAME ' + parameters.shaderName, customDefines, parameters.useFog && parameters.fog ? '#define USE_FOG' : '', parameters.useFog && parameters.fogExp2 ? '#define FOG_EXP2' : '', parameters.map ? '#define USE_MAP' : '', parameters.matcap ? '#define USE_MATCAP' : '', parameters.envMap ? '#define USE_ENVMAP' : '', parameters.envMap ? '#define ' + envMapTypeDefine : '', parameters.envMap ? '#define ' + envMapModeDefine : '', parameters.envMap ? '#define ' + envMapBlendingDefine : '', parameters.lightMap ? '#define USE_LIGHTMAP' : '', parameters.aoMap ? '#define USE_AOMAP' : '', parameters.emissiveMap ? '#define USE_EMISSIVEMAP' : '', parameters.bumpMap ? '#define USE_BUMPMAP' : '', parameters.normalMap ? '#define USE_NORMALMAP' : '', parameters.normalMap && parameters.objectSpaceNormalMap ? '#define OBJECTSPACE_NORMALMAP' : '', parameters.normalMap && parameters.tangentSpaceNormalMap ? '#define TANGENTSPACE_NORMALMAP' : '', parameters.clearcoat ? '#define USE_CLEARCOAT' : '', parameters.clearcoatMap ? '#define USE_CLEARCOATMAP' : '', parameters.clearcoatRoughnessMap ? '#define USE_CLEARCOAT_ROUGHNESSMAP' : '', parameters.clearcoatNormalMap ? '#define USE_CLEARCOAT_NORMALMAP' : '', parameters.specularMap ? '#define USE_SPECULARMAP' : '', parameters.specularIntensityMap ? '#define USE_SPECULARINTENSITYMAP' : '', parameters.specularColorMap ? '#define USE_SPECULARCOLORMAP' : '', parameters.roughnessMap ? '#define USE_ROUGHNESSMAP' : '', parameters.metalnessMap ? '#define USE_METALNESSMAP' : '', parameters.alphaMap ? '#define USE_ALPHAMAP' : '', parameters.alphaTest ? '#define USE_ALPHATEST' : '', parameters.sheen ? '#define USE_SHEEN' : '', parameters.sheenColorMap ? '#define USE_SHEENCOLORMAP' : '', parameters.sheenRoughnessMap ? '#define USE_SHEENROUGHNESSMAP' : '', parameters.transmission ? '#define USE_TRANSMISSION' : '', parameters.transmissionMap ? '#define USE_TRANSMISSIONMAP' : '', parameters.thicknessMap ? '#define USE_THICKNESSMAP' : '', parameters.vertexTangents ? '#define USE_TANGENT' : '', parameters.vertexColors || parameters.instancingColor ? '#define USE_COLOR' : '', parameters.vertexAlphas ? '#define USE_COLOR_ALPHA' : '', parameters.vertexUvs ? '#define USE_UV' : '', parameters.uvsVertexOnly ? '#define UVS_VERTEX_ONLY' : '', parameters.gradientMap ? '#define USE_GRADIENTMAP' : '', parameters.flatShading ? '#define FLAT_SHADED' : '', parameters.doubleSided ? '#define DOUBLE_SIDED' : '', parameters.flipSided ? '#define FLIP_SIDED' : '', parameters.shadowMapEnabled ? '#define USE_SHADOWMAP' : '', parameters.shadowMapEnabled ? '#define ' + shadowMapTypeDefine : '', parameters.premultipliedAlpha ? '#define PREMULTIPLIED_ALPHA' : '', parameters.physicallyCorrectLights ? '#define PHYSICALLY_CORRECT_LIGHTS' : '', parameters.logarithmicDepthBuffer ? '#define USE_LOGDEPTHBUF' : '', parameters.logarithmicDepthBuffer && parameters.rendererExtensionFragDepth ? '#define USE_LOGDEPTHBUF_EXT' : '', (parameters.extensionShaderTextureLOD || parameters.envMap) && parameters.rendererExtensionShaderTextureLod ? '#define TEXTURE_LOD_EXT' : '', `
-			layout (std140) uniform CameraBlock{
+			layout (std140) uniform CommonBlock{
+				mat4 modelMatrix;
+				mat4 modelViewMatrix;
+				mat3 normalMatrix;
 				mat4 viewMatrix;
 				mat4 projectionMatrix;
 				vec3 cameraPosition;
@@ -21267,7 +21253,6 @@
 
 				if (_currentCamera !== camera) {
 					// setup camera uniform block
-					p_uniforms.setCameraBlock(_gl, camera);
 					_currentCamera = camera; // lighting uniforms depend on the camera so enforce an update
 					// now, in case this material supports lights - or later, when
 					// the next material that does gets activated:
@@ -21343,7 +21328,7 @@
 			} // common matrices
 
 
-			p_uniforms.setCommonBlock(_gl, object);
+			p_uniforms.setCommonBlock(_gl, object, camera);
 			return program;
 		} // If uniforms are marked as clean, they don't need to be loaded to the GPU.
 
