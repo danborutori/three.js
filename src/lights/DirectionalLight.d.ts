@@ -29,6 +29,7 @@ export class DirectionalLight extends Light {
 		bottom: number
 	}
 	
+	/**
 	 * @default 'DirectionalLight'
 	 */
 	type: string;

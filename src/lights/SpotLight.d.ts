@@ -24,6 +24,7 @@ export class SpotLight extends Light {
 	 */
 	map?: Texture 
 	 
+	/**
 	 * @default 'SpotLight'
 	 */
 	type: string;
