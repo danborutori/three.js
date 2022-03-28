@@ -669,6 +669,14 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			( ( parameters.extensionShaderTextureLOD || parameters.envMap ) && parameters.rendererExtensionShaderTextureLod ) ? '#define TEXTURE_LOD_EXT' : '',
 
 			`
+			layout (std140) uniform CommonBlock{
+				mat4 modelMatrix;
+				mat4 modelViewMatrix;
+				mat3 normalMatrix;
+			};
+			`,
+			
+			`
 			layout (std140) uniform CameraBlock{
 				mat4 viewMatrix;
 				mat4 projectionMatrix;
