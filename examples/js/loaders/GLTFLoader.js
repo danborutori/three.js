@@ -2733,11 +2733,11 @@
 
 				}
 
-				if ( encoding !== undefined ) {
+				// if ( encoding !== undefined ) {
 
-					texture.encoding = encoding;
+				// 	texture.encoding = encoding;
 
-				}
+				// }
 
 				materialParams[ mapName ] = texture;
 				return texture;
