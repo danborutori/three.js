@@ -1191,7 +1191,7 @@ WebGLUniforms.prototype.setLights = function( gl, lights, textures ){
 		}
 		
 		for( let i=0; i<units.length; i++ ){
-			textures.safeSetTexture2D( texs[i] || emptyTexture, units[i] );
+			textures.setTexture2D( texs[i] || emptyTexture, units[i] );
 		}
 	}
 
