@@ -19016,6 +19016,14 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			( ( parameters.extensionShaderTextureLOD || parameters.envMap ) && parameters.rendererExtensionShaderTextureLod ) ? '#define TEXTURE_LOD_EXT' : '',
 
 			`
+			layout (std140) uniform CommonBlock{
+				mat4 modelMatrix;
+				mat4 modelViewMatrix;
+				mat3 normalMatrix;
+			};
+			`,
+			
+			`
 			layout (std140) uniform CameraBlock{
 				mat4 viewMatrix;
 				mat4 projectionMatrix;
@@ -22698,11 +22706,7 @@ function WebGLState( gl, extensions, capabilities ) {
 
 		if ( needsUpdate ) {
 
-			if ( capabilities.isWebGL2 ) {
-
-				gl.drawBuffers( drawBuffers );
-
-			} else {
+			if ( capabilities.isWebGL2 ) ; else {
 
 				extensions.get( 'WEBGL_draw_buffers' ).drawBuffersWEBGL( drawBuffers );
 
@@ -23529,6 +23533,11 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 			if ( glType === 5121 ) internalFormat = 33321;
 
 		}
+		
+        if ( glFormat === 36244 ) {
+            if ( glType === 5122 ) internalFormat = _gl.R16I;
+            if ( glType === 5123 ) internalFormat = _gl.R16UI;
+        }
 
 		if ( glFormat === 33319 ) {
 
