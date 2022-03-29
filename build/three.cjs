@@ -21706,7 +21706,13 @@ function WebGLRenderer(parameters = {}) {
 
 
 				if (x >= 0 && x <= renderTarget.width - width && y >= 0 && y <= renderTarget.height - height) {
+					const readBufferAttachment = colorAttachment !== undefined ? colorAttachment : 0;
+
+					_gl.readBuffer(_gl.COLOR_ATTACHMENT0 + readBufferAttachment);
+
 					_gl.readPixels(x, y, width, height, utils.convert(textureFormat), utils.convert(textureType), buffer);
+
+					if (readBufferAttachment != 0) _gl.readBuffer(_gl.COLOR_ATTACHMENT0);
 				}
 			} finally {
 				// restore framebuffer of current render target if necessary
