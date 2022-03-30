@@ -1102,10 +1102,7 @@ WebGLUniforms.prototype.setCommonBlock = function ( gl, object, camera ) {
 		const uboBlock = commonBlock.uboBlock;		
 		const f32View = uboBlock.f32View;
 		const u8View = uboBlock.u8View;
-<<<<<<< HEAD
-=======
-
->>>>>>> feature/combine_common_camera_block
+		
 		object.matrixWorld.toArray( f32View, uniforms.modelMatrix.offset/4 );
 		object.modelViewMatrix.toArray( f32View, uniforms.modelViewMatrix.offset/4 );
 		const offset = uniforms.normalMatrix.offset/4;
