@@ -43,13 +43,13 @@
 
 import { CubeTexture } from '../../textures/CubeTexture.js';
 import { Texture } from '../../textures/Texture.js';
-import { DataTexture2DArray } from '../../textures/DataTexture2DArray.js';
-import { DataTexture3D } from '../../textures/DataTexture3D.js';
+import { DataArrayTexture } from '../../textures/DataArrayTexture.js';
+import { Data3DTexture } from '../../textures/Data3DTexture.js';
 import { Vector3 } from '../../math/Vector3.js';
 
 const emptyTexture = new Texture();
-const emptyTexture2dArray = new DataTexture2DArray();
-const emptyTexture3d = new DataTexture3D();
+const emptyArrayTexture = new DataArrayTexture();
+const empty3dTexture = new Data3DTexture();
 const emptyCubeTexture = new CubeTexture();
 
 // --- Utilities ---
@@ -473,7 +473,7 @@ function setValueT1( gl, v, textures ) {
 
 	}
 
-	textures.safeSetTexture2D( v || emptyTexture, unit );
+	textures.setTexture2D( v || emptyTexture, unit );
 
 }
 
@@ -489,7 +489,7 @@ function setValueT3D1( gl, v, textures ) {
 
 	}
 
-	textures.setTexture3D( v || emptyTexture3d, unit );
+	textures.setTexture3D( v || empty3dTexture, unit );
 
 }
 
@@ -505,7 +505,7 @@ function setValueT6( gl, v, textures ) {
 
 	}
 
-	textures.safeSetTextureCube( v || emptyCubeTexture, unit );
+	textures.setTextureCube( v || emptyCubeTexture, unit );
 
 }
 
@@ -521,7 +521,7 @@ function setValueT2DArray1( gl, v, textures ) {
 
 	}
 
-	textures.setTexture2DArray( v || emptyTexture2dArray, unit );
+	textures.setTexture2DArray( v || emptyArrayTexture, unit );
 
 }
 
@@ -708,7 +708,7 @@ function setValueT1Array( gl, v, textures ) {
 
 	for ( let i = 0; i !== n; ++ i ) {
 
-		textures.safeSetTexture2D( v[ i ] || emptyTexture, units[ i ] );
+		textures.setTexture2D( v[ i ] || emptyTexture, units[ i ] );
 
 	}
 
@@ -724,7 +724,7 @@ function setValueT3DArray( gl, v, textures ) {
 
 	for ( let i = 0; i !== n; ++ i ) {
 
-		textures.setTexture3D( v[ i ] || emptyTexture3d, units[ i ] );
+		textures.setTexture3D( v[ i ] || empty3dTexture, units[ i ] );
 
 	}
 
@@ -740,7 +740,7 @@ function setValueT6Array( gl, v, textures ) {
 
 	for ( let i = 0; i !== n; ++ i ) {
 
-		textures.safeSetTextureCube( v[ i ] || emptyCubeTexture, units[ i ] );
+		textures.setTextureCube( v[ i ] || emptyCubeTexture, units[ i ] );
 
 	}
 
@@ -756,7 +756,7 @@ function setValueT2DArrayArray( gl, v, textures ) {
 
 	for ( let i = 0; i !== n; ++ i ) {
 
-		textures.setTexture2DArray( v[ i ] || emptyTexture2dArray, units[ i ] );
+		textures.setTexture2DArray( v[ i ] || emptyArrayTexture, units[ i ] );
 
 	}
 
@@ -1004,7 +1004,7 @@ function parseUniformBlock( gl, program, blockName, container ) {
 }
 
 function parseUniformBlocks( gl, program, container ){
-	parseUniformBlock( gl, program, "FogBlock", container ); 
+	parseUniformBlock( gl, program, "FogBlock", container );
 	parseUniformBlock( gl, program, "LightBlock", container );
 	parseUniformBlock( gl, program, "ShadowMapBlock", container );
 	parseUniformBlock( gl, program, "CommonBlock", container );
@@ -1102,6 +1102,10 @@ WebGLUniforms.prototype.setCommonBlock = function ( gl, object, camera ) {
 		const uboBlock = commonBlock.uboBlock;		
 		const f32View = uboBlock.f32View;
 		const u8View = uboBlock.u8View;
+<<<<<<< HEAD
+=======
+
+>>>>>>> feature/combine_common_camera_block
 		object.matrixWorld.toArray( f32View, uniforms.modelMatrix.offset/4 );
 		object.modelViewMatrix.toArray( f32View, uniforms.modelViewMatrix.offset/4 );
 		const offset = uniforms.normalMatrix.offset/4;
@@ -1117,10 +1121,18 @@ WebGLUniforms.prototype.setCommonBlock = function ( gl, object, camera ) {
 		f32View[offset+9] = object.normalMatrix.elements[7];
 		f32View[offset+10] = object.normalMatrix.elements[8];
 		f32View[offset+11] = 0;
+<<<<<<< HEAD
+=======
+
+>>>>>>> feature/combine_common_camera_block
 		camera.projectionMatrix.toArray( f32View, uniforms.projectionMatrix.offset/4 );
 		camera.matrixWorldInverse.toArray( f32View,uniforms.viewMatrix.offset/4 );
 		_vector3.setFromMatrixPosition( camera.matrixWorld ).toArray( f32View, uniforms.cameraPosition.offset/4 );
 		u8View[uniforms.isOrthographic.offset] = camera.isOrthographicCamera?1:0;
+<<<<<<< HEAD
+=======
+
+>>>>>>> feature/combine_common_camera_block
 		gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
 		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
 		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
@@ -1177,7 +1189,7 @@ WebGLUniforms.prototype.setLights = function( gl, lights, textures ){
 		}
 		
 		for( let i=0; i<units.length; i++ ){
-			textures.safeSetTexture2D( texs[i] || emptyTexture, units[i] );
+			textures.setTexture2D( texs[i] || emptyTexture, units[i] );
 		}
 	}
 

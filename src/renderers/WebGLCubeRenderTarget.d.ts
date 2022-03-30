@@ -16,4 +16,5 @@ export class WebGLCubeRenderTarget extends WebGLRenderTarget {
 
 	clear( renderer: WebGLRenderer, color: boolean, depth: boolean, stencil: boolean ): void;
 
+	readonly isWebGLCubeRenderTarget: true;
 }
