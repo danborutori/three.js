@@ -2,7 +2,7 @@ import { Texture } from './Texture';
 import { TypedArray } from '../polyfills';
 import { TextureFilter } from '../constants';
 
-export class DataTexture3D extends Texture {
+export class DataArrayTexture extends Texture {
 
 	constructor(
 		data: TypedArray,
@@ -36,6 +36,6 @@ export class DataTexture3D extends Texture {
 	 */
 	generateMipmaps: boolean;
 
-	readonly isDataTexture3D: true;
+	readonly isDataArrayTexture: true;
 
 }
