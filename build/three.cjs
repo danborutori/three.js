@@ -21445,7 +21445,6 @@ function WebGLRenderer(parameters = {}) {
 
 			if (_currentCamera !== camera) {
 				// setup camera uniform block
-				// p_uniforms.setCameraBlock( _gl, camera );			
 				_currentCamera = camera; // lighting uniforms depend on the camera so enforce an update
 				// now, in case this material supports lights - or later, when
 				// the next material that does gets activated:
