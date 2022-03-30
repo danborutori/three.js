@@ -1102,7 +1102,7 @@ WebGLUniforms.prototype.setCommonBlock = function ( gl, object, camera ) {
 		const uboBlock = commonBlock.uboBlock;		
 		const f32View = uboBlock.f32View;
 		const u8View = uboBlock.u8View;
-		
+
 		object.matrixWorld.toArray( f32View, uniforms.modelMatrix.offset/4 );
 		object.modelViewMatrix.toArray( f32View, uniforms.modelViewMatrix.offset/4 );
 		const offset = uniforms.normalMatrix.offset/4;
@@ -1118,18 +1118,12 @@ WebGLUniforms.prototype.setCommonBlock = function ( gl, object, camera ) {
 		f32View[offset+9] = object.normalMatrix.elements[7];
 		f32View[offset+10] = object.normalMatrix.elements[8];
 		f32View[offset+11] = 0;
-<<<<<<< HEAD
-=======
 
->>>>>>> feature/combine_common_camera_block
 		camera.projectionMatrix.toArray( f32View, uniforms.projectionMatrix.offset/4 );
 		camera.matrixWorldInverse.toArray( f32View,uniforms.viewMatrix.offset/4 );
 		_vector3.setFromMatrixPosition( camera.matrixWorld ).toArray( f32View, uniforms.cameraPosition.offset/4 );
 		u8View[uniforms.isOrthographic.offset] = camera.isOrthographicCamera?1:0;
-<<<<<<< HEAD
-=======
 
->>>>>>> feature/combine_common_camera_block
 		gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
 		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
 		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
