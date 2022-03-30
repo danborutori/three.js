@@ -1613,7 +1613,7 @@ function WebGLRenderer( parameters = {} ) {
 
 			if ( _currentCamera !== camera ) {
 				// setup camera uniform block
-				p_uniforms.setCameraBlock( _gl, camera );			
+				// p_uniforms.setCameraBlock( _gl, camera );			
 
 				_currentCamera = camera;
 
@@ -1727,7 +1727,7 @@ function WebGLRenderer( parameters = {} ) {
 
 		// common matrices
 
-		p_uniforms.setCommonBlock( _gl, object );
+		p_uniforms.setCommonBlock( _gl, object, camera );
 
 		return program;
 

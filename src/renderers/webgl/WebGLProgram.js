@@ -537,10 +537,6 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 				mat4 modelMatrix;
 				mat4 modelViewMatrix;
 				mat3 normalMatrix;
-			};
-			`,
-			`
-			layout (std140) uniform CameraBlock{
 				mat4 viewMatrix;
 				mat4 projectionMatrix;
 				vec3 cameraPosition;
@@ -697,11 +693,6 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 				mat4 modelMatrix;
 				mat4 modelViewMatrix;
 				mat3 normalMatrix;
-			};
-			`,
-			
-			`
-			layout (std140) uniform CameraBlock{
 				mat4 viewMatrix;
 				mat4 projectionMatrix;
 				vec3 cameraPosition;
