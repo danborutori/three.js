@@ -18256,7 +18256,6 @@ function parseUniformBlock( gl, program, blockName, container ) {
 }
 
 function parseUniformBlocks( gl, program, container ){
-	parseUniformBlock( gl, program, "CameraBlock", container );
 	parseUniformBlock( gl, program, "FogBlock", container );
 	parseUniformBlock( gl, program, "LightBlock", container );
 	parseUniformBlock( gl, program, "ShadowMapBlock", container );
@@ -18323,24 +18322,6 @@ WebGLUniforms.prototype.setOptional = function ( gl, object, name ) {
 
 };
 
-WebGLUniforms.prototype.setCameraBlock = function ( gl, camera ) {
-
-	const cameraBlock = this.blocks["CameraBlock"];
-	if( cameraBlock!==undefined ){
-		const uniforms = cameraBlock.uniforms;
-		const uboBlock = cameraBlock.uboBlock;		
-		const f32View = uboBlock.f32View;
-		const u8View = uboBlock.u8View;
-		camera.projectionMatrix.toArray( f32View, uniforms.projectionMatrix.offset/4 );
-		camera.matrixWorldInverse.toArray( f32View,uniforms.viewMatrix.offset/4 );
-		_vector3.setFromMatrixPosition( camera.matrixWorld ).toArray( f32View, uniforms.cameraPosition.offset/4 );
-		u8View[uniforms.isOrthographic.offset] = camera.isOrthographicCamera?1:0;
-		gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
-		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
-		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
-	}
-};
-
 WebGLUniforms.prototype.setFogBlock = function ( gl, fog ) {
 	const fogBlock = this.blocks["FogBlock"];
 	if( fogBlock!==undefined ){
@@ -18365,13 +18346,15 @@ WebGLUniforms.prototype.setFogBlock = function ( gl, fog ) {
 	return false;
 };
 
-WebGLUniforms.prototype.setCommonBlock = function ( gl, object ) {
+WebGLUniforms.prototype.setCommonBlock = function ( gl, object, camera ) {
 
 	const commonBlock = this.blocks["CommonBlock"];
 	if( commonBlock!==undefined ){
 		const uniforms = commonBlock.uniforms;
 		const uboBlock = commonBlock.uboBlock;		
 		const f32View = uboBlock.f32View;
+		const u8View = uboBlock.u8View;
+
 		object.matrixWorld.toArray( f32View, uniforms.modelMatrix.offset/4 );
 		object.modelViewMatrix.toArray( f32View, uniforms.modelViewMatrix.offset/4 );
 		const offset = uniforms.normalMatrix.offset/4;
@@ -18387,6 +18370,12 @@ WebGLUniforms.prototype.setCommonBlock = function ( gl, object ) {
 		f32View[offset+9] = object.normalMatrix.elements[7];
 		f32View[offset+10] = object.normalMatrix.elements[8];
 		f32View[offset+11] = 0;
+
+		camera.projectionMatrix.toArray( f32View, uniforms.projectionMatrix.offset/4 );
+		camera.matrixWorldInverse.toArray( f32View,uniforms.viewMatrix.offset/4 );
+		_vector3.setFromMatrixPosition( camera.matrixWorld ).toArray( f32View, uniforms.cameraPosition.offset/4 );
+		u8View[uniforms.isOrthographic.offset] = camera.isOrthographicCamera?1:0;
+
 		gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
 		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
 		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
@@ -19123,10 +19112,6 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 				mat4 modelMatrix;
 				mat4 modelViewMatrix;
 				mat3 normalMatrix;
-			};
-			`,
-			`
-			layout (std140) uniform CameraBlock{
 				mat4 viewMatrix;
 				mat4 projectionMatrix;
 				vec3 cameraPosition;
@@ -19283,11 +19268,6 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 				mat4 modelMatrix;
 				mat4 modelViewMatrix;
 				mat3 normalMatrix;
-			};
-			`,
-			
-			`
-			layout (std140) uniform CameraBlock{
 				mat4 viewMatrix;
 				mat4 projectionMatrix;
 				vec3 cameraPosition;
@@ -29049,7 +29029,7 @@ function WebGLRenderer( parameters = {} ) {
 
 			if ( _currentCamera !== camera ) {
 				// setup camera uniform block
-				p_uniforms.setCameraBlock( _gl, camera );			
+				// p_uniforms.setCameraBlock( _gl, camera );			
 
 				_currentCamera = camera;
 
@@ -29162,7 +29142,7 @@ function WebGLRenderer( parameters = {} ) {
 
 		// common matrices
 
-		p_uniforms.setCommonBlock( _gl, object );
+		p_uniforms.setCommonBlock( _gl, object, camera );
 
 		return program;
 
