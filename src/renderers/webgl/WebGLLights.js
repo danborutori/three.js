@@ -738,7 +738,6 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 
 				uniforms.direction.setFromMatrixPosition( light.matrixWorld );
 				uniforms.direction.transformDirection( viewMatrix );
-				uniforms.direction.normalize();
 
 				hemiLength ++;
 
