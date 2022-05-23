@@ -2,23 +2,6 @@ import { BackSide } from '../../constants.js';
 
 function WebGLMaterials( renderer, properties ) {
 
-	function refreshFogUniforms( uniforms, fog ) {
-
-		uniforms.fogColor.value.copy( fog.color );
-
-		if ( fog.isFog ) {
-
-			uniforms.fogNear.value = fog.near;
-			uniforms.fogFar.value = fog.far;
-
-		} else if ( fog.isFogExp2 ) {
-
-			uniforms.fogDensity.value = fog.density;
-
-		}
-
-	}
-
 	function refreshMaterialUniforms( uniforms, material, pixelRatio, height, transmissionRenderTarget ) {
 
 		if ( material.isMeshBasicMaterial ) {
@@ -637,7 +620,6 @@ function WebGLMaterials( renderer, properties ) {
 	}
 
 	return {
-		refreshFogUniforms: refreshFogUniforms,
 		refreshMaterialUniforms: refreshMaterialUniforms
 	};
 
