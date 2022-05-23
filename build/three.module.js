@@ -18994,19 +18994,6 @@ function generateEnvMapBlendingDefine( parameters ) {
 
 }
 
-let compilingProgramCnt = 0;
-function waitAllCompileFinish(){
-	return new Promise( function( resolve, reject ){
-		const func = function(){
-			if( compilingProgramCnt==0 ){
-				resolve();
-			}else {
-				setTimeout( func, 100 );
-			}
-		};
-		func();
-	} );
-}
 function generateCubeUVSize( parameters ) {
 
 	const imageHeight = parameters.envMapCubeUVHeight;
@@ -19350,8 +19337,6 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 	vertexShader = unrollLoops( vertexShader );
 	fragmentShader = unrollLoops( fragmentShader );
-	
-	const outputFragmentType = (defines && defines.FRAGMENT_OUTPUT_TYPE) || "vec4";
 
 	if ( parameters.isWebGL2 && parameters.isRawShaderMaterial !== true ) {
 
@@ -19369,9 +19354,9 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 		prefixFragment = [
 			'#define varying in',
 			( parameters.glslVersion === GLSL3 ) ? '' : 'layout(location = 0) out highp vec4 pc_fragColor;',
-			( parameters.glslVersion === GLSL3 ) ? '' : `layout(location = 1) out highp ${outputFragmentType} pc_fragNormal;`,
-			( parameters.glslVersion === GLSL3 ) ? '' : `layout(location = 2) out highp ${outputFragmentType} pc_fragMetalness;`,
-			( parameters.glslVersion === GLSL3 ) ? '' : `layout(location = 3) out highp ${outputFragmentType} pc_fragDiffuseColor;`,
+			( parameters.glslVersion === GLSL3 ) ? '' : `layout(location = 1) out highp vec4 pc_fragNormal;`,
+			( parameters.glslVersion === GLSL3 ) ? '' : `layout(location = 2) out highp vec4 pc_fragMetalness;`,
+			( parameters.glslVersion === GLSL3 ) ? '' : `layout(location = 3) out highp vec4 pc_fragDiffuseColor;`,
 			( parameters.glslVersion === GLSL3 ) ? '' : '#define gl_FragColor pc_fragColor',
 			( parameters.glslVersion === GLSL3 ) ? '' : '#define gl_FragNormal pc_fragNormal',
 			( parameters.glslVersion === GLSL3 ) ? '' : '#define gl_FragMetalness pc_fragMetalness',
@@ -19389,18 +19374,18 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 		].join( '\n' ) + '\n' + prefixFragment;
 
 	}
-	
+
 	const vertexGlsl = versionString + prefixVertex + vertexShader;
 	const fragmentGlsl = versionString + prefixFragment + fragmentShader.replace( /void\s+main\s*\(\s*\)\s*{/, function(match){
 		return match+`
 			#ifdef gl_FragNormal
-				gl_FragNormal = ${outputFragmentType}(0.5,0.5,1,1);
+				gl_FragNormal = vec4(0.5,0.5,1,1);
 			#endif
 			#ifdef gl_FragMetalness
-				gl_FragMetalness = ${outputFragmentType}(1,0,0,1);
+				gl_FragMetalness = vec4(1,0,0,1);
 			#endif
 			#ifdef gl_FragDiffuseColor
-				gl_FragDiffuseColor = ${outputFragmentType}(0,0,0,1);
+				gl_FragDiffuseColor = vec4(0,0,0,1);
 			#endif
 		`
 	} );
@@ -19430,25 +19415,22 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 	gl.linkProgram( program );
 
-	function checkErrors(){
-		// check for link errors
-		if ( renderer.debug.checkShaderErrors ) {
-			const linkFail = gl.getProgramParameter( program, 35714 );			
-			if( linkFail !== false ) return;
+	// check for link errors
+	if ( renderer.debug.checkShaderErrors ) {
 
-			const programLog = gl.getProgramInfoLog( program ).trim();
-			const vertexLog = gl.getShaderInfoLog( glVertexShader ).trim();
-			const fragmentLog = gl.getShaderInfoLog( glFragmentShader ).trim();
+		const programLog = gl.getProgramInfoLog( program ).trim();
+		const vertexLog = gl.getShaderInfoLog( glVertexShader ).trim();
+		const fragmentLog = gl.getShaderInfoLog( glFragmentShader ).trim();
 
-			let runnable = true;
-			let haveDiagnostics = true;
+		let runnable = true;
+		let haveDiagnostics = true;
 
-			if ( linkFail === false ) {
+		if ( gl.getProgramParameter( program, 35714 ) === false ) {
 
-				runnable = false;
+			runnable = false;
 
-				const vertexErrors = getShaderErrors( gl, glVertexShader, 'vertex' );
-				const fragmentErrors = getShaderErrors( gl, glFragmentShader, 'fragment' );
+			const vertexErrors = getShaderErrors( gl, glVertexShader, 'vertex' );
+			const fragmentErrors = getShaderErrors( gl, glFragmentShader, 'fragment' );
 
 			console.error(
 				'THREE.WebGLProgram: Shader Error ' + gl.getError() + ' - ' +
@@ -19458,74 +19440,52 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 				fragmentErrors
 			);
 
-			} else if ( programLog !== '' ) {
+		} else if ( programLog !== '' ) {
 
 			console.warn( 'THREE.WebGLProgram: Program Info Log:', programLog );
 
-			} else if ( vertexLog === '' || fragmentLog === '' ) {
+		} else if ( vertexLog === '' || fragmentLog === '' ) {
 
-				haveDiagnostics = false;
-
-			}
-
-			if ( haveDiagnostics ) {
-
-				this.diagnostics = {
-
-					runnable: runnable,
-
-					programLog: programLog,
-
-					vertexShader: {
-
-						log: vertexLog,
-						prefix: prefixVertex
-
-					},
-
-					fragmentShader: {
-
-						log: fragmentLog,
-						prefix: prefixFragment
-
-					}
-
-				};
-
-			}
+			haveDiagnostics = false;
 
 		}
 
-		// Clean up
+		if ( haveDiagnostics ) {
 
-		// Crashes in iOS9 and iOS10. #18402
-		// gl.detachShader( program, glVertexShader );
-		// gl.detachShader( program, glFragmentShader );
+			this.diagnostics = {
 
-		gl.deleteShader( glVertexShader );
-		gl.deleteShader( glFragmentShader );	
-	}
-	
-	const ext = gl.getExtension('KHR_parallel_shader_compile');
-	if( ext ){
-		this.completion = new Promise( function( resolve, reject ){
-			compilingProgramCnt++;
-			function checkCompletion() {
-				if (gl.getProgramParameter(program, ext.COMPLETION_STATUS_KHR) == true) {
-				  compilingProgramCnt--;
-				  waitAllCompileFinish().then( function(){
-					  resolve();
-				  });
-				} else {
-				  setTimeout(checkCompletion, 100);
+				runnable: runnable,
+
+				programLog: programLog,
+
+				vertexShader: {
+
+					log: vertexLog,
+					prefix: prefixVertex
+
+				},
+
+				fragmentShader: {
+
+					log: fragmentLog,
+					prefix: prefixFragment
+
 				}
-			}
-			setTimeout(checkCompletion, 100);
-		});
-	}else {
-		this.completion = Promise.resolve();
+
+			};
+
+		}
+
 	}
-	this.completion.then( checkErrors );
+
+	// Clean up
+
+	// Crashes in iOS9 and iOS10. #18402
+	// gl.detachShader( program, glVertexShader );
+	// gl.detachShader( program, glFragmentShader );
+
+	gl.deleteShader( glVertexShader );
+	gl.deleteShader( glFragmentShader );
 
 	// set up caching for uniform locations
 
