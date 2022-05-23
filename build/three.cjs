@@ -19925,17 +19925,6 @@ class WebXRManager extends EventDispatcher {
 }
 
 function WebGLMaterials(renderer, properties) {
-	function refreshFogUniforms(uniforms, fog) {
-		uniforms.fogColor.value.copy(fog.color);
-
-		if (fog.isFog) {
-			uniforms.fogNear.value = fog.near;
-			uniforms.fogFar.value = fog.far;
-		} else if (fog.isFogExp2) {
-			uniforms.fogDensity.value = fog.density;
-		}
-	}
-
 	function refreshMaterialUniforms(uniforms, material, pixelRatio, height, transmissionRenderTarget) {
 		if (material.isMeshBasicMaterial) {
 			refreshUniformsCommon(uniforms, material);
@@ -20347,7 +20336,6 @@ function WebGLMaterials(renderer, properties) {
 	}
 
 	return {
-		refreshFogUniforms: refreshFogUniforms,
 		refreshMaterialUniforms: refreshMaterialUniforms
 	};
 }
@@ -21233,7 +21221,6 @@ function WebGLRenderer(parameters = {}) {
 		let programs = materialProperties.programs; // always update environment and fog - changing these trigger an getProgram call, but it's possible that the program doesn't change
 
 		materialProperties.environment = material.isMeshStandardMaterial ? scene.environment : null;
-		materialProperties.fog = scene.fog;
 		materialProperties.envMap = (material.isMeshStandardMaterial ? cubeuvmaps : cubemaps).get(material.envMap || materialProperties.environment);
 
 		if (programs === undefined) {
@@ -21480,10 +21467,6 @@ function WebGLRenderer(parameters = {}) {
 
 		if (refreshMaterial) {
 			p_uniforms.setValue(_gl, 'toneMappingExposure', _this.toneMappingExposure); // refresh uniforms common to several materials
-
-			if (fog && material.fog === true) {
-				materials.refreshFogUniforms(m_uniforms, fog);
-			}
 
 			materials.refreshMaterialUniforms(m_uniforms, material, _pixelRatio, _height, _transmissionRenderTarget);
 			WebGLUniforms.upload(_gl, materialProperties.uniformsList, m_uniforms, textures);
