@@ -1698,12 +1698,6 @@ function WebGLRenderer( parameters = {} ) {
 
 			// refresh uniforms common to several materials
 
-			if ( fog && material.fog === true ) {
-
-				materials.refreshFogUniforms( m_uniforms, fog );
-
-			}
-
 			materials.refreshMaterialUniforms( m_uniforms, material, _pixelRatio, _height, _transmissionRenderTarget );
 
 			WebGLUniforms.upload( _gl, materialProperties.uniformsList, m_uniforms, textures );
