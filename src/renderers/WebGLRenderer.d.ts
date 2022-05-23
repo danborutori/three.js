@@ -382,12 +382,6 @@ export class WebGLRenderer implements Renderer {
 		camera: Camera
 	): void;
 	
-	compileAsync(
-		scene: Scene,
-		camera: Camera,
-		object: THREE.Object3D,
-		progress?: (progress: number)=>void
-	): Promise<void>;
 
 	/**
 	 * Render a scene or an object using a camera.
