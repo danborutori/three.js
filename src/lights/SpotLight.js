@@ -10,6 +10,8 @@ class SpotLight extends Light {
 
 		super( colorTexture?0xffffff:color, intensity );
 
+		this.isSpotLight = true;
+
 		this.type = 'SpotLight';
 
 		this.position.copy( Object3D.DefaultUp );
@@ -49,9 +51,9 @@ class SpotLight extends Light {
 
 	}
 
-	copy( source ) {
+	copy( source, recursive ) {
 
-		super.copy( source );
+		super.copy( source, recursive );
 
 		this.map = source.map;
 		this.mapMatrix.copy( source.mapMatrix );
@@ -69,7 +71,5 @@ class SpotLight extends Light {
 	}
 
 }
-
-SpotLight.prototype.isSpotLight = true;
 
 export { SpotLight };

@@ -10,6 +10,8 @@ class DirectionalLight extends Light {
 		
 		super( colorTexture?0xffffff:color, intensity );
 
+		this.isDirectionalLight = true;
+
 		this.type = 'DirectionalLight';
 
 		this.map = colorTexture?color:undefined;
@@ -41,7 +43,5 @@ class DirectionalLight extends Light {
 	}
 
 }
-
-DirectionalLight.prototype.isDirectionalLight = true;
 
 export { DirectionalLight };

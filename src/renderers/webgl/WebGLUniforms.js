@@ -90,7 +90,7 @@ function flatten( array, nBlocks, blockSize ) {
 
 	}
 
-	if ( nBlocks !== 0 ) {
+	if ( Math.min( array.length, nBlocks )!== 0 ) {
 
 		firstElem.toArray( r, 0 );
 
@@ -818,50 +818,62 @@ function getPureArraySetter( type ) {
 
 // --- Uniform Classes ---
 
-function SingleUniform( id, activeInfo, addr ) {
+class SingleUniform {
 
-	this.id = id;
-	this.addr = addr;
-	this.cache = [];
-	this.setValue = getSingularSetter( activeInfo.type );
+	constructor( id, activeInfo, addr ) {
 
-	// this.path = activeInfo.name; // DEBUG
+		this.id = id;
+		this.addr = addr;
+		this.cache = [];
+		this.setValue = getSingularSetter( activeInfo.type );
 
-}
-
-function PureArrayUniform( id, activeInfo, addr ) {
-
-	this.id = id;
-	this.addr = addr;
-	this.cache = [];
-	this.size = activeInfo.size;
-	this.setValue = getPureArraySetter( activeInfo.type );
-
-	// this.path = activeInfo.name; // DEBUG
-
-}
-
-function StructuredUniform( id ) {
-
-	this.id = id;
-
-	this.seq = [];
-	this.map = {};
-
-}
-
-StructuredUniform.prototype.setValue = function ( gl, value, textures ) {
-
-	const seq = this.seq;
-
-	for ( let i = 0, n = seq.length; i !== n; ++ i ) {
-
-		const u = seq[ i ];
-		u.setValue( gl, value[ u.id ], textures );
+		// this.path = activeInfo.name; // DEBUG
 
 	}
 
-};
+}
+
+class PureArrayUniform {
+
+	constructor( id, activeInfo, addr ) {
+
+		this.id = id;
+		this.addr = addr;
+		this.cache = [];
+		this.size = activeInfo.size;
+		this.setValue = getPureArraySetter( activeInfo.type );
+
+		// this.path = activeInfo.name; // DEBUG
+
+	}
+
+}
+
+class StructuredUniform {
+
+	constructor( id ) {
+
+		this.id = id;
+
+		this.seq = [];
+		this.map = {};
+
+	}
+
+	setValue( gl, value, textures ) {
+
+		const seq = this.seq;
+
+		for ( let i = 0, n = seq.length; i !== n; ++ i ) {
+
+			const u = seq[ i ];
+			u.setValue( gl, value[ u.id ], textures );
+
+		}
+
+	}
+
+}
 
 // --- Top-level ---
 
@@ -996,126 +1008,6 @@ function parseUniformBlocks( gl, program, container ){
 	parseUniformBlock( gl, program, "CommonBlock", container );
 }
 
-// Root Container
-
-function WebGLUniforms( gl, program, staticSamplers ) {
-
-	this.seq = [];
-	this.map = {};
-	this.blocks = {};
-	this.staticSamplers = {
-		needsUpdate: true,
-		samplers: []
-	};
-
-	parseUniformBlocks( gl, program, this );
-
-	const n = gl.getProgramParameter( program, gl.ACTIVE_UNIFORMS );
-
-	for ( let i = 0; i < n; ++ i ) {
-
-		const info = gl.getActiveUniform( program, i ),
-			addr = gl.getUniformLocation( program, info.name );
-
-		if( addr !== null ){
-			const staticSampler = staticSamplers[info.name];
-			if( staticSampler!==undefined ){
-				parseStaticSamplerUniform( addr, staticSampler, this );
-			}else{
-				parseUniform( info, addr, this );
-			}
-		}
-
-	}
-
-}
-
-WebGLUniforms.prototype.uploadStaticSamplers = function( gl ){
-	if( this.staticSamplers.needsUpdate ){
-		for( let i=0; i<this.staticSamplers.samplers.length; i++ ){
-			const sampler = this.staticSamplers.samplers[i];
-			gl.uniform1iv( sampler.addr, sampler.units );
-		}
-		this.staticSamplers.needsUpdate = false;
-	}
-}
-
-WebGLUniforms.prototype.setValue = function ( gl, name, value, textures ) {
-
-	const u = this.map[ name ];
-
-	if ( u !== undefined ) u.setValue( gl, value, textures );
-
-};
-
-WebGLUniforms.prototype.setOptional = function ( gl, object, name ) {
-
-	const v = object[ name ];
-
-	if ( v !== undefined ) this.setValue( gl, name, v );
-
-};
-
-WebGLUniforms.prototype.setFogBlock = function ( gl, fog ) {
-	const fogBlock = this.blocks["FogBlock"];
-	if( fogBlock!==undefined ){
-		const uniforms = fogBlock.uniforms;
-		const uboBlock = fogBlock.uboBlock;
-		const f32View = uboBlock.f32View;
-		
-		fog.color.toArray( f32View, uniforms.fogColor.offset/4 );
-
-		if ( fog.isFog ) {
-			f32View[ uniforms.fogNear.offset/4 ] = fog.near;
-			f32View[ uniforms.fogFar.offset/4 ] = fog.far;
-		} else if ( fog.isFogExp2 ) {
-			f32View[ uniforms.fogDensity.offset/4 ] = fog.density;
-		}
-
-		gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
-		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
-		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
-		return true;
-	}
-	return false;
-};
-
-WebGLUniforms.prototype.setCommonBlock = function ( gl, object, camera ) {
-
-	const commonBlock = this.blocks["CommonBlock"];
-	if( commonBlock!==undefined ){
-		const uniforms = commonBlock.uniforms;
-		const uboBlock = commonBlock.uboBlock;		
-		const f32View = uboBlock.f32View;
-		const u8View = uboBlock.u8View;
-
-		object.matrixWorld.toArray( f32View, uniforms.modelMatrix.offset/4 );
-		object.modelViewMatrix.toArray( f32View, uniforms.modelViewMatrix.offset/4 );
-		const offset = uniforms.normalMatrix.offset/4;
-		f32View[offset] = object.normalMatrix.elements[0];
-		f32View[offset+1] = object.normalMatrix.elements[1];
-		f32View[offset+2] = object.normalMatrix.elements[2];
-		f32View[offset+3] = 0;
-		f32View[offset+4] = object.normalMatrix.elements[3];
-		f32View[offset+5] = object.normalMatrix.elements[4];
-		f32View[offset+6] = object.normalMatrix.elements[5];
-		f32View[offset+7] = 0;
-		f32View[offset+8] = object.normalMatrix.elements[6];
-		f32View[offset+9] = object.normalMatrix.elements[7];
-		f32View[offset+10] = object.normalMatrix.elements[8];
-		f32View[offset+11] = 0;
-
-		camera.projectionMatrix.toArray( f32View, uniforms.projectionMatrix.offset/4 );
-		camera.matrixWorldInverse.toArray( f32View,uniforms.viewMatrix.offset/4 );
-		_vector3.setFromMatrixPosition( camera.matrixWorld ).toArray( f32View, uniforms.cameraPosition.offset/4 );
-		u8View[uniforms.isOrthographic.offset] = camera.isOrthographicCamera?1:0;
-
-		gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
-		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
-		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
-	}
-};
-
 function arrayToArrayView( uniform, src, view ){
 	if( uniform!==undefined ){
 		for( let i=0; i<src.length; i++ ){
@@ -1142,155 +1034,276 @@ function fillViewProperty( uniforms, namePrefix, propertyName, src, view ){
 	}
 }
 
-WebGLUniforms.prototype.setLights = function( gl, lights, textures ){
-	//set light map
-	for( let name in lights.staticSamplers ){
-		const units = lights.staticSamplers[name];
-		let texs;
-		switch(name){
-		case "directionalMap[0]":
-			texs = lights.state.directionalMap;
-			break;
-		case "spotMap[0]":
-			texs = lights.state.spotMap;
-			break;
-		case "directionalShadowMap[0]":
-			texs = lights.state.directionalShadowMap;
-			break;
-		case "spotShadowMap[0]":
-			texs = lights.state.spotShadowMap;
-			break;
-		case "pointShadowMap[0]":
-			texs = lights.state.pointShadowMap;
-			break;
+// Root Container
+
+class WebGLUniforms {
+
+	constructor( gl, program, staticSamplers ) {
+
+		this.seq = [];
+		this.map = {};
+		this.blocks = {};
+		this.staticSamplers = {
+			needsUpdate: true,
+			samplers: []
+		};
+
+		parseUniformBlocks( gl, program, this );
+
+		const n = gl.getProgramParameter( program, gl.ACTIVE_UNIFORMS );
+
+		for ( let i = 0; i < n; ++ i ) {
+
+			const info = gl.getActiveUniform( program, i ),
+				addr = gl.getUniformLocation( program, info.name );
+
+			if( addr!==null ){
+				const staticSampler = staticSamplers[info.name];
+				if( staticSampler!==undefined ){
+					parseStaticSamplerUniform( addr, staticSampler, this );
+				}else{
+					parseUniform( info, addr, this );
+				}
+			}
+
 		}
-		
-		for( let i=0; i<units.length; i++ ){
-			textures.setTexture2D( texs[i] || emptyTexture, units[i] );
+
+	}
+
+	uploadStaticSamplers( gl ) {
+		if( this.staticSamplers.needsUpdate ){
+			for( let i=0; i<this.staticSamplers.samplers.length; i++ ){
+				const sampler = this.staticSamplers.samplers[i];
+				gl.uniform1iv( sampler.addr, sampler.units );
+			}
+			this.staticSamplers.needsUpdate = false;
 		}
 	}
 
-	//set light block
-	const lightBlock = this.blocks["LightBlock"];
-	if( lightBlock!==undefined ){
-		const uniforms = lightBlock.uniforms;
-		const strides = lightBlock.strides;
-		const uboBlock = lightBlock.uboBlock;
-		const f32View = uboBlock.f32View;
-		const i32View = uboBlock.i32View;
-		
-		f32View.set(lights.state.ambient, uniforms.ambientLightColor.offset/4);
-		arrayToArrayView( uniforms["lightProbe[0]"], lights.state.probe, f32View );
-		
-		arrayToArrayView( uniforms["directionalMapMatrix[0]"], lights.state.directionalMapMatrix, f32View );
-		arrayToArrayViewProperty(uniforms, "directionalLights", "direction", lights.state.directional, f32View );
-		arrayToArrayViewProperty(uniforms, "directionalLights", "color", lights.state.directional, f32View );
-		fillViewProperty(uniforms, "directionalLights", "map", lights.state.directional, i32View );
+	setValue( gl, name, value, textures ) {
 
-		arrayToArrayViewProperty(uniforms, "pointLights", "position", lights.state.point, f32View );
-		arrayToArrayViewProperty(uniforms, "pointLights", "color", lights.state.point, f32View );
-		fillViewProperty(uniforms, "pointLights", "distance", lights.state.point, f32View );
-		fillViewProperty(uniforms, "pointLights", "decay", lights.state.point, f32View );
-		
-		arrayToArrayViewProperty(uniforms, "spotLights", "position", lights.state.spot, f32View );
-		arrayToArrayViewProperty(uniforms, "spotLights", "direction", lights.state.spot, f32View );
-		arrayToArrayViewProperty(uniforms, "spotLights", "color", lights.state.spot, f32View );
-		fillViewProperty(uniforms, "spotLights", "map", lights.state.spot, i32View );
-		fillViewProperty(uniforms, "spotLights", "distance", lights.state.spot, f32View );
-		fillViewProperty(uniforms, "spotLights", "coneCos", lights.state.spot, f32View );
-		fillViewProperty(uniforms, "spotLights", "penumbraCos", lights.state.spot, f32View );
-		fillViewProperty(uniforms, "spotLights", "decay", lights.state.spot, f32View );
-		arrayToArrayView( uniforms["spotMapMatrix[0]"], lights.state.spotMapMatrix, f32View );
+		const u = this.map[ name ];
 
-		arrayToArrayViewProperty(uniforms, "rectAreaLights", "color", lights.state.rectArea, f32View );
-		arrayToArrayViewProperty(uniforms, "rectAreaLights", "position", lights.state.rectArea, f32View );
-		arrayToArrayViewProperty(uniforms, "rectAreaLights", "halfWidth", lights.state.rectArea, f32View );
-		arrayToArrayViewProperty(uniforms, "rectAreaLights", "halfHeight", lights.state.rectArea, f32View );
+		if ( u !== undefined ) u.setValue( gl, value, textures );
 
-		arrayToArrayViewProperty(uniforms, "hemisphereLights", "direction", lights.state.hemi, f32View );
-		arrayToArrayViewProperty(uniforms, "hemisphereLights", "skyColor", lights.state.hemi, f32View );
-		arrayToArrayViewProperty(uniforms, "hemisphereLights", "groundColor", lights.state.hemi, f32View );
-
-		gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
-		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
-		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
-		return true;
 	}
-	
-	return false;
+
+	setOptional( gl, object, name ) {
+
+		const v = object[ name ];
+
+		if ( v !== undefined ) this.setValue( gl, name, v );
+
+	}
+
+	setFogBlock ( gl, fog ) {		
+		const fogBlock = this.blocks["FogBlock"];
+		if( fogBlock!==undefined ){
+			const uniforms = fogBlock.uniforms;
+			const uboBlock = fogBlock.uboBlock;
+			const f32View = uboBlock.f32View;
+			
+			fog.color.toArray( f32View, uniforms.fogColor.offset/4 );
+
+			if ( fog.isFog ) {
+				f32View[ uniforms.fogNear.offset/4 ] = fog.near;
+				f32View[ uniforms.fogFar.offset/4 ] = fog.far;
+			} else if ( fog.isFogExp2 ) {
+				f32View[ uniforms.fogDensity.offset/4 ] = fog.density;
+			}
+
+			gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
+			gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
+			gl.bindBuffer( gl.UNIFORM_BUFFER, null );
+			return true;
+		}
+		return false;
+	}
+
+	setCommonBlock ( gl, object, camera ) {
+		const commonBlock = this.blocks["CommonBlock"];
+		if( commonBlock!==undefined ){
+			const uniforms = commonBlock.uniforms;
+			const uboBlock = commonBlock.uboBlock;		
+			const f32View = uboBlock.f32View;
+			const u8View = uboBlock.u8View;
+
+			object.matrixWorld.toArray( f32View, uniforms.modelMatrix.offset/4 );
+			object.modelViewMatrix.toArray( f32View, uniforms.modelViewMatrix.offset/4 );
+			const offset = uniforms.normalMatrix.offset/4;
+			f32View[offset] = object.normalMatrix.elements[0];
+			f32View[offset+1] = object.normalMatrix.elements[1];
+			f32View[offset+2] = object.normalMatrix.elements[2];
+			f32View[offset+3] = 0;
+			f32View[offset+4] = object.normalMatrix.elements[3];
+			f32View[offset+5] = object.normalMatrix.elements[4];
+			f32View[offset+6] = object.normalMatrix.elements[5];
+			f32View[offset+7] = 0;
+			f32View[offset+8] = object.normalMatrix.elements[6];
+			f32View[offset+9] = object.normalMatrix.elements[7];
+			f32View[offset+10] = object.normalMatrix.elements[8];
+			f32View[offset+11] = 0;
+
+			camera.projectionMatrix.toArray( f32View, uniforms.projectionMatrix.offset/4 );
+			camera.matrixWorldInverse.toArray( f32View,uniforms.viewMatrix.offset/4 );
+			_vector3.setFromMatrixPosition( camera.matrixWorld ).toArray( f32View, uniforms.cameraPosition.offset/4 );
+			u8View[uniforms.isOrthographic.offset] = camera.isOrthographicCamera?1:0;
+
+			gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
+			gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
+			gl.bindBuffer( gl.UNIFORM_BUFFER, null );
+		}
+	}
+
+	setLights ( gl, lights, textures ){
+		//set light map
+		for( let name in lights.staticSamplers ){
+			const units = lights.staticSamplers[name];
+			let texs;
+			switch(name){
+			case "directionalMap[0]":
+				texs = lights.state.directionalMap;
+				break;
+			case "spotMap[0]":
+				texs = lights.state.spotMap;
+				break;
+			case "directionalShadowMap[0]":
+				texs = lights.state.directionalShadowMap;
+				break;
+			case "spotShadowMap[0]":
+				texs = lights.state.spotShadowMap;
+				break;
+			case "pointShadowMap[0]":
+				texs = lights.state.pointShadowMap;
+				break;
+			}
+			
+			for( let i=0; i<units.length; i++ ){
+				textures.setTexture2D( texs[i] || emptyTexture, units[i] );
+			}
+		}
+
+		//set light block
+		const lightBlock = this.blocks["LightBlock"];
+		if( lightBlock!==undefined ){
+			const uniforms = lightBlock.uniforms;
+			const strides = lightBlock.strides;
+			const uboBlock = lightBlock.uboBlock;
+			const f32View = uboBlock.f32View;
+			const i32View = uboBlock.i32View;
+			
+			f32View.set(lights.state.ambient, uniforms.ambientLightColor.offset/4);
+			arrayToArrayView( uniforms["lightProbe[0]"], lights.state.probe, f32View );
+			
+			arrayToArrayView( uniforms["directionalMapMatrix[0]"], lights.state.directionalMapMatrix, f32View );
+			arrayToArrayViewProperty(uniforms, "directionalLights", "direction", lights.state.directional, f32View );
+			arrayToArrayViewProperty(uniforms, "directionalLights", "color", lights.state.directional, f32View );
+			fillViewProperty(uniforms, "directionalLights", "map", lights.state.directional, i32View );
+
+			arrayToArrayViewProperty(uniforms, "pointLights", "position", lights.state.point, f32View );
+			arrayToArrayViewProperty(uniforms, "pointLights", "color", lights.state.point, f32View );
+			fillViewProperty(uniforms, "pointLights", "distance", lights.state.point, f32View );
+			fillViewProperty(uniforms, "pointLights", "decay", lights.state.point, f32View );
+			
+			arrayToArrayViewProperty(uniforms, "spotLights", "position", lights.state.spot, f32View );
+			arrayToArrayViewProperty(uniforms, "spotLights", "direction", lights.state.spot, f32View );
+			arrayToArrayViewProperty(uniforms, "spotLights", "color", lights.state.spot, f32View );
+			fillViewProperty(uniforms, "spotLights", "map", lights.state.spot, i32View );
+			fillViewProperty(uniforms, "spotLights", "distance", lights.state.spot, f32View );
+			fillViewProperty(uniforms, "spotLights", "coneCos", lights.state.spot, f32View );
+			fillViewProperty(uniforms, "spotLights", "penumbraCos", lights.state.spot, f32View );
+			fillViewProperty(uniforms, "spotLights", "decay", lights.state.spot, f32View );
+			arrayToArrayView( uniforms["spotMapMatrix[0]"], lights.state.spotMapMatrix, f32View );
+
+			arrayToArrayViewProperty(uniforms, "rectAreaLights", "color", lights.state.rectArea, f32View );
+			arrayToArrayViewProperty(uniforms, "rectAreaLights", "position", lights.state.rectArea, f32View );
+			arrayToArrayViewProperty(uniforms, "rectAreaLights", "halfWidth", lights.state.rectArea, f32View );
+			arrayToArrayViewProperty(uniforms, "rectAreaLights", "halfHeight", lights.state.rectArea, f32View );
+
+			arrayToArrayViewProperty(uniforms, "hemisphereLights", "direction", lights.state.hemi, f32View );
+			arrayToArrayViewProperty(uniforms, "hemisphereLights", "skyColor", lights.state.hemi, f32View );
+			arrayToArrayViewProperty(uniforms, "hemisphereLights", "groundColor", lights.state.hemi, f32View );
+
+			gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
+			gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
+			gl.bindBuffer( gl.UNIFORM_BUFFER, null );
+			return true;
+		}
+		
+		return false;
+	}
+
+	setShadows ( gl, lights ){
+		const shadowMapBlock = this.blocks["ShadowMapBlock"];
+		if( shadowMapBlock!==undefined ){
+			const uniforms = shadowMapBlock.uniforms;
+			const strides = shadowMapBlock.strides;
+			const uboBlock = shadowMapBlock.uboBlock;
+			const f32View = uboBlock.f32View;
+			const i32View = uboBlock.i32View;
+			
+			arrayToArrayView( uniforms["directionalShadowMatrix[0]"], lights.state.directionalShadowMatrix, f32View );
+			fillViewProperty(uniforms, "directionalLightShadows", "shadowBias", lights.state.directionalShadow, f32View );
+			fillViewProperty(uniforms, "directionalLightShadows", "shadowNormalBias", lights.state.directionalShadow, f32View );
+			fillViewProperty(uniforms, "directionalLightShadows", "shadowRadius", lights.state.directionalShadow, f32View );
+			arrayToArrayViewProperty(uniforms, "directionalLightShadows", "shadowMapSize", lights.state.directionalShadow, f32View );
+			
+			arrayToArrayView( uniforms["spotShadowMatrix[0]"], lights.state.spotShadowMatrix, f32View );
+			fillViewProperty(uniforms, "spotLightShadows", "shadowBias", lights.state.spotShadow, f32View );
+			fillViewProperty(uniforms, "spotLightShadows", "shadowNormalBias", lights.state.spotShadow, f32View );
+			fillViewProperty(uniforms, "spotLightShadows", "shadowRadius", lights.state.spotShadow, f32View );
+			arrayToArrayViewProperty(uniforms, "spotLightShadows", "shadowMapSize", lights.state.spotShadow, f32View );
+
+			arrayToArrayView( uniforms["pointLightShadows[0]"], lights.state.pointShadowMatrix, f32View );
+			fillViewProperty(uniforms, "pointLightShadows", "shadowBias", lights.state.pointShadow, f32View );
+			fillViewProperty(uniforms, "pointLightShadows", "shadowNormalBias", lights.state.pointShadow, f32View );
+			fillViewProperty(uniforms, "pointLightShadows", "shadowRadius", lights.state.pointShadow, f32View );
+			arrayToArrayViewProperty(uniforms, "pointLightShadows", "shadowMapSize", lights.state.pointShadow, f32View );
+			fillViewProperty(uniforms, "pointLightShadows", "shadowCameraNear", lights.state.pointShadow, f32View );
+			fillViewProperty(uniforms, "pointLightShadows", "shadowCameraFar", lights.state.pointShadow, f32View );
+
+			gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
+			gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
+			gl.bindBuffer( gl.UNIFORM_BUFFER, null );
+			return true;
+		}
+		return false;
+	}
+
+	static upload( gl, seq, values, textures ) {
+
+		for ( let i = 0, n = seq.length; i !== n; ++ i ) {
+
+			const u = seq[ i ],
+				v = values[ u.id ];
+
+			if ( v.needsUpdate !== false ) {
+
+				// note: always updating when .needsUpdate is undefined
+				u.setValue( gl, v.value, textures );
+
+			}
+
+		}
+
+	}
+
+	static seqWithValue( seq, values ) {
+
+		const r = [];
+
+		for ( let i = 0, n = seq.length; i !== n; ++ i ) {
+
+			const u = seq[ i ];
+			if ( u.id in values ) r.push( u );
+
+		}
+
+		return r;
+
+	}
+
 }
-
-WebGLUniforms.prototype.setShadows = function( gl, lights ){
-	const shadowMapBlock = this.blocks["ShadowMapBlock"];
-	if( shadowMapBlock!==undefined ){
-		const uniforms = shadowMapBlock.uniforms;
-		const strides = shadowMapBlock.strides;
-		const uboBlock = shadowMapBlock.uboBlock;
-		const f32View = uboBlock.f32View;
-		const i32View = uboBlock.i32View;
-		
-		arrayToArrayView( uniforms["directionalShadowMatrix[0]"], lights.state.directionalShadowMatrix, f32View );
-		fillViewProperty(uniforms, "directionalLightShadows", "shadowBias", lights.state.directionalShadow, f32View );
-		fillViewProperty(uniforms, "directionalLightShadows", "shadowNormalBias", lights.state.directionalShadow, f32View );
-		fillViewProperty(uniforms, "directionalLightShadows", "shadowRadius", lights.state.directionalShadow, f32View );
-		arrayToArrayViewProperty(uniforms, "directionalLightShadows", "shadowMapSize", lights.state.directionalShadow, f32View );
-		
-		arrayToArrayView( uniforms["spotShadowMatrix[0]"], lights.state.spotShadowMatrix, f32View );
-		fillViewProperty(uniforms, "spotLightShadows", "shadowBias", lights.state.spotShadow, f32View );
-		fillViewProperty(uniforms, "spotLightShadows", "shadowNormalBias", lights.state.spotShadow, f32View );
-		fillViewProperty(uniforms, "spotLightShadows", "shadowRadius", lights.state.spotShadow, f32View );
-		arrayToArrayViewProperty(uniforms, "spotLightShadows", "shadowMapSize", lights.state.spotShadow, f32View );
-
-		arrayToArrayView( uniforms["pointLightShadows[0]"], lights.state.pointShadowMatrix, f32View );
-		fillViewProperty(uniforms, "pointLightShadows", "shadowBias", lights.state.pointShadow, f32View );
-		fillViewProperty(uniforms, "pointLightShadows", "shadowNormalBias", lights.state.pointShadow, f32View );
-		fillViewProperty(uniforms, "pointLightShadows", "shadowRadius", lights.state.pointShadow, f32View );
-		arrayToArrayViewProperty(uniforms, "pointLightShadows", "shadowMapSize", lights.state.pointShadow, f32View );
-		fillViewProperty(uniforms, "pointLightShadows", "shadowCameraNear", lights.state.pointShadow, f32View );
-		fillViewProperty(uniforms, "pointLightShadows", "shadowCameraFar", lights.state.pointShadow, f32View );
-
-		gl.bindBuffer( gl.UNIFORM_BUFFER, uboBlock.ubo );
-		gl.bufferSubData( gl.UNIFORM_BUFFER, 0, f32View );
-		gl.bindBuffer( gl.UNIFORM_BUFFER, null );
-		return true;
-	}
-	return false;
-}
-
-// Static interface
-
-WebGLUniforms.upload = function ( gl, seq, values, textures ) {
-
-	for ( let i = 0, n = seq.length; i !== n; ++ i ) {
-
-		const u = seq[ i ],
-			v = values[ u.id ];
-
-		if ( v.needsUpdate !== false ) {
-
-			// note: always updating when .needsUpdate is undefined
-			u.setValue( gl, v.value, textures );
-
-		}
-
-	}
-
-};
-
-WebGLUniforms.seqWithValue = function ( seq, values ) {
-
-	const r = [];
-
-	for ( let i = 0, n = seq.length; i !== n; ++ i ) {
-
-		const u = seq[ i ];
-		if ( u.id in values ) r.push( u );
-
-	}
-
-	return r;
-
-};
 
 WebGLUniforms.dispose = function ( gl ) {
 	for( let name in uboBlocks ){
