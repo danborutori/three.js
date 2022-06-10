@@ -32655,7 +32655,7 @@ class PropertyBinding {
 		this.setValue = this._setValue_unavailable; // ensure there is a value node
 
 		if (!targetObject) {
-			console.error('THREE.PropertyBinding: Trying to update node for track: ' + this.path + ' but it wasn\'t found.');
+			// console.error( 'THREE.PropertyBinding: Trying to update node for track: ' + this.path + ' but it wasn\'t found.' );
 			return;
 		}
 
