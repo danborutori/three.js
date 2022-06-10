@@ -28913,23 +28913,23 @@ function WebGLRenderer( parameters = {} ) {
 
 		material.onBeforeRender( _this, scene, camera, geometry, object, group );
 
-		if ( material.transparent === true && material.side === DoubleSide ) {
+		// if ( material.transparent === true && material.side === DoubleSide ) {
 
-			material.side = BackSide;
-			material.needsUpdate = true;
+		// 	material.side = BackSide;
+		// 	material.needsUpdate = true;
+		// 	_this.renderBufferDirect( camera, scene, geometry, material, object, group );
+
+		// 	material.side = FrontSide;
+		// 	material.needsUpdate = true;
+		// 	_this.renderBufferDirect( camera, scene, geometry, material, object, group );
+
+		// 	material.side = DoubleSide;
+
+		// } else {
+
 			_this.renderBufferDirect( camera, scene, geometry, material, object, group );
 
-			material.side = FrontSide;
-			material.needsUpdate = true;
-			_this.renderBufferDirect( camera, scene, geometry, material, object, group );
-
-			material.side = DoubleSide;
-
-		} else {
-
-			_this.renderBufferDirect( camera, scene, geometry, material, object, group );
-
-		}
+		// }
 
 		object.onAfterRender( _this, scene, camera, geometry, material, group );
 
@@ -29301,6 +29301,7 @@ function WebGLRenderer( parameters = {} ) {
 			if( p_uniforms.setFogBlock( _gl, fog ) )
 				_currentFog = fog;
 		}
+		materialProperties.fog = fog;
 		
 		if( _currentLights !== lights ){
 			if( p_uniforms.setLights( _gl, lights, textures ) ){
