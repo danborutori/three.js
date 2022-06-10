@@ -32422,7 +32422,7 @@ class PropertyBinding {
 	constructor(rootNode, path, parsedPath) {
 		this.path = path;
 		this.parsedPath = parsedPath || PropertyBinding.parseTrackName(path);
-		this.node = PropertyBinding.findNode(rootNode, this.parsedPath.nodeName) || rootNode;
+		this.node = PropertyBinding.findNode(rootNode, this.parsedPath.nodeName);
 		this.rootNode = rootNode; // initial state of these methods that calls 'bind'
 
 		this.getValue = this._getValue_unbound;
@@ -32646,7 +32646,7 @@ class PropertyBinding {
 		let propertyIndex = parsedPath.propertyIndex;
 
 		if (!targetObject) {
-			targetObject = PropertyBinding.findNode(this.rootNode, parsedPath.nodeName) || this.rootNode;
+			targetObject = PropertyBinding.findNode(this.rootNode, parsedPath.nodeName);
 			this.node = targetObject;
 		} // set fail state so we can just 'return' on error
 
