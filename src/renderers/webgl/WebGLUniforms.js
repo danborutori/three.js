@@ -47,10 +47,10 @@ import { DataArrayTexture } from '../../textures/DataArrayTexture.js';
 import { Data3DTexture } from '../../textures/Data3DTexture.js';
 import { Vector3 } from '../../math/Vector3.js';
 
-const emptyTexture = new Texture();
-const emptyArrayTexture = new DataArrayTexture();
-const empty3dTexture = new Data3DTexture();
-const emptyCubeTexture = new CubeTexture();
+const emptyTexture = /*@__PURE__*/ new Texture();
+const emptyArrayTexture = /*@__PURE__*/ new DataArrayTexture();
+const empty3dTexture = /*@__PURE__*/ new Data3DTexture();
+const emptyCubeTexture = /*@__PURE__*/ new CubeTexture();
 
 // --- Utilities ---
 
