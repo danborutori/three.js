@@ -3487,7 +3487,6 @@
 					const target = targets[ i ];
 					if ( node === undefined ) continue;
 					node.updateMatrix();
-					node.matrixAutoUpdate = true;
 					let TypedKeyframeTrack;
 
 					switch ( PATH_PROPERTIES[ target.path ] ) {
