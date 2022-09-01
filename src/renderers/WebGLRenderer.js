@@ -960,11 +960,11 @@ function WebGLRenderer( parameters = {} ) {
 		
 		// update scene graph
 
-		if ( scene.autoUpdate === true ) scene.updateMatrixWorld();
+		if ( scene.matrixWorldAutoUpdate === true ) scene.updateMatrixWorld();
 
 		// update camera matrices and frustum
 
-		if ( camera.parent === null ) camera.updateMatrixWorld();
+		if ( camera.parent === null && camera.matrixWorldAutoUpdate === true ) camera.updateMatrixWorld();
 
 		if ( xr.enabled === true && xr.isPresenting === true ) {
 
@@ -1764,7 +1764,6 @@ function WebGLRenderer( parameters = {} ) {
 
 		}
 
-
 		if ( refreshMaterial || materialProperties.receiveShadow !== object.receiveShadow ) {
 
 			materialProperties.receiveShadow = object.receiveShadow;
@@ -1788,6 +1787,16 @@ function WebGLRenderer( parameters = {} ) {
 			if( p_uniforms.setShadows( _gl, lights ) ){
 				_currentShadows = lights;
 			}
+		}
+
+		// https://github.com/mrdoob/three.js/pull/24467#issuecomment-1209031512
+
+		if ( material.isMeshGouraudMaterial && material.envMap !== null ) {
+
+			m_uniforms.envMap.value = envMap;
+
+			m_uniforms.flipEnvMap.value = ( envMap.isCubeTexture && envMap.isRenderTargetTexture === false ) ? - 1 : 1;
+
 		}
 
 		if ( refreshMaterial ) {

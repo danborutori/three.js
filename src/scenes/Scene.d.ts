@@ -34,7 +34,7 @@ export class Scene extends Object3D {
 	/**
 	 * @default true
 	 */
-	autoUpdate: boolean;
+	matrixWorldAutoUpdate: boolean;
 
 	/**
 	 * @default null
