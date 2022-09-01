@@ -173,8 +173,8 @@
 			texture.magFilter = THREE.LinearFilter;
 			texture.generateMipmaps = false;
 			texture.needsUpdate = true;
-			texture.encoding = dfdTransferFn === KHR_DF_TRANSFER_SRGB ? THREE.sRGBEncoding : THREE.LinearEncoding;
-			texture.premultiplyAlpha = !! ( dfdFlags & KHR_DF_FLAG_ALPHA_PREMULTIPLIED );
+			texture.encoding = dfdTransferFn === KTX.KHR_DF_TRANSFER_SRGB ? THREE.sRGBEncoding : THREE.LinearEncoding;
+			texture.premultiplyAlpha = !! ( dfdFlags & KTX.KHR_DF_FLAG_ALPHA_PREMULTIPLIED );
 			return texture;
 
 		}
@@ -187,9 +187,9 @@
 
 		_createTexture( buffer, config = {} ) {
 
-			const container = read( new Uint8Array( buffer ) );
+			const container = KTX.read( new Uint8Array( buffer ) );
 
-			if ( container.vkFormat !== VK_FORMAT_UNDEFINED ) {
+			if ( container.vkFormat !== KTX.VK_FORMAT_UNDEFINED ) {
 
 				return createDataTexture( container );
 
@@ -557,37 +557,37 @@
 
 
 	const FORMAT_MAP = {
-		[ VK_FORMAT_R32G32B32A32_SFLOAT ]: THREE.RGBAFormat,
-		[ VK_FORMAT_R16G16B16A16_SFLOAT ]: THREE.RGBAFormat,
-		[ VK_FORMAT_R8G8B8A8_UNORM ]: THREE.RGBAFormat,
-		[ VK_FORMAT_R8G8B8A8_SRGB ]: THREE.RGBAFormat,
-		[ VK_FORMAT_R32G32_SFLOAT ]: THREE.RGFormat,
-		[ VK_FORMAT_R16G16_SFLOAT ]: THREE.RGFormat,
-		[ VK_FORMAT_R8G8_UNORM ]: THREE.RGFormat,
-		[ VK_FORMAT_R8G8_SRGB ]: THREE.RGFormat,
-		[ VK_FORMAT_R32_SFLOAT ]: THREE.RedFormat,
-		[ VK_FORMAT_R16_SFLOAT ]: THREE.RedFormat,
-		[ VK_FORMAT_R8_SRGB ]: THREE.RedFormat,
-		[ VK_FORMAT_R8_UNORM ]: THREE.RedFormat
+		[ KTX.VK_FORMAT_R32G32B32A32_SFLOAT ]: THREE.RGBAFormat,
+		[ KTX.VK_FORMAT_R16G16B16A16_SFLOAT ]: THREE.RGBAFormat,
+		[ KTX.VK_FORMAT_R8G8B8A8_UNORM ]: THREE.RGBAFormat,
+		[ KTX.VK_FORMAT_R8G8B8A8_SRGB ]: THREE.RGBAFormat,
+		[ KTX.VK_FORMAT_R32G32_SFLOAT ]: THREE.RGFormat,
+		[ KTX.VK_FORMAT_R16G16_SFLOAT ]: THREE.RGFormat,
+		[ KTX.VK_FORMAT_R8G8_UNORM ]: THREE.RGFormat,
+		[ KTX.VK_FORMAT_R8G8_SRGB ]: THREE.RGFormat,
+		[ KTX.VK_FORMAT_R32_SFLOAT ]: THREE.RedFormat,
+		[ KTX.VK_FORMAT_R16_SFLOAT ]: THREE.RedFormat,
+		[ KTX.VK_FORMAT_R8_SRGB ]: THREE.RedFormat,
+		[ KTX.VK_FORMAT_R8_UNORM ]: THREE.RedFormat
 	};
 	const TYPE_MAP = {
-		[ VK_FORMAT_R32G32B32A32_SFLOAT ]: THREE.FloatType,
-		[ VK_FORMAT_R16G16B16A16_SFLOAT ]: THREE.HalfFloatType,
-		[ VK_FORMAT_R8G8B8A8_UNORM ]: THREE.UnsignedByteType,
-		[ VK_FORMAT_R8G8B8A8_SRGB ]: THREE.UnsignedByteType,
-		[ VK_FORMAT_R32G32_SFLOAT ]: THREE.FloatType,
-		[ VK_FORMAT_R16G16_SFLOAT ]: THREE.HalfFloatType,
-		[ VK_FORMAT_R8G8_UNORM ]: THREE.UnsignedByteType,
-		[ VK_FORMAT_R8G8_SRGB ]: THREE.UnsignedByteType,
-		[ VK_FORMAT_R32_SFLOAT ]: THREE.FloatType,
-		[ VK_FORMAT_R16_SFLOAT ]: THREE.HalfFloatType,
-		[ VK_FORMAT_R8_SRGB ]: THREE.UnsignedByteType,
-		[ VK_FORMAT_R8_UNORM ]: THREE.UnsignedByteType
+		[ KTX.VK_FORMAT_R32G32B32A32_SFLOAT ]: THREE.FloatType,
+		[ KTX.VK_FORMAT_R16G16B16A16_SFLOAT ]: THREE.HalfFloatType,
+		[ KTX.VK_FORMAT_R8G8B8A8_UNORM ]: THREE.UnsignedByteType,
+		[ KTX.VK_FORMAT_R8G8B8A8_SRGB ]: THREE.UnsignedByteType,
+		[ KTX.VK_FORMAT_R32G32_SFLOAT ]: THREE.FloatType,
+		[ KTX.VK_FORMAT_R16G16_SFLOAT ]: THREE.HalfFloatType,
+		[ KTX.VK_FORMAT_R8G8_UNORM ]: THREE.UnsignedByteType,
+		[ KTX.VK_FORMAT_R8G8_SRGB ]: THREE.UnsignedByteType,
+		[ KTX.VK_FORMAT_R32_SFLOAT ]: THREE.FloatType,
+		[ KTX.VK_FORMAT_R16_SFLOAT ]: THREE.HalfFloatType,
+		[ KTX.VK_FORMAT_R8_SRGB ]: THREE.UnsignedByteType,
+		[ KTX.VK_FORMAT_R8_UNORM ]: THREE.UnsignedByteType
 	};
 	const ENCODING_MAP = {
-		[ VK_FORMAT_R8G8B8A8_SRGB ]: THREE.sRGBEncoding,
-		[ VK_FORMAT_R8G8_SRGB ]: THREE.sRGBEncoding,
-		[ VK_FORMAT_R8_SRGB ]: THREE.sRGBEncoding
+		[ KTX.VK_FORMAT_R8G8B8A8_SRGB ]: THREE.sRGBEncoding,
+		[ KTX.VK_FORMAT_R8G8_SRGB ]: THREE.sRGBEncoding,
+		[ KTX.VK_FORMAT_R8_SRGB ]: THREE.sRGBEncoding
 	};
 
 	async function createDataTexture( container ) {
@@ -610,11 +610,11 @@
 		let levelData;
 		let view;
 
-		if ( container.supercompressionScheme === KHR_SUPERCOMPRESSION_NONE ) {
+		if ( container.supercompressionScheme === KTX.KHR_SUPERCOMPRESSION_NONE ) {
 
 			levelData = level.levelData;
 
-		} else if ( container.supercompressionScheme === KHR_SUPERCOMPRESSION_ZSTD ) {
+		} else if ( container.supercompressionScheme === KTX.KHR_SUPERCOMPRESSION_ZSTD ) {
 
 			if ( ! _zstd ) {
 
