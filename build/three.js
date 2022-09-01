@@ -9,7 +9,7 @@
 	(global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.THREE = {}));
 })(this, (function (exports) { 'use strict';
 
-	const REVISION = '144dev';
+	const REVISION = '144';
 	const MOUSE = {
 		LEFT: 0,
 		MIDDLE: 1,
@@ -1083,7 +1083,7 @@
 	function arrayNeedsUint32(array) {
 		// assumes larger values usually on last
 		for (let i = array.length - 1; i >= 0; --i) {
-			if (array[i] > 65535) return true;
+			if (array[i] >= 65535) return true; // account for PRIMITIVE_RESTART_FIXED_INDEX, #24565
 		}
 
 		return false;
@@ -7172,110 +7172,6 @@
 			return this;
 		}
 
-		copyColorsArray(colors) {
-			const array = this.array;
-			let offset = 0;
-
-			for (let i = 0, l = colors.length; i < l; i++) {
-				let color = colors[i];
-
-				if (color === undefined) {
-					console.warn('THREE.BufferAttribute.copyColorsArray(): color is undefined', i);
-					color = new Color();
-				}
-
-				if (this.normalized) {
-					array[offset++] = normalize(color.r, array);
-					array[offset++] = normalize(color.g, array);
-					array[offset++] = normalize(color.b, array);
-				} else {
-					array[offset++] = color.r;
-					array[offset++] = color.g;
-					array[offset++] = color.b;
-				}
-			}
-
-			return this;
-		}
-
-		copyVector2sArray(vectors) {
-			const array = this.array;
-			let offset = 0;
-
-			for (let i = 0, l = vectors.length; i < l; i++) {
-				let vector = vectors[i];
-
-				if (vector === undefined) {
-					console.warn('THREE.BufferAttribute.copyVector2sArray(): vector is undefined', i);
-					vector = new Vector2();
-				}
-
-				if (this.normalized) {
-					array[offset++] = normalize(vector.x, array);
-					array[offset++] = normalize(vector.y, array);
-				} else {
-					array[offset++] = vector.x;
-					array[offset++] = vector.y;
-				}
-			}
-
-			return this;
-		}
-
-		copyVector3sArray(vectors) {
-			const array = this.array;
-			let offset = 0;
-
-			for (let i = 0, l = vectors.length; i < l; i++) {
-				let vector = vectors[i];
-
-				if (vector === undefined) {
-					console.warn('THREE.BufferAttribute.copyVector3sArray(): vector is undefined', i);
-					vector = new Vector3();
-				}
-
-				if (this.normalized) {
-					array[offset++] = normalize(vector.x, array);
-					array[offset++] = normalize(vector.y, array);
-					array[offset++] = normalize(vector.z, array);
-				} else {
-					array[offset++] = vector.x;
-					array[offset++] = vector.y;
-					array[offset++] = vector.z;
-				}
-			}
-
-			return this;
-		}
-
-		copyVector4sArray(vectors) {
-			const array = this.array;
-			let offset = 0;
-
-			for (let i = 0, l = vectors.length; i < l; i++) {
-				let vector = vectors[i];
-
-				if (vector === undefined) {
-					console.warn('THREE.BufferAttribute.copyVector4sArray(): vector is undefined', i);
-					vector = new Vector4();
-				}
-
-				if (this.normalized) {
-					array[offset++] = normalize(vector.x, array);
-					array[offset++] = normalize(vector.y, array);
-					array[offset++] = normalize(vector.z, array);
-					array[offset++] = normalize(vector.w, array);
-				} else {
-					array[offset++] = vector.x;
-					array[offset++] = vector.y;
-					array[offset++] = vector.z;
-					array[offset++] = vector.w;
-				}
-			}
-
-			return this;
-		}
-
 		applyMatrix3(m) {
 			if (this.itemSize === 2) {
 				for (let i = 0, l = this.count; i < l; i++) {
@@ -7453,6 +7349,23 @@
 			if (this.usage !== StaticDrawUsage) data.usage = this.usage;
 			if (this.updateRange.offset !== 0 || this.updateRange.count !== -1) data.updateRange = this.updateRange;
 			return data;
+		} // @deprecated
+
+
+		copyColorsArray() {
+			console.error('THREE.BufferAttribute: copyColorsArray() was removed in r144.');
+		}
+
+		copyVector2sArray() {
+			console.error('THREE.BufferAttribute: copyVector2sArray() was removed in r144.');
+		}
+
+		copyVector3sArray() {
+			console.error('THREE.BufferAttribute: copyVector3sArray() was removed in r144.');
+		}
+
+		copyVector4sArray() {
+			console.error('THREE.BufferAttribute: copyVector4sArray() was removed in r144.');
 		}
 
 	} //
@@ -21227,6 +21140,20 @@
 
 
 		this.compile = function (scene, camera) {
+			function prepare(material, scene, object) {
+				if (material.transparent === true && material.side === DoubleSide) {
+					material.side = BackSide;
+					material.needsUpdate = true;
+					getProgram(material, scene, object);
+					material.side = FrontSide;
+					material.needsUpdate = true;
+					getProgram(material, scene, object);
+					material.side = DoubleSide;
+				} else {
+					getProgram(material, scene, object);
+				}
+			}
+
 			currentRenderState = renderStates.get(scene);
 			currentRenderState.init();
 			renderStateStack.push(currentRenderState);
@@ -21247,10 +21174,10 @@
 					if (Array.isArray(material)) {
 						for (let i = 0; i < material.length; i++) {
 							const material2 = material[i];
-							getProgram(material2, scene, object);
+							prepare(material2, scene, object);
 						}
 					} else {
-						getProgram(material, scene, object);
+						prepare(material, scene, object);
 					}
 				}
 			});
@@ -22292,23 +22219,20 @@
 			const data = super.toJSON(meta);
 			if (this.fog !== null) data.object.fog = this.fog.toJSON();
 			return data;
+		} // @deprecated
+
+
+		get autoUpdate() {
+			console.warn('THREE.Scene: autoUpdate was renamed to matrixWorldAutoUpdate in r144.');
+			return this.matrixWorldAutoUpdate;
 		}
 
-	} // r144
-
-
-	Object.defineProperty(Scene.prototype, 'autoUpdate', {
-		get() {
-			console.warn('THREE.Scene: autoUpdate has been renamed matrixWorldAutoUpdate.');
-			return this.matrixWorldAutoUpdate;
-		},
-
-		set(value) {
-			console.warn('THREE.Scene: autoUpdate has been renamed matrixWorldAutoUpdate.');
+		set autoUpdate(value) {
+			console.warn('THREE.Scene: autoUpdate was renamed to matrixWorldAutoUpdate in r144.');
 			this.matrixWorldAutoUpdate = value;
 		}
 
-	});
+	}
 
 	class InterleavedBuffer {
 		constructor(array, stride) {
@@ -32666,7 +32590,7 @@
 
 	const _trackRe = new RegExp('' + '^' + _directoryRe + _nodeRe + _objectRe + _propertyRe + '$');
 
-	const _supportedObjectNames = ['material', 'materials', 'bones'];
+	const _supportedObjectNames = ['material', 'materials', 'bones', 'map'];
 
 	class Composite {
 		constructor(targetGroup, path, optionalParsedPath) {
@@ -32991,6 +32915,20 @@
 							}
 						}
 
+						break;
+
+					case 'map':
+						if (!targetObject.material) {
+							console.error('THREE.PropertyBinding: Can not bind to material as node does not have a material.', this);
+							return;
+						}
+
+						if (!targetObject.material.map) {
+							console.error('THREE.PropertyBinding: Can not bind to material.map as node.material does not have a map.', this);
+							return;
+						}
+
+						targetObject = targetObject.material.map;
 						break;
 
 					default:
@@ -35910,7 +35848,7 @@
 			return this;
 		}
 
-		toShapes(isCCW, noHoles) {
+		toShapes(isCCW) {
 			function toShapesNoHoles(inSubpaths) {
 				const shapes = [];
 
@@ -35975,7 +35913,6 @@
 			const isClockWise = ShapeUtils.isClockWise;
 			const subPaths = this.subPaths;
 			if (subPaths.length === 0) return [];
-			if (noHoles === true) return toShapesNoHoles(subPaths);
 			let solid, tmpPath, tmpShape;
 			const shapes = [];
 
