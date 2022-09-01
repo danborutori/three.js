@@ -601,7 +601,7 @@
 					for ( let k = 0; k < itemSize; k ++ ) {
 
 						const getterFunc = getters[ k ];
-						newarray.push( attribute[ getterFunc ]( index ) );
+						newarray.push( attribute.array[ index*itemSize+k ] );
 
 						if ( morphAttr ) {
 
