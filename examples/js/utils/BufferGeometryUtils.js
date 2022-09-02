@@ -601,7 +601,10 @@
 					for ( let k = 0; k < itemSize; k ++ ) {
 
 						const getterFunc = getters[ k ];
-						newarray.push( attribute.array[ index*itemSize+k ] );
+						let v = attribute[ getterFunc ]( index );
+						if( attribute.normalized )
+							v = THREE.MathUtils.normalize( v, attribute.array );
+						newarray.push( v );
 
 						if ( morphAttr ) {
 
