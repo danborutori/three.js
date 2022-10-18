@@ -135,7 +135,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 	}
 
-	function getInternalFormat( internalFormatName, glFormat, glType, encoding, isVideoTexture = false ) {
+	function getInternalFormat( internalFormatName, glFormat, glType, encoding, forceLinearEncoding = false ) {
 
 		if ( isWebGL2 === false ) return glFormat;
 
@@ -174,7 +174,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			if ( glType === _gl.FLOAT ) internalFormat = _gl.RGBA32F;
 			if ( glType === _gl.HALF_FLOAT ) internalFormat = _gl.RGBA16F;
-			if ( glType === _gl.UNSIGNED_BYTE ) internalFormat = ( encoding === sRGBEncoding && isVideoTexture === false ) ? _gl.SRGB8_ALPHA8 : _gl.RGBA8;
+			if ( glType === _gl.UNSIGNED_BYTE ) internalFormat = ( encoding === sRGBEncoding && forceLinearEncoding === false ) ? _gl.SRGB8_ALPHA8 : _gl.RGBA8;
 			if ( glType === _gl.UNSIGNED_SHORT_4_4_4_4 ) internalFormat = _gl.RGBA4;
 			if ( glType === _gl.UNSIGNED_SHORT_5_5_5_1 ) internalFormat = _gl.RGB5_A1;
 
@@ -492,8 +492,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		}
 
-		state.activeTexture( _gl.TEXTURE0 + slot );
-		state.bindTexture( _gl.TEXTURE_2D, textureProperties.__webglTexture );
+		state.bindTexture( _gl.TEXTURE_2D, textureProperties.__webglTexture, _gl.TEXTURE0 + slot );
 
 	}
 
@@ -508,8 +507,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		}
 
-		state.activeTexture( _gl.TEXTURE0 + slot );
-		state.bindTexture( _gl.TEXTURE_2D_ARRAY, textureProperties.__webglTexture );
+		state.bindTexture( _gl.TEXTURE_2D_ARRAY, textureProperties.__webglTexture, _gl.TEXTURE0 + slot );
 
 	}
 
@@ -524,8 +522,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		}
 
-		state.activeTexture( _gl.TEXTURE0 + slot );
-		state.bindTexture( _gl.TEXTURE_3D, textureProperties.__webglTexture );
+		state.bindTexture( _gl.TEXTURE_3D, textureProperties.__webglTexture, _gl.TEXTURE0 + slot );
 
 	}
 
@@ -540,8 +537,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		}
 
-		state.activeTexture( _gl.TEXTURE0 + slot );
-		state.bindTexture( _gl.TEXTURE_CUBE_MAP, textureProperties.__webglTexture );
+		state.bindTexture( _gl.TEXTURE_CUBE_MAP, textureProperties.__webglTexture, _gl.TEXTURE0 + slot );
 
 	}
 
@@ -713,10 +709,13 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 		const forceUpload = initTexture( textureProperties, texture );
 		const source = texture.source;
 
-		state.activeTexture( _gl.TEXTURE0 + slot );
-		state.bindTexture( textureType, textureProperties.__webglTexture );
+		state.bindTexture( textureType, textureProperties.__webglTexture, _gl.TEXTURE0 + slot );
 
-		if ( source.version !== source.__currentVersion || forceUpload === true ) {
+		const sourceProperties = properties.get( source );
+
+		if ( source.version !== sourceProperties.__version || forceUpload === true ) {
+
+			state.activeTexture( _gl.TEXTURE0 + slot );
 
 			_gl.pixelStorei( _gl.UNPACK_FLIP_Y_WEBGL, texture.flipY );
 			_gl.pixelStorei( _gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.premultiplyAlpha );
@@ -739,7 +738,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 			const mipmaps = texture.mipmaps;
 
 			const useTexStorage = ( isWebGL2 && texture.isVideoTexture !== true );
-			const allocateMemory = ( source.__currentVersion === undefined ) || ( forceUpload === true );
+			const allocateMemory = ( sourceProperties.__version === undefined ) || ( forceUpload === true );
 			const levels = getMipLevels( texture, image, supportsMips );
 
 			if ( texture.isDepthTexture ) {
@@ -1055,7 +1054,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			}
 
-			source.__currentVersion = source.version;
+			sourceProperties.__version = source.version;
 
 			if ( texture.onUpdate ) texture.onUpdate( texture );
 
@@ -1072,10 +1071,13 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 		const forceUpload = initTexture( textureProperties, texture );
 		const source = texture.source;
 
-		state.activeTexture( _gl.TEXTURE0 + slot );
-		state.bindTexture( _gl.TEXTURE_CUBE_MAP, textureProperties.__webglTexture );
+		state.bindTexture( _gl.TEXTURE_CUBE_MAP, textureProperties.__webglTexture, _gl.TEXTURE0 + slot );
 
-		if ( source.version !== source.__currentVersion || forceUpload === true ) {
+		const sourceProperties = properties.get( source );
+
+		if ( source.version !== sourceProperties.__version || forceUpload === true ) {
+
+			state.activeTexture( _gl.TEXTURE0 + slot );
 
 			_gl.pixelStorei( _gl.UNPACK_FLIP_Y_WEBGL, texture.flipY );
 			_gl.pixelStorei( _gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.premultiplyAlpha );
@@ -1110,7 +1112,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 				glInternalFormat = getInternalFormat( texture.internalFormat, glFormat, glType, texture.encoding );
 
 			const useTexStorage = ( isWebGL2 && texture.isVideoTexture !== true );
-			const allocateMemory = ( source.__currentVersion === undefined ) || ( forceUpload === true );
+			const allocateMemory = ( sourceProperties.__version === undefined ) || ( forceUpload === true );
 			let levels = getMipLevels( texture, image, supportsMips );
 
 			setTextureParameters( _gl.TEXTURE_CUBE_MAP, texture, supportsMips );
@@ -1259,7 +1261,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			}
 
-			source.__currentVersion = source.version;
+			sourceProperties.__version = source.version;
 
 			if ( texture.onUpdate ) texture.onUpdate( texture );
 
@@ -1658,7 +1660,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 					const glFormat = utils.convert( texture.format, texture.encoding );
 					const glType = utils.convert( texture.type );
-					const glInternalFormat = getInternalFormat( texture.internalFormat, glFormat, glType, texture.encoding );
+					const glInternalFormat = getInternalFormat( texture.internalFormat, glFormat, glType, texture.encoding, renderTarget.isXRRenderTarget === true );
 					const samples = getRenderTargetSamples( renderTarget );
 					_gl.renderbufferStorageMultisample( _gl.RENDERBUFFER, samples, glInternalFormat, renderTarget.width, renderTarget.height );
 

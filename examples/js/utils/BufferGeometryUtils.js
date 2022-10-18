@@ -349,7 +349,7 @@
 		// a set of InterleavedBufferAttributes for each attribute
 		let TypedArray;
 		let arrayLength = 0;
-		let stride = 0; // calculate the the length and type of the interleavedBuffer
+		let stride = 0; // calculate the length and type of the interleavedBuffer
 
 		for ( let i = 0, l = attributes.length; i < l; ++ i ) {
 
@@ -519,7 +519,7 @@
 	/**
  * @param {BufferGeometry} geometry
  * @param {number} tolerance
- * @return {BufferGeometry>}
+ * @return {BufferGeometry}
  */
 
 
@@ -663,7 +663,7 @@
 	/**
  * @param {BufferGeometry} geometry
  * @param {number} drawMode
- * @return {BufferGeometry>}
+ * @return {BufferGeometry}
  */
 
 
