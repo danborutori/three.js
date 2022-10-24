@@ -468,6 +468,7 @@
 			lightNode.decay = 2;
 			if ( lightDef.intensity !== undefined ) lightNode.intensity = lightDef.intensity;
 			lightNode.name = parser.createUniqueName( lightDef.name || 'light_' + lightIndex );
+			assignExtrasToUserData( lightNode, lightDef );
 			dependency = Promise.resolve( lightNode );
 			parser.cache.add( cacheKey, dependency );
 			return dependency;
