@@ -1130,9 +1130,9 @@ function WebGLRenderer( parameters = {} ) {
 
 				groupOrder = object.renderOrder;
 
-			} else if ( object.isLOD ) {
+			// } else if ( object.isLOD ) {
 
-				if ( object.autoUpdate === true ) object.update( camera );
+			// 	if ( object.autoUpdate === true ) object.update( camera );
 
 			} else if ( object.isLight ) {
 
@@ -1144,29 +1144,29 @@ function WebGLRenderer( parameters = {} ) {
 
 				}
 
-			} else if ( object.isSprite ) {
+			// } else if ( object.isSprite ) {
 
-				if ( ! object.frustumCulled || _frustum.intersectsSprite( object ) ) {
+			// 	if ( ! object.frustumCulled || _frustum.intersectsSprite( object ) ) {
 
-					if ( sortObjects ) {
+			// 		if ( sortObjects ) {
 
-						_vector3.setFromMatrixPosition( object.matrixWorld )
-							.applyMatrix4( _projScreenMatrix );
+			// 			_vector3.setFromMatrixPosition( object.matrixWorld )
+			// 				.applyMatrix4( _projScreenMatrix );
 
-					}
+			// 		}
 
-					const geometry = objects.update( object );
-					const material = object.material;
+			// 		const geometry = objects.update( object );
+			// 		const material = object.material;
 
-					if ( material.visible ) {
+			// 		if ( material.visible ) {
 
-						currentRenderList.push( object, geometry, material, groupOrder, _vector3.z, null );
+			// 			currentRenderList.push( object, geometry, material, groupOrder, _vector3.z, null );
 
-					}
+			// 		}
 
-				}else{
-					object.onFrustumCulled( _this, camera );
-				}
+			// 	}else{
+			// 		object.onFrustumCulled( _this, camera );
+			// 	}
 
 			} else if ( object.isMesh || object.isLine || object.isPoints ) {
 
