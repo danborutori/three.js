@@ -13083,7 +13083,7 @@ var map_particle_fragment = "#if defined( USE_MAP ) || defined( USE_ALPHAMAP )\n
 
 var map_particle_pars_fragment = "#if defined( USE_MAP ) || defined( USE_ALPHAMAP )\n\tuniform mat3 uvTransform;\n#endif\n#ifdef USE_MAP\n\tuniform sampler2D map;\n#endif\n#ifdef USE_ALPHAMAP\n\tuniform sampler2D alphaMap;\n#endif";
 
-var metalnessmap_fragment = "float metalnessFactor = metalness;\n#ifdef USE_METALNESSMAP\n\tvec4 texelMetalness = texture2D( metalnessMap, vUv );\n\tmetalnessFactor *= texelMetalness.b;\n#endif";
+var metalnessmap_fragment = "float metalnessFactor = metalness;\n#ifdef USE_METALNESSMAP\n\tmetalnessFactor *= texelRoughMetalness.b;\n#endif";
 
 var metalnessmap_pars_fragment = "#ifdef USE_METALNESSMAP\n\tuniform sampler2D metalnessMap;\n#endif";
 
@@ -13127,7 +13127,7 @@ var dithering_fragment = "#ifdef DITHERING\n\tgl_FragColor.rgb = dithering( gl_F
 
 var dithering_pars_fragment = "#ifdef DITHERING\n\tvec3 dithering( vec3 color ) {\n\t\tfloat grid_position = rand( gl_FragCoord.xy );\n\t\tvec3 dither_shift_RGB = vec3( 0.25 / 255.0, -0.25 / 255.0, 0.25 / 255.0 );\n\t\tdither_shift_RGB = mix( 2.0 * dither_shift_RGB, -2.0 * dither_shift_RGB, grid_position );\n\t\treturn color + dither_shift_RGB;\n\t}\n#endif";
 
-var roughnessmap_fragment = "float roughnessFactor = roughness;\n#ifdef USE_ROUGHNESSMAP\n\tvec4 texelRoughness = texture2D( roughnessMap, vUv );\n\troughnessFactor *= texelRoughness.g;\n#endif";
+var roughnessmap_fragment = "float roughnessFactor = roughness;\n#if defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\nvec4 texelRoughMetalness = texture2D( roughnessMap, vUv );\n#endif\n#ifdef USE_ROUGHNESSMAP\n\troughnessFactor *= texelRoughMetalness.g;\n#endif";
 
 var roughnessmap_pars_fragment = "#ifdef USE_ROUGHNESSMAP\n\tuniform sampler2D roughnessMap;\n#endif";
 
@@ -29173,9 +29173,9 @@ function WebGLRenderer( parameters = {} ) {
 
 				groupOrder = object.renderOrder;
 
-			} else if ( object.isLOD ) {
+			// } else if ( object.isLOD ) {
 
-				if ( object.autoUpdate === true ) object.update( camera );
+			// 	if ( object.autoUpdate === true ) object.update( camera );
 
 			} else if ( object.isLight ) {
 
@@ -29187,29 +29187,29 @@ function WebGLRenderer( parameters = {} ) {
 
 				}
 
-			} else if ( object.isSprite ) {
+			// } else if ( object.isSprite ) {
 
-				if ( ! object.frustumCulled || _frustum.intersectsSprite( object ) ) {
+			// 	if ( ! object.frustumCulled || _frustum.intersectsSprite( object ) ) {
 
-					if ( sortObjects ) {
+			// 		if ( sortObjects ) {
 
-						_vector3.setFromMatrixPosition( object.matrixWorld )
-							.applyMatrix4( _projScreenMatrix );
+			// 			_vector3.setFromMatrixPosition( object.matrixWorld )
+			// 				.applyMatrix4( _projScreenMatrix );
 
-					}
+			// 		}
 
-					const geometry = objects.update( object );
-					const material = object.material;
+			// 		const geometry = objects.update( object );
+			// 		const material = object.material;
 
-					if ( material.visible ) {
+			// 		if ( material.visible ) {
 
-						currentRenderList.push( object, geometry, material, groupOrder, _vector3.z, null );
+			// 			currentRenderList.push( object, geometry, material, groupOrder, _vector3.z, null );
 
-					}
+			// 		}
 
-				}else {
-					object.onFrustumCulled( _this, camera );
-				}
+			// 	}else{
+			// 		object.onFrustumCulled( _this, camera );
+			// 	}
 
 			} else if ( object.isMesh || object.isLine || object.isPoints ) {
 
