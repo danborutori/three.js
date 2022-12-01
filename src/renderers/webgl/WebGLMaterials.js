@@ -1,4 +1,5 @@
 import { BackSide } from '../../constants.js';
+import { getUnlitUniformColorSpace } from '../shaders/UniformsUtils.js';
 
 function WebGLMaterials( renderer, properties ) {
 

@@ -3,7 +3,7 @@
  * Copyright 2010-2022 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
-const REVISION = '146';
+const REVISION = '147';
 const MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2, ROTATE: 0, DOLLY: 1, PAN: 2 };
 const TOUCH = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 };
 const CullFaceNone = 0;
@@ -1287,12 +1287,11 @@ class Matrix3 {
 
 	}
 
+	//
+
 	scale( sx, sy ) {
 
-		const te = this.elements;
-
-		te[ 0 ] *= sx; te[ 3 ] *= sx; te[ 6 ] *= sx;
-		te[ 1 ] *= sy; te[ 4 ] *= sy; te[ 7 ] *= sy;
+		this.premultiply( _m3.makeScale( sx, sy ) );
 
 		return this;
 
@@ -1300,21 +1299,7 @@ class Matrix3 {
 
 	rotate( theta ) {
 
-		const c = Math.cos( theta );
-		const s = Math.sin( theta );
-
-		const te = this.elements;
-
-		const a11 = te[ 0 ], a12 = te[ 3 ], a13 = te[ 6 ];
-		const a21 = te[ 1 ], a22 = te[ 4 ], a23 = te[ 7 ];
-
-		te[ 0 ] = c * a11 + s * a21;
-		te[ 3 ] = c * a12 + s * a22;
-		te[ 6 ] = c * a13 + s * a23;
-
-		te[ 1 ] = - s * a11 + c * a21;
-		te[ 4 ] = - s * a12 + c * a22;
-		te[ 7 ] = - s * a13 + c * a23;
+		this.premultiply( _m3.makeRotation( - theta ) );
 
 		return this;
 
@@ -1322,14 +1307,62 @@ class Matrix3 {
 
 	translate( tx, ty ) {
 
-		const te = this.elements;
-
-		te[ 0 ] += tx * te[ 2 ]; te[ 3 ] += tx * te[ 5 ]; te[ 6 ] += tx * te[ 8 ];
-		te[ 1 ] += ty * te[ 2 ]; te[ 4 ] += ty * te[ 5 ]; te[ 7 ] += ty * te[ 8 ];
+		this.premultiply( _m3.makeTranslation( tx, ty ) );
 
 		return this;
 
 	}
+
+	// for 2D Transforms
+
+	makeTranslation( x, y ) {
+
+		this.set(
+
+			1, 0, x,
+			0, 1, y,
+			0, 0, 1
+
+		);
+
+		return this;
+
+	}
+
+	makeRotation( theta ) {
+
+		// counterclockwise
+
+		const c = Math.cos( theta );
+		const s = Math.sin( theta );
+
+		this.set(
+
+			c, - s, 0,
+			s, c, 0,
+			0, 0, 1
+
+		);
+
+		return this;
+
+	}
+
+	makeScale( x, y ) {
+
+		this.set(
+
+			x, 0, 0,
+			0, y, 0,
+			0, 0, 1
+
+		);
+
+		return this;
+
+	}
+
+	//
 
 	equals( matrix ) {
 
@@ -1385,6 +1418,8 @@ class Matrix3 {
 	}
 
 }
+
+const _m3 = /*@__PURE__*/ new Matrix3();
 
 function arrayNeedsUint32( array ) {
 
@@ -1522,7 +1557,7 @@ const _colorKeywords = { 'aliceblue': 0xF0F8FF, 'antiquewhite': 0xFAEBD7, 'aqua'
 	'springgreen': 0x00FF7F, 'steelblue': 0x4682B4, 'tan': 0xD2B48C, 'teal': 0x008080, 'thistle': 0xD8BFD8, 'tomato': 0xFF6347, 'turquoise': 0x40E0D0,
 	'violet': 0xEE82EE, 'wheat': 0xF5DEB3, 'white': 0xFFFFFF, 'whitesmoke': 0xF5F5F5, 'yellow': 0xFFFF00, 'yellowgreen': 0x9ACD32 };
 
-const _rgb = { r: 0, g: 0, b: 0 };
+const _rgb$1 = { r: 0, g: 0, b: 0 };
 const _hslA = { h: 0, s: 0, l: 0 };
 const _hslB = { h: 0, s: 0, l: 0 };
 
@@ -1612,7 +1647,7 @@ class Color {
 
 	}
 
-	setRGB( r, g, b, colorSpace = LinearSRGBColorSpace ) {
+	setRGB( r, g, b, colorSpace = ColorManagement.workingColorSpace ) {
 
 		this.r = r;
 		this.g = g;
@@ -1624,7 +1659,7 @@ class Color {
 
 	}
 
-	setHSL( h, s, l, colorSpace = LinearSRGBColorSpace ) {
+	setHSL( h, s, l, colorSpace = ColorManagement.workingColorSpace ) {
 
 		// h,s,l ranges are in 0.0 - 1.0
 		h = euclideanModulo( h, 1 );
@@ -1852,9 +1887,9 @@ class Color {
 
 	getHex( colorSpace = SRGBColorSpace ) {
 
-		ColorManagement.fromWorkingColorSpace( toComponents( this, _rgb ), colorSpace );
+		ColorManagement.fromWorkingColorSpace( toComponents( this, _rgb$1 ), colorSpace );
 
-		return clamp( _rgb.r * 255, 0, 255 ) << 16 ^ clamp( _rgb.g * 255, 0, 255 ) << 8 ^ clamp( _rgb.b * 255, 0, 255 ) << 0;
+		return clamp( _rgb$1.r * 255, 0, 255 ) << 16 ^ clamp( _rgb$1.g * 255, 0, 255 ) << 8 ^ clamp( _rgb$1.b * 255, 0, 255 ) << 0;
 
 	}
 
@@ -1864,13 +1899,13 @@ class Color {
 
 	}
 
-	getHSL( target, colorSpace = LinearSRGBColorSpace ) {
+	getHSL( target, colorSpace = ColorManagement.workingColorSpace ) {
 
 		// h,s,l ranges are in 0.0 - 1.0
 
-		ColorManagement.fromWorkingColorSpace( toComponents( this, _rgb ), colorSpace );
+		ColorManagement.fromWorkingColorSpace( toComponents( this, _rgb$1 ), colorSpace );
 
-		const r = _rgb.r, g = _rgb.g, b = _rgb.b;
+		const r = _rgb$1.r, g = _rgb$1.g, b = _rgb$1.b;
 
 		const max = Math.max( r, g, b );
 		const min = Math.min( r, g, b );
@@ -1909,13 +1944,13 @@ class Color {
 
 	}
 
-	getRGB( target, colorSpace = LinearSRGBColorSpace ) {
+	getRGB( target, colorSpace = ColorManagement.workingColorSpace ) {
 
-		ColorManagement.fromWorkingColorSpace( toComponents( this, _rgb ), colorSpace );
+		ColorManagement.fromWorkingColorSpace( toComponents( this, _rgb$1 ), colorSpace );
 
-		target.r = _rgb.r;
-		target.g = _rgb.g;
-		target.b = _rgb.b;
+		target.r = _rgb$1.r;
+		target.g = _rgb$1.g;
+		target.b = _rgb$1.b;
 
 		return target;
 
@@ -1923,16 +1958,16 @@ class Color {
 
 	getStyle( colorSpace = SRGBColorSpace ) {
 
-		ColorManagement.fromWorkingColorSpace( toComponents( this, _rgb ), colorSpace );
+		ColorManagement.fromWorkingColorSpace( toComponents( this, _rgb$1 ), colorSpace );
 
 		if ( colorSpace !== SRGBColorSpace ) {
 
 			// Requires CSS Color Module Level 4 (https://www.w3.org/TR/css-color-4/).
-			return `color(${ colorSpace } ${ _rgb.r } ${ _rgb.g } ${ _rgb.b })`;
+			return `color(${ colorSpace } ${ _rgb$1.r } ${ _rgb$1.g } ${ _rgb$1.b })`;
 
 		}
 
-		return `rgb(${( _rgb.r * 255 ) | 0},${( _rgb.g * 255 ) | 0},${( _rgb.b * 255 ) | 0})`;
+		return `rgb(${( _rgb$1.r * 255 ) | 0},${( _rgb$1.g * 255 ) | 0},${( _rgb$1.b * 255 ) | 0})`;
 
 	}
 
@@ -2345,7 +2380,7 @@ let textureId = 0;
 
 class Texture extends EventDispatcher {
 
-	constructor( image = Texture.DEFAULT_IMAGE, mapping = Texture.DEFAULT_MAPPING, wrapS = ClampToEdgeWrapping, wrapT = ClampToEdgeWrapping, magFilter = LinearFilter, minFilter = LinearMipmapLinearFilter, format = RGBAFormat, type = UnsignedByteType, anisotropy = 1, encoding = LinearEncoding ) {
+	constructor( image = Texture.DEFAULT_IMAGE, mapping = Texture.DEFAULT_MAPPING, wrapS = ClampToEdgeWrapping, wrapT = ClampToEdgeWrapping, magFilter = LinearFilter, minFilter = LinearMipmapLinearFilter, format = RGBAFormat, type = UnsignedByteType, anisotropy = Texture.DEFAULT_ANISOTROPY, encoding = LinearEncoding ) {
 
 		super();
 
@@ -2630,6 +2665,7 @@ class Texture extends EventDispatcher {
 
 Texture.DEFAULT_IMAGE = null;
 Texture.DEFAULT_MAPPING = UVMapping;
+Texture.DEFAULT_ANISOTROPY = 1;
 
 class Vector4 {
 
@@ -11535,6 +11571,19 @@ function cloneUniformsGroups( src ) {
 
 }
 
+function getUnlitUniformColorSpace( renderer ) {
+
+	if ( renderer.getRenderTarget() === null ) {
+
+		// https://github.com/mrdoob/three.js/pull/23937#issuecomment-1111067398
+		return renderer.outputEncoding === sRGBEncoding ? SRGBColorSpace : LinearSRGBColorSpace;
+
+	}
+
+	return LinearSRGBColorSpace;
+
+}
+
 // Legacy
 
 const UniformsUtils = { clone: cloneUniforms, merge: mergeUniforms };
@@ -12011,7 +12060,8 @@ class PerspectiveCamera extends Camera {
 
 }
 
-const fov = 90, aspect = 1;
+const fov = - 90; // negative fov is not an error
+const aspect = 1;
 
 class CubeCamera extends Object3D {
 
@@ -12025,38 +12075,38 @@ class CubeCamera extends Object3D {
 
 		const cameraPX = new PerspectiveCamera( fov, aspect, near, far );
 		cameraPX.layers = this.layers;
-		cameraPX.up.set( 0, - 1, 0 );
-		cameraPX.lookAt( new Vector3( 1, 0, 0 ) );
+		cameraPX.up.set( 0, 1, 0 );
+		cameraPX.lookAt( 1, 0, 0 );
 		this.add( cameraPX );
 
 		const cameraNX = new PerspectiveCamera( fov, aspect, near, far );
 		cameraNX.layers = this.layers;
-		cameraNX.up.set( 0, - 1, 0 );
-		cameraNX.lookAt( new Vector3( - 1, 0, 0 ) );
+		cameraNX.up.set( 0, 1, 0 );
+		cameraNX.lookAt( - 1, 0, 0 );
 		this.add( cameraNX );
 
 		const cameraPY = new PerspectiveCamera( fov, aspect, near, far );
 		cameraPY.layers = this.layers;
-		cameraPY.up.set( 0, 0, 1 );
-		cameraPY.lookAt( new Vector3( 0, 1, 0 ) );
+		cameraPY.up.set( 0, 0, - 1 );
+		cameraPY.lookAt( 0, 1, 0 );
 		this.add( cameraPY );
 
 		const cameraNY = new PerspectiveCamera( fov, aspect, near, far );
 		cameraNY.layers = this.layers;
-		cameraNY.up.set( 0, 0, - 1 );
-		cameraNY.lookAt( new Vector3( 0, - 1, 0 ) );
+		cameraNY.up.set( 0, 0, 1 );
+		cameraNY.lookAt( 0, - 1, 0 );
 		this.add( cameraNY );
 
 		const cameraPZ = new PerspectiveCamera( fov, aspect, near, far );
 		cameraPZ.layers = this.layers;
-		cameraPZ.up.set( 0, - 1, 0 );
-		cameraPZ.lookAt( new Vector3( 0, 0, 1 ) );
+		cameraPZ.up.set( 0, 1, 0 );
+		cameraPZ.lookAt( 0, 0, 1 );
 		this.add( cameraPZ );
 
 		const cameraNZ = new PerspectiveCamera( fov, aspect, near, far );
 		cameraNZ.layers = this.layers;
-		cameraNZ.up.set( 0, - 1, 0 );
-		cameraNZ.lookAt( new Vector3( 0, 0, - 1 ) );
+		cameraNZ.up.set( 0, 1, 0 );
+		cameraNZ.lookAt( 0, 0, - 1 );
 		this.add( cameraNZ );
 
 	}
@@ -12800,6 +12850,8 @@ function WebGLAttributes( gl, capabilities ) {
 
 		}
 
+		attribute.onUploadCallback();
+
 	}
 
 	//
@@ -13043,7 +13095,7 @@ var lightmap_pars_fragment = "#ifdef USE_LIGHTMAP\n\tuniform sampler2D lightMap;
 
 var lights_lambert_fragment = "LambertMaterial material;\nmaterial.diffuseColor = diffuseColor.rgb;\nmaterial.specularStrength = specularStrength;";
 
-var lights_lambert_pars_fragment = "varying vec3 vViewPosition;\nstruct LambertMaterial {\n\tvec3 diffuseColor;\n\tfloat specularStrength;\n};\nvoid RE_Direct_Lambert( const in IncidentLight directLight, const in GeometricContext geometry, const in LambertMaterial material, inout ReflectedLight reflectedLight ) {\n\tfloat dotNL = saturate( dot( geometry.normal, directLight.direction ) );\n\tvec3 irradiance = dotNL * directLight.color;\n\treflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );\n}\nvoid RE_IndirectDiffuse_Lambert( const in vec3 irradiance, const in GeometricContext geometry, const in LambertMaterial material, inout ReflectedLight reflectedLight ) {\n\treflectedLight.indirectDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );\n}\n#define RE_Direct\t\t\t\tRE_Direct_Lambert\n#define RE_IndirectDiffuse\t\tRE_IndirectDiffuse_Lambert\n#define Material_LightProbeLOD( material )\t(0)";
+var lights_lambert_pars_fragment = "varying vec3 vViewPosition;\nstruct LambertMaterial {\n\tvec3 diffuseColor;\n\tfloat specularStrength;\n};\nvoid RE_Direct_Lambert( const in IncidentLight directLight, const in GeometricContext geometry, const in LambertMaterial material, inout ReflectedLight reflectedLight ) {\n\tfloat dotNL = saturate( dot( geometry.normal, directLight.direction ) );\n\tvec3 irradiance = dotNL * directLight.color;\n\treflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );\n}\nvoid RE_IndirectDiffuse_Lambert( const in vec3 irradiance, const in GeometricContext geometry, const in LambertMaterial material, inout ReflectedLight reflectedLight ) {\n\treflectedLight.indirectDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );\n}\n#define RE_Direct\t\t\t\tRE_Direct_Lambert\n#define RE_IndirectDiffuse\t\tRE_IndirectDiffuse_Lambert";
 
 var lights_pars_begin = "uniform bool receiveShadow;\nvec3 shGetIrradianceAt( in vec3 normal, in vec3 shCoefficients[ 9 ] ) {\n\tfloat x = normal.x, y = normal.y, z = normal.z;\n\tvec3 result = shCoefficients[ 0 ] * 0.886227;\n\tresult += shCoefficients[ 1 ] * 2.0 * 0.511664 * y;\n\tresult += shCoefficients[ 2 ] * 2.0 * 0.511664 * z;\n\tresult += shCoefficients[ 3 ] * 2.0 * 0.511664 * x;\n\tresult += shCoefficients[ 4 ] * 2.0 * 0.429043 * x * y;\n\tresult += shCoefficients[ 5 ] * 2.0 * 0.429043 * y * z;\n\tresult += shCoefficients[ 6 ] * ( 0.743125 * z * z - 0.247708 );\n\tresult += shCoefficients[ 7 ] * 2.0 * 0.429043 * x * z;\n\tresult += shCoefficients[ 8 ] * 0.429043 * ( x * x - y * y );\n\treturn result;\n}\nvec3 getLightProbeIrradiance( const in vec3 lightProbe[ 9 ], const in vec3 normal ) {\n\tvec3 worldNormal = inverseTransformDirection( normal, viewMatrix );\n\tvec3 irradiance = shGetIrradianceAt( worldNormal, lightProbe );\n\treturn irradiance;\n}\nvec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {\n\tvec3 irradiance = ambientLightColor;\n\treturn irradiance;\n}\nfloat getDistanceAttenuation( const in float lightDistance, const in float cutoffDistance, const in float decayExponent ) {\n\t#if defined ( PHYSICALLY_CORRECT_LIGHTS )\n\t\tfloat distanceFalloff = 1.0 / max( pow( lightDistance, decayExponent ), 0.25 );\n\t\tif ( cutoffDistance > 0.0 ) {\n\t\t\tdistanceFalloff *= pow2( saturate( 1.0 - pow4( lightDistance / cutoffDistance ) ) );\n\t\t}\n\t\treturn distanceFalloff;\n\t#else\n\t\tif ( cutoffDistance > 0.0 && decayExponent > 0.0 ) {\n\t\t\treturn pow( saturate( - lightDistance / cutoffDistance + 1.0 ), decayExponent );\n\t\t}\n\t\treturn 1.0;\n\t#endif\n}\nfloat getSpotAttenuation( const in float coneCosine, const in float penumbraCosine, const in float angleCosine ) {\n\treturn smoothstep( coneCosine, penumbraCosine, angleCosine );\n}\n#if NUM_DIR_LIGHTS > 0\n#if NUM_DIRECTIONAL_MAP > 0\n\tuniform sampler2D directionalMap[ NUM_DIRECTIONAL_MAP ];\n\t\n\tvec4 sampleDirectionalMap( int index, vec2 uv ){\n\t\tvec4 r = vec4( 1, 1, 1, 1 );\n\t\t#pragma unroll_loop_start\n\t\tfor ( int i = 0; i < NUM_DIRECTIONAL_MAP; i ++ ) {\n\t\t\tif( UNROLLED_LOOP_INDEX == index ) r = texture2D( directionalMap[ i ], uv );\n\t\t}\n\t\t#pragma unroll_loop_end\n\t\treturn r;\n\t}\n#endif\n\tstruct DirectionalLight {\n\t\tvec3 direction;\n\t\tvec3 color;\n\t\t#if NUM_DIRECTIONAL_MAP > 0\n\t\tint map;\n\t\t#endif\n\t};\n\tvoid getDirectionalLightInfo( const in DirectionalLight directionalLight, const in GeometricContext geometry, out IncidentLight light ) {\n\t\tlight.color = directionalLight.color;\n\t\tlight.direction = directionalLight.direction;\n\t\tlight.visible = true;\n\t}\n#endif\n#if NUM_POINT_LIGHTS > 0\n\tstruct PointLight {\n\t\tvec3 position;\n\t\tvec3 color;\n\t\tfloat distance;\n\t\tfloat decay;\n\t};\n\tvoid getPointLightInfo( const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight light ) {\n\t\tvec3 lVector = pointLight.position - geometry.position;\n\t\tlight.direction = normalize( lVector );\n\t\tfloat lightDistance = length( lVector );\n\t\tlight.color = pointLight.color;\n\t\tlight.color *= getDistanceAttenuation( lightDistance, pointLight.distance, pointLight.decay );\n\t\tlight.visible = ( light.color != vec3( 0.0 ) );\n\t}\n#endif\n#if NUM_SPOT_LIGHTS > 0\n\tstruct SpotLight {\n\t\tvec3 position;\n\t\tvec3 direction;\n\t\tvec3 color;\n#if NUM_SPOT_MAP > 0\n\t\tint map;\n#endif\n\t\tfloat distance;\n\t\tfloat decay;\n\t\tfloat coneCos;\n\t\tfloat penumbraCos;\n\t};\n\t\n#if NUM_SPOT_MAP > 0\n\tuniform sampler2D spotMap[ NUM_SPOT_MAP ];\n\t\n\tvec4 sampleSpotMap( int index, vec2 uv ){\n\t\tvec4 r = vec4( 1, 1, 1, 1 );\n\t\t#pragma unroll_loop_start\n\t\tfor ( int i = 0; i < NUM_SPOT_MAP; i ++ ) {\n\t\t\tif( UNROLLED_LOOP_INDEX == index ) r = texture2D( spotMap[ i ], uv );\n\t\t}\n\t\t#pragma unroll_loop_end\n\t\treturn r;\n\t}\n#endif\n\tvoid getSpotLightInfo( const in SpotLight spotLight, const in GeometricContext geometry, out IncidentLight light ) {\n\t\tvec3 lVector = spotLight.position - geometry.position;\n\t\tlight.direction = normalize( lVector );\n\t\tfloat angleCos = dot( light.direction, spotLight.direction );\n\t\tfloat spotAttenuation = getSpotAttenuation( spotLight.coneCos, spotLight.penumbraCos, angleCos );\n\t\tif ( spotAttenuation > 0.0 ) {\n\t\t\tfloat lightDistance = length( lVector );\n\t\t\tlight.color = spotLight.color * spotAttenuation;\n\t\t\tlight.color *= getDistanceAttenuation( lightDistance, spotLight.distance, spotLight.decay );\n\t\t\tlight.visible = ( light.color != vec3( 0.0 ) );\n\t\t} else {\n\t\t\tlight.color = vec3( 0.0 );\n\t\t\tlight.visible = false;\n\t\t}\n\t}\n#endif\n#if NUM_RECT_AREA_LIGHTS > 0\n\tstruct RectAreaLight {\n\t\tvec3 color;\n\t\tvec3 position;\n\t\tvec3 halfWidth;\n\t\tvec3 halfHeight;\n\t};\n\tuniform sampler2D ltc_1;\tuniform sampler2D ltc_2;\n#endif\n#if NUM_HEMI_LIGHTS > 0\n\tstruct HemisphereLight {\n\t\tvec3 direction;\n\t\tvec3 skyColor;\n\t\tvec3 groundColor;\n\t};\n\tvec3 getHemisphereLightIrradiance( const in HemisphereLight hemiLight, const in vec3 normal ) {\n\t\tfloat dotNL = dot( normal, hemiLight.direction );\n\t\tfloat hemiDiffuseWeight = 0.5 * dotNL + 0.5;\n\t\tvec3 irradiance = mix( hemiLight.groundColor, hemiLight.skyColor, hemiDiffuseWeight );\n\t\treturn irradiance;\n\t}\n#endif\nlayout (std140) uniform LightBlock {\n\tvec3 ambientLightColor;\n\tvec3 lightProbe[ 9 ];\n#if NUM_DIR_LIGHTS > 0\n#if NUM_DIRECTIONAL_MAP > 0\n\tmat4 directionalMapMatrix[ NUM_DIRECTIONAL_MAP ];\n#endif\n\tDirectionalLight directionalLights[ NUM_DIR_LIGHTS ];\n#endif\n#if NUM_POINT_LIGHTS > 0\n\tPointLight pointLights[ NUM_POINT_LIGHTS ];\n#endif\n#if NUM_SPOT_LIGHTS > 0\n\tSpotLight spotLights[ NUM_SPOT_LIGHTS ];\n\t\n#if NUM_SPOT_MAP > 0\n\tmat4 spotMapMatrix[ NUM_SPOT_MAP ];\n#endif\n#endif\n#if NUM_RECT_AREA_LIGHTS > 0\n\tRectAreaLight rectAreaLights[ NUM_RECT_AREA_LIGHTS ];\n#endif\n#if NUM_HEMI_LIGHTS > 0\n\tHemisphereLight hemisphereLights[ NUM_HEMI_LIGHTS ];\n#endif\n};";
 
@@ -13051,11 +13103,11 @@ var envmap_physical_pars_fragment = "#if defined( USE_ENVMAP )\n\tvec3 getIBLIrr
 
 var lights_toon_fragment = "ToonMaterial material;\nmaterial.diffuseColor = diffuseColor.rgb;";
 
-var lights_toon_pars_fragment = "varying vec3 vViewPosition;\nstruct ToonMaterial {\n\tvec3 diffuseColor;\n};\nvoid RE_Direct_Toon( const in IncidentLight directLight, const in GeometricContext geometry, const in ToonMaterial material, inout ReflectedLight reflectedLight ) {\n\tvec3 irradiance = getGradientIrradiance( geometry.normal, directLight.direction ) * directLight.color;\n\treflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );\n}\nvoid RE_IndirectDiffuse_Toon( const in vec3 irradiance, const in GeometricContext geometry, const in ToonMaterial material, inout ReflectedLight reflectedLight ) {\n\treflectedLight.indirectDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );\n}\n#define RE_Direct\t\t\t\tRE_Direct_Toon\n#define RE_IndirectDiffuse\t\tRE_IndirectDiffuse_Toon\n#define Material_LightProbeLOD( material )\t(0)";
+var lights_toon_pars_fragment = "varying vec3 vViewPosition;\nstruct ToonMaterial {\n\tvec3 diffuseColor;\n};\nvoid RE_Direct_Toon( const in IncidentLight directLight, const in GeometricContext geometry, const in ToonMaterial material, inout ReflectedLight reflectedLight ) {\n\tvec3 irradiance = getGradientIrradiance( geometry.normal, directLight.direction ) * directLight.color;\n\treflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );\n}\nvoid RE_IndirectDiffuse_Toon( const in vec3 irradiance, const in GeometricContext geometry, const in ToonMaterial material, inout ReflectedLight reflectedLight ) {\n\treflectedLight.indirectDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );\n}\n#define RE_Direct\t\t\t\tRE_Direct_Toon\n#define RE_IndirectDiffuse\t\tRE_IndirectDiffuse_Toon";
 
 var lights_phong_fragment = "BlinnPhongMaterial material;\nmaterial.diffuseColor = diffuseColor.rgb;\nmaterial.specularColor = specular;\nmaterial.specularShininess = shininess;\nmaterial.specularStrength = specularStrength;";
 
-var lights_phong_pars_fragment = "varying vec3 vViewPosition;\nstruct BlinnPhongMaterial {\n\tvec3 diffuseColor;\n\tvec3 specularColor;\n\tfloat specularShininess;\n\tfloat specularStrength;\n};\nvoid RE_Direct_BlinnPhong( const in IncidentLight directLight, const in GeometricContext geometry, const in BlinnPhongMaterial material, inout ReflectedLight reflectedLight ) {\n\tfloat dotNL = saturate( dot( geometry.normal, directLight.direction ) );\n\tvec3 irradiance = dotNL * directLight.color;\n\treflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );\n\treflectedLight.directSpecular += irradiance * BRDF_BlinnPhong( directLight.direction, geometry.viewDir, geometry.normal, material.specularColor, material.specularShininess ) * material.specularStrength;\n}\nvoid RE_IndirectDiffuse_BlinnPhong( const in vec3 irradiance, const in GeometricContext geometry, const in BlinnPhongMaterial material, inout ReflectedLight reflectedLight ) {\n\treflectedLight.indirectDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );\n}\n#define RE_Direct\t\t\t\tRE_Direct_BlinnPhong\n#define RE_IndirectDiffuse\t\tRE_IndirectDiffuse_BlinnPhong\n#define Material_LightProbeLOD( material )\t(0)";
+var lights_phong_pars_fragment = "varying vec3 vViewPosition;\nstruct BlinnPhongMaterial {\n\tvec3 diffuseColor;\n\tvec3 specularColor;\n\tfloat specularShininess;\n\tfloat specularStrength;\n};\nvoid RE_Direct_BlinnPhong( const in IncidentLight directLight, const in GeometricContext geometry, const in BlinnPhongMaterial material, inout ReflectedLight reflectedLight ) {\n\tfloat dotNL = saturate( dot( geometry.normal, directLight.direction ) );\n\tvec3 irradiance = dotNL * directLight.color;\n\treflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );\n\treflectedLight.directSpecular += irradiance * BRDF_BlinnPhong( directLight.direction, geometry.viewDir, geometry.normal, material.specularColor, material.specularShininess ) * material.specularStrength;\n}\nvoid RE_IndirectDiffuse_BlinnPhong( const in vec3 irradiance, const in GeometricContext geometry, const in BlinnPhongMaterial material, inout ReflectedLight reflectedLight ) {\n\treflectedLight.indirectDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );\n}\n#define RE_Direct\t\t\t\tRE_Direct_BlinnPhong\n#define RE_IndirectDiffuse\t\tRE_IndirectDiffuse_BlinnPhong";
 
 var lights_physical_fragment = "PhysicalMaterial material;\nmaterial.diffuseColor = diffuseColor.rgb * ( 1.0 - metalnessFactor );\nvec3 dxy = max( abs( dFdx( geometryNormal ) ), abs( dFdy( geometryNormal ) ) );\nfloat geometryRoughness = max( max( dxy.x, dxy.y ), dxy.z );\nmaterial.roughness = max( roughnessFactor, 0.0525 );material.roughness += geometryRoughness;\nmaterial.roughness = min( material.roughness, 1.0 );\n#ifdef IOR\n\tmaterial.ior = ior;\n\t#ifdef SPECULAR\n\t\tfloat specularIntensityFactor = specularIntensity;\n\t\tvec3 specularColorFactor = specularColor;\n\t\t#ifdef USE_SPECULARINTENSITYMAP\n\t\t\tspecularIntensityFactor *= texture2D( specularIntensityMap, vUv ).a;\n\t\t#endif\n\t\t#ifdef USE_SPECULARCOLORMAP\n\t\t\tspecularColorFactor *= texture2D( specularColorMap, vUv ).rgb;\n\t\t#endif\n\t\tmaterial.specularF90 = mix( specularIntensityFactor, 1.0, metalnessFactor );\n\t#else\n\t\tfloat specularIntensityFactor = 1.0;\n\t\tvec3 specularColorFactor = vec3( 1.0 );\n\t\tmaterial.specularF90 = 1.0;\n\t#endif\n\tmaterial.specularColor = mix( min( pow2( ( material.ior - 1.0 ) / ( material.ior + 1.0 ) ) * specularColorFactor, vec3( 1.0 ) ) * specularIntensityFactor, diffuseColor.rgb, metalnessFactor );\n#else\n\tmaterial.specularColor = mix( vec3( 0.04 ), diffuseColor.rgb, metalnessFactor );\n\tmaterial.specularF90 = 1.0;\n#endif\n#ifdef USE_CLEARCOAT\n\tmaterial.clearcoat = clearcoat;\n\tmaterial.clearcoatRoughness = clearcoatRoughness;\n\tmaterial.clearcoatF0 = vec3( 0.04 );\n\tmaterial.clearcoatF90 = 1.0;\n\t#ifdef USE_CLEARCOATMAP\n\t\tmaterial.clearcoat *= texture2D( clearcoatMap, vUv ).x;\n\t#endif\n\t#ifdef USE_CLEARCOAT_ROUGHNESSMAP\n\t\tmaterial.clearcoatRoughness *= texture2D( clearcoatRoughnessMap, vUv ).y;\n\t#endif\n\tmaterial.clearcoat = saturate( material.clearcoat );\tmaterial.clearcoatRoughness = max( material.clearcoatRoughness, 0.0525 );\n\tmaterial.clearcoatRoughness += geometryRoughness;\n\tmaterial.clearcoatRoughness = min( material.clearcoatRoughness, 1.0 );\n#endif\n#ifdef USE_IRIDESCENCE\n\tmaterial.iridescence = iridescence;\n\tmaterial.iridescenceIOR = iridescenceIOR;\n\t#ifdef USE_IRIDESCENCEMAP\n\t\tmaterial.iridescence *= texture2D( iridescenceMap, vUv ).r;\n\t#endif\n\t#ifdef USE_IRIDESCENCE_THICKNESSMAP\n\t\tmaterial.iridescenceThickness = (iridescenceThicknessMaximum - iridescenceThicknessMinimum) * texture2D( iridescenceThicknessMap, vUv ).g + iridescenceThicknessMinimum;\n\t#else\n\t\tmaterial.iridescenceThickness = iridescenceThicknessMaximum;\n\t#endif\n#endif\n#ifdef USE_SHEEN\n\tmaterial.sheenColor = sheenColor;\n\t#ifdef USE_SHEENCOLORMAP\n\t\tmaterial.sheenColor *= texture2D( sheenColorMap, vUv ).rgb;\n\t#endif\n\tmaterial.sheenRoughness = clamp( sheenRoughness, 0.07, 1.0 );\n\t#ifdef USE_SHEENROUGHNESSMAP\n\t\tmaterial.sheenRoughness *= texture2D( sheenRoughnessMap, vUv ).a;\n\t#endif\n#endif";
 
@@ -13175,11 +13227,11 @@ var worldpos_vertex = "#if defined( USE_ENVMAP ) || defined( DISTANCE ) || defin
 
 const vertex$h = "varying vec2 vUv;\nuniform mat3 uvTransform;\nvoid main() {\n\tvUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n\tgl_Position = vec4( position.xy, 1.0, 1.0 );\n}";
 
-const fragment$h = "uniform sampler2D t2D;\nvarying vec2 vUv;\nvoid main() {\n\tgl_FragColor = texture2D( t2D, vUv );\n\t#ifdef DECODE_VIDEO_TEXTURE\n\t\tgl_FragColor = vec4( mix( pow( gl_FragColor.rgb * 0.9478672986 + vec3( 0.0521327014 ), vec3( 2.4 ) ), gl_FragColor.rgb * 0.0773993808, vec3( lessThanEqual( gl_FragColor.rgb, vec3( 0.04045 ) ) ) ), gl_FragColor.w );\n\t#endif\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n}";
+const fragment$h = "uniform sampler2D t2D;\nuniform float backgroundIntensity;\nvarying vec2 vUv;\nvoid main() {\n\tvec4 texColor = texture2D( t2D, vUv );\n\t#ifdef DECODE_VIDEO_TEXTURE\n\t\ttexColor = vec4( mix( pow( texColor.rgb * 0.9478672986 + vec3( 0.0521327014 ), vec3( 2.4 ) ), texColor.rgb * 0.0773993808, vec3( lessThanEqual( texColor.rgb, vec3( 0.04045 ) ) ) ), texColor.w );\n\t#endif\n\ttexColor.rgb *= backgroundIntensity;\n\tgl_FragColor = texColor;\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n}";
 
 const vertex$g = "varying vec3 vWorldDirection;\n#include <common>\nvoid main() {\n\tvWorldDirection = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n\tgl_Position.z = gl_Position.w;\n}";
 
-const fragment$g = "#ifdef ENVMAP_TYPE_CUBE\n\tuniform samplerCube envMap;\n#elif defined( ENVMAP_TYPE_CUBE_UV )\n\tuniform sampler2D envMap;\n#endif\nuniform float flipEnvMap;\nuniform float backgroundBlurriness;\nvarying vec3 vWorldDirection;\n#include <cube_uv_reflection_fragment>\nvoid main() {\n\t#ifdef ENVMAP_TYPE_CUBE\n\t\tvec4 texColor = textureCube( envMap, vec3( flipEnvMap * vWorldDirection.x, vWorldDirection.yz ) );\n\t#elif defined( ENVMAP_TYPE_CUBE_UV )\n\t\tvec4 texColor = textureCubeUV( envMap, vWorldDirection, backgroundBlurriness );\n\t#else\n\t\tvec4 texColor = vec4( 0.0, 0.0, 0.0, 1.0 );\n\t#endif\n\tgl_FragColor = texColor;\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n}";
+const fragment$g = "#ifdef ENVMAP_TYPE_CUBE\n\tuniform samplerCube envMap;\n#elif defined( ENVMAP_TYPE_CUBE_UV )\n\tuniform sampler2D envMap;\n#endif\nuniform float flipEnvMap;\nuniform float backgroundBlurriness;\nuniform float backgroundIntensity;\nvarying vec3 vWorldDirection;\n#include <cube_uv_reflection_fragment>\nvoid main() {\n\t#ifdef ENVMAP_TYPE_CUBE\n\t\tvec4 texColor = textureCube( envMap, vec3( flipEnvMap * vWorldDirection.x, vWorldDirection.yz ) );\n\t#elif defined( ENVMAP_TYPE_CUBE_UV )\n\t\tvec4 texColor = textureCubeUV( envMap, vWorldDirection, backgroundBlurriness );\n\t#else\n\t\tvec4 texColor = vec4( 0.0, 0.0, 0.0, 1.0 );\n\t#endif\n\ttexColor.rgb *= backgroundIntensity;\n\tgl_FragColor = texColor;\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n}";
 
 const vertex$f = "varying vec3 vWorldDirection;\n#include <common>\nvoid main() {\n\tvWorldDirection = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n\tgl_Position.z = gl_Position.w;\n}";
 
@@ -13816,6 +13868,7 @@ const ShaderLib = {
 		uniforms: {
 			uvTransform: { value: /*@__PURE__*/ new Matrix3() },
 			t2D: { value: null },
+			backgroundIntensity: { value: 1 }
 		},
 
 		vertexShader: ShaderChunk.background_vert,
@@ -13828,7 +13881,8 @@ const ShaderLib = {
 		uniforms: {
 			envMap: { value: null },
 			flipEnvMap: { value: - 1 },
-			backgroundBlurriness: { value: 0 }
+			backgroundBlurriness: { value: 0 },
+			backgroundIntensity: { value: 1 }
 		},
 
 		vertexShader: ShaderChunk.backgroundCube_vert,
@@ -13937,6 +13991,8 @@ ShaderLib.physical = {
 
 };
 
+const _rgb = { r: 0, b: 0, g: 0 };
+
 function WebGLBackground( renderer, cubemaps, cubeuvmaps, state, objects, alpha, premultipliedAlpha ) {
 
 	const clearColor = new Color( 0x000000 );
@@ -14035,6 +14091,7 @@ function WebGLBackground( renderer, cubemaps, cubeuvmaps, state, objects, alpha,
 			boxMesh.material.uniforms.envMap.value = background;
 			boxMesh.material.uniforms.flipEnvMap.value = ( background.isCubeTexture && background.isRenderTargetTexture === false ) ? - 1 : 1;
 			boxMesh.material.uniforms.backgroundBlurriness.value = scene.backgroundBlurriness;
+			boxMesh.material.uniforms.backgroundIntensity.value = scene.backgroundIntensity;
 
 			if ( currentBackground !== background ||
 				currentBackgroundVersion !== background.version ||
@@ -14089,6 +14146,7 @@ function WebGLBackground( renderer, cubemaps, cubeuvmaps, state, objects, alpha,
 			}
 
 			planeMesh.material.uniforms.t2D.value = background;
+			planeMesh.material.uniforms.backgroundIntensity.value = scene.backgroundIntensity;
 
 			if ( background.matrixAutoUpdate === true ) {
 
@@ -14121,7 +14179,9 @@ function WebGLBackground( renderer, cubemaps, cubeuvmaps, state, objects, alpha,
 
 	function setClear( color, alpha ) {
 
-		state.buffers.color.setClear( color.r, color.g, color.b, alpha, premultipliedAlpha );
+		color.getRGB( _rgb, getUnlitUniformColorSpace( renderer ) );
+
+		state.buffers.color.setClear( _rgb.r, _rgb.g, _rgb.b, alpha, premultipliedAlpha );
 
 	}
 
@@ -20736,7 +20796,7 @@ class SpotLightShadow extends LightShadow {
 
 class SpotLight extends Light {
 
-	constructor( color, intensity, distance = 0, angle = Math.PI / 3, penumbra = 0, decay = 1 ) {
+	constructor( color, intensity, distance = 0, angle = Math.PI / 3, penumbra = 0, decay = 2 ) {
 		const colorTexture = color && color.isTexture;
 
 		super( colorTexture?0xffffff:color, intensity );
@@ -20755,7 +20815,7 @@ class SpotLight extends Light {
 		this.distance = distance;
 		this.angle = angle;
 		this.penumbra = penumbra;
-		this.decay = decay; // for physically correct lights, should be 2.
+		this.decay = decay;
 
 		this.map = null;
 
@@ -20895,7 +20955,7 @@ class PointLightShadow extends LightShadow {
 
 class PointLight extends Light {
 
-	constructor( color, intensity, distance = 0, decay = 1 ) {
+	constructor( color, intensity, distance = 0, decay = 2 ) {
 
 		super( color, intensity );
 
@@ -20904,7 +20964,7 @@ class PointLight extends Light {
 		this.type = 'PointLight';
 
 		this.distance = distance;
-		this.decay = decay; // for physically correct lights, should be 2.
+		this.decay = decay;
 
 		this.shadow = new PointLightShadow();
 
@@ -21417,10 +21477,6 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 
 				const uniforms = cache.get( light );
 
-				// (a) intensity is the total visible light emitted
-				//uniforms.color.copy( color ).multiplyScalar( intensity / ( light.width * light.height * Math.PI ) );
-
-				// (b) intensity is the brightness of the light
 				uniforms.color.copy( color ).multiplyScalar( intensity );
 
 				uniforms.halfWidth.set( light.width * 0.5, 0.0, 0.0 );
@@ -22214,7 +22270,8 @@ function WebGLShadowMap( _renderer, _objects, _capabilities ) {
 
 		if ( ( _renderer.localClippingEnabled && material.clipShadows === true && Array.isArray( material.clippingPlanes ) && material.clippingPlanes.length !== 0 ) ||
 			( material.displacementMap && material.displacementScale !== 0 ) ||
-			( material.alphaMap && material.alphaTest > 0 ) ) {
+			( material.alphaMap && material.alphaTest > 0 ) ||
+			( material.map && material.alphaTest > 0 ) ) {
 
 			// in this case we need a unique material instance reflecting the
 			// appropriate state
@@ -22258,6 +22315,7 @@ function WebGLShadowMap( _renderer, _objects, _capabilities ) {
 
 		result.alphaMap = material.alphaMap;
 		result.alphaTest = material.alphaTest;
+		result.map = material.map;
 
 		result.clipShadows = material.clipShadows;
 		result.clippingPlanes = material.clippingPlanes;
@@ -23053,7 +23111,7 @@ function WebGLState( gl, extensions, capabilities ) {
 		}
 
 		currentBlending = blending;
-		currentPremultipledAlpha = null;
+		currentPremultipledAlpha = false;
 
 	}
 
@@ -23633,7 +23691,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 	const maxTextureSize = capabilities.maxTextureSize;
 	const maxSamples = capabilities.maxSamples;
 	const multisampledRTTExt = extensions.has( 'WEBGL_multisampled_render_to_texture' ) ? extensions.get( 'WEBGL_multisampled_render_to_texture' ) : null;
-	const supportsInvalidateFramebuffer = /OculusBrowser/g.test( typeof navigator === 'undefined' ? '' : navigator.userAgent );
+	const supportsInvalidateFramebuffer = typeof navigator === 'undefined' ? false : /OculusBrowser/g.test( navigator.userAgent );
 
 	const _videoTextures = new WeakMap();
 	let _canvas;
@@ -25772,7 +25830,6 @@ function WebGLUtils( gl, extensions, capabilities ) {
 		if ( p === LuminanceAlphaFormat ) return 6410;
 		if ( p === DepthFormat ) return 6402;
 		if ( p === DepthStencilFormat ) return 34041;
-		if ( p === RedFormat ) return 6403;
 
 		// @deprecated since r137
 
@@ -25803,6 +25860,7 @@ function WebGLUtils( gl, extensions, capabilities ) {
 
 		// WebGL2 formats.
 
+		if ( p === RedFormat ) return 6403;
 		if ( p === RedIntegerFormat ) return 36244;
 		if ( p === RGFormat ) return 33319;
 		if ( p === RGIntegerFormat ) return 33320;
@@ -26108,6 +26166,31 @@ class WebXRController {
 
 	}
 
+	connect( inputSource ) {
+
+		if ( inputSource && inputSource.hand ) {
+
+			const hand = this._hand;
+
+			if ( hand ) {
+
+				for ( const inputjoint of inputSource.hand.values() ) {
+
+					// Initialize hand with joints when connected
+					this._getHandJoint( hand, inputjoint );
+
+				}
+
+			}
+
+		}
+
+		this.dispatchEvent( { type: 'connected', data: inputSource } );
+
+		return this;
+
+	}
+
 	disconnect( inputSource ) {
 
 		this.dispatchEvent( { type: 'disconnected', data: inputSource } );
@@ -26155,19 +26238,8 @@ class WebXRController {
 					// Update the joints groups with the XRJoint poses
 					const jointPose = frame.getJointPose( inputjoint, referenceSpace );
 
-					if ( hand.joints[ inputjoint.jointName ] === undefined ) {
-
-						// The transform of this joint will be updated with the joint pose on each frame
-						const joint = new Group();
-						joint.matrixAutoUpdate = false;
-						joint.visible = false;
-						hand.joints[ inputjoint.jointName ] = joint;
-						// ??
-						hand.add( joint );
-
-					}
-
-					const joint = hand.joints[ inputjoint.jointName ];
+					// The transform of this joint will be updated with the joint pose on each frame
+					const joint = this._getHandJoint( hand, inputjoint );
 
 					if ( jointPose !== null ) {
 
@@ -26319,6 +26391,25 @@ class WebXRController {
 
 	}
 
+	// private method
+
+	_getHandJoint( hand, inputjoint ) {
+
+		if ( hand.joints[ inputjoint.jointName ] === undefined ) {
+
+			const joint = new Group();
+			joint.matrixAutoUpdate = false;
+			joint.visible = false;
+			hand.joints[ inputjoint.jointName ] = joint;
+
+			hand.add( joint );
+
+		}
+
+		return hand.joints[ inputjoint.jointName ];
+
+	}
+
 }
 
 class DepthTexture extends Texture {
@@ -26379,6 +26470,9 @@ class WebXRManager extends EventDispatcher {
 
 		const controllers = [];
 		const controllerInputSources = [];
+
+		const planes = new Set();
+		const planesLastChangedTimes = new Map();
 
 		//
 
@@ -26701,7 +26795,7 @@ class WebXRManager extends EventDispatcher {
 				if ( index >= 0 ) {
 
 					controllerInputSources[ index ] = null;
-					controllers[ index ].dispatchEvent( { type: 'disconnected', data: inputSource } );
+					controllers[ index ].disconnect( inputSource );
 
 				}
 
@@ -26747,7 +26841,7 @@ class WebXRManager extends EventDispatcher {
 
 				if ( controller ) {
 
-					controller.dispatchEvent( { type: 'connected', data: inputSource } );
+					controller.connect( inputSource );
 
 				}
 
@@ -26937,6 +27031,12 @@ class WebXRManager extends EventDispatcher {
 
 		};
 
+		this.getPlanes = function () {
+
+			return planes;
+
+		};
+
 		// Animation Loop
 
 		let onAnimationFrameCallback = null;
@@ -27044,6 +27144,65 @@ class WebXRManager extends EventDispatcher {
 			}
 
 			if ( onAnimationFrameCallback ) onAnimationFrameCallback( time, frame );
+
+			if ( frame.detectedPlanes ) {
+
+				scope.dispatchEvent( { type: 'planesdetected', data: frame.detectedPlanes } );
+
+				let planesToRemove = null;
+
+				for ( const plane of planes ) {
+
+					if ( ! frame.detectedPlanes.has( plane ) ) {
+
+						if ( planesToRemove === null ) {
+
+							planesToRemove = [];
+
+						}
+
+						planesToRemove.push( plane );
+
+					}
+
+				}
+
+				if ( planesToRemove !== null ) {
+
+					for ( const plane of planesToRemove ) {
+
+						planes.delete( plane );
+						planesLastChangedTimes.delete( plane );
+						scope.dispatchEvent( { type: 'planeremoved', data: plane } );
+
+					}
+
+				}
+
+				for ( const plane of frame.detectedPlanes ) {
+
+					if ( ! planes.has( plane ) ) {
+
+						planes.add( plane );
+						planesLastChangedTimes.set( plane, frame.lastChangedTime );
+						scope.dispatchEvent( { type: 'planeadded', data: plane } );
+
+					} else {
+
+						const lastKnownTime = planesLastChangedTimes.get( plane );
+
+						if ( plane.lastChangedTime > lastKnownTime ) {
+
+							planesLastChangedTimes.set( plane, plane.lastChangedTime );
+							scope.dispatchEvent( { type: 'planechanged', data: plane } );
+
+						}
+
+					}
+
+				}
+
+			}
 
 			xrFrame = null;
 
@@ -28178,28 +28337,6 @@ function WebGLRenderer( parameters = {} ) {
 	this.toneMapping = NoToneMapping;
 	this.toneMappingExposure = 1.0;
 
-	//
-
-	Object.defineProperties( this, {
-
-		// @deprecated since r136, 0e21088102b4de7e0a0a33140620b7a3424b9e6d
-
-		gammaFactor: {
-			get: function () {
-
-				console.warn( 'THREE.WebGLRenderer: .gammaFactor has been removed.' );
-				return 2;
-
-			},
-			set: function () {
-
-				console.warn( 'THREE.WebGLRenderer: .gammaFactor has been removed.' );
-
-			}
-		}
-
-	} );
-
 	// internal properties
 
 	const _this = this;
@@ -28770,22 +28907,6 @@ function WebGLRenderer( parameters = {} ) {
 		//
 
 		let index = geometry.index;
-		const position = geometry.attributes.position;
-
-		//
-
-		if ( index === null ) {
-
-			if ( position === undefined || position.count === 0 ) return;
-
-		} else if ( index.count === 0 ) {
-
-			return;
-
-		}
-
-		//
-
 		let rangeFactor = 1;
 
 		if ( material.wireframe === true ) {
@@ -28794,6 +28915,39 @@ function WebGLRenderer( parameters = {} ) {
 			rangeFactor = 2;
 
 		}
+
+		//
+
+		const drawRange = geometry.drawRange;
+		const position = geometry.attributes.position;
+
+		let drawStart = drawRange.start * rangeFactor;
+		let drawEnd = ( drawRange.start + drawRange.count ) * rangeFactor;
+
+		if ( group !== null ) {
+
+			drawStart = Math.max( drawStart, group.start * rangeFactor );
+			drawEnd = Math.min( drawEnd, ( group.start + group.count ) * rangeFactor );
+
+		}
+
+		if ( index !== null ) {
+
+			drawStart = Math.max( drawStart, 0 );
+			drawEnd = Math.min( drawEnd, index.count );
+
+		} else if ( position !== undefined && position !== null ) {
+
+			drawStart = Math.max( drawStart, 0 );
+			drawEnd = Math.min( drawEnd, position.count );
+
+		}
+
+		const drawCount = drawEnd - drawStart;
+
+		if ( drawCount < 0 || drawCount === Infinity ) return;
+
+		//
 
 		bindingStates.setup( object, material, program, geometry, index );
 
@@ -28808,23 +28962,6 @@ function WebGLRenderer( parameters = {} ) {
 			renderer.setIndex( attribute );
 
 		}
-
-		//
-
-		const dataCount = ( index !== null ) ? index.count : position.count;
-
-		const rangeStart = geometry.drawRange.start * rangeFactor;
-		const rangeCount = geometry.drawRange.count * rangeFactor;
-
-		const groupStart = group !== null ? group.start * rangeFactor : 0;
-		const groupCount = group !== null ? group.count * rangeFactor : Infinity;
-
-		const drawStart = Math.max( rangeStart, groupStart );
-		const drawEnd = Math.min( dataCount, rangeStart + rangeCount, groupStart + groupCount ) - 1;
-
-		const drawCount = Math.max( 0, drawEnd - drawStart + 1 );
-
-		if ( drawCount === 0 ) return;
 
 		//
 
@@ -28879,7 +29016,8 @@ function WebGLRenderer( parameters = {} ) {
 
 		} else if ( geometry.isInstancedBufferGeometry ) {
 
-			const instanceCount = Math.min( geometry.instanceCount, geometry._maxInstanceCount );
+			const maxInstanceCount = geometry._maxInstanceCount !== undefined ? geometry._maxInstanceCount : Infinity;
+			const instanceCount = Math.min( geometry.instanceCount, maxInstanceCount );
 
 			renderer.renderInstances( drawStart, drawCount, instanceCount );
 
@@ -30417,6 +30555,7 @@ class Scene extends Object3D {
 		this.fog = null;
 
 		this.backgroundBlurriness = 0;
+		this.backgroundIntensity = 1;
 
 		this.overrideMaterial = null;
 
@@ -30437,6 +30576,7 @@ class Scene extends Object3D {
 		if ( source.fog !== null ) this.fog = source.fog.clone();
 
 		this.backgroundBlurriness = source.backgroundBlurriness;
+		this.backgroundIntensity = source.backgroundIntensity;
 
 		if ( source.overrideMaterial !== null ) this.overrideMaterial = source.overrideMaterial.clone();
 
@@ -30452,6 +30592,7 @@ class Scene extends Object3D {
 
 		if ( this.fog !== null ) data.object.fog = this.fog.toJSON();
 		if ( this.backgroundBlurriness > 0 ) data.backgroundBlurriness = this.backgroundBlurriness;
+		if ( this.backgroundIntensity !== 1 ) data.backgroundIntensity = this.backgroundIntensity;
 
 		return data;
 
@@ -30844,7 +30985,7 @@ class InterleavedBufferAttribute {
 
 		if ( data === undefined ) {
 
-			console.log( 'THREE.InterleavedBufferAttribute.clone(): Cloning an interleaved buffer attribute will deinterleave buffer data.' );
+			console.log( 'THREE.InterleavedBufferAttribute.clone(): Cloning an interleaved buffer attribute will de-interleave buffer data.' );
 
 			const array = [];
 
@@ -30886,7 +31027,7 @@ class InterleavedBufferAttribute {
 
 		if ( data === undefined ) {
 
-			console.log( 'THREE.InterleavedBufferAttribute.toJSON(): Serializing an interleaved buffer attribute will deinterleave buffer data.' );
+			console.log( 'THREE.InterleavedBufferAttribute.toJSON(): Serializing an interleaved buffer attribute will de-interleave buffer data.' );
 
 			const array = [];
 
@@ -30902,7 +31043,7 @@ class InterleavedBufferAttribute {
 
 			}
 
-			// deinterleave data and save it as an ordinary buffer attribute for now
+			// de-interleave data and save it as an ordinary buffer attribute for now
 
 			return {
 				itemSize: this.itemSize,
@@ -30913,7 +31054,7 @@ class InterleavedBufferAttribute {
 
 		} else {
 
-			// save as true interleaved attribtue
+			// save as true interleaved attribute
 
 			if ( data.interleavedBuffers === undefined ) {
 
@@ -31198,7 +31339,7 @@ class LOD extends Object3D {
 
 			const level = levels[ i ];
 
-			this.addLevel( level.object.clone(), level.distance );
+			this.addLevel( level.object.clone(), level.distance, level.hysteresis );
 
 		}
 
@@ -31208,7 +31349,7 @@ class LOD extends Object3D {
 
 	}
 
-	addLevel( object, distance = 0 ) {
+	addLevel( object, distance = 0, hysteresis = 0 ) {
 
 		distance = Math.abs( distance );
 
@@ -31226,7 +31367,7 @@ class LOD extends Object3D {
 
 		}
 
-		levels.splice( l, 0, { distance: distance, object: object } );
+		levels.splice( l, 0, { distance: distance, hysteresis: hysteresis, object: object } );
 
 		this.add( object );
 
@@ -31240,6 +31381,8 @@ class LOD extends Object3D {
 
 	}
 
+
+
 	getObjectForDistance( distance ) {
 
 		const levels = this.levels;
@@ -31250,7 +31393,15 @@ class LOD extends Object3D {
 
 			for ( i = 1, l = levels.length; i < l; i ++ ) {
 
-				if ( distance < levels[ i ].distance ) {
+				let levelDistance = levels[ i ].distance;
+
+				if ( levels[ i ].object.visible ) {
+
+					levelDistance -= levelDistance * levels[ i ].hysteresis;
+
+				}
+
+				if ( distance < levelDistance ) {
 
 					break;
 
@@ -31299,7 +31450,15 @@ class LOD extends Object3D {
 
 			for ( i = 1, l = levels.length; i < l; i ++ ) {
 
-				if ( distance >= levels[ i ].distance ) {
+				let levelDistance = levels[ i ].distance;
+
+				if ( levels[ i ].object.visible ) {
+
+					levelDistance -= levelDistance * levels[ i ].hysteresis;
+
+				}
+
+				if ( distance >= levelDistance ) {
 
 					levels[ i - 1 ].object.visible = false;
 					levels[ i ].object.visible = true;
@@ -31340,7 +31499,8 @@ class LOD extends Object3D {
 
 			data.object.levels.push( {
 				object: level.object.uuid,
-				distance: level.distance
+				distance: level.distance,
+				hysteresis: level.hysteresis
 			} );
 
 		}
@@ -35131,7 +35291,7 @@ class PolyhedronGeometry extends BufferGeometry {
 			const b = new Vector3();
 			const c = new Vector3();
 
-			// iterate over all faces and apply a subdivison with the given detail value
+			// iterate over all faces and apply a subdivision with the given detail value
 
 			for ( let i = 0; i < indices.length; i += 3 ) {
 
@@ -37633,7 +37793,7 @@ class ShapeGeometry extends BufferGeometry {
 
 			}
 
-			// incides
+			// indices
 
 			for ( let i = 0, l = faces.length; i < l; i ++ ) {
 
@@ -41460,7 +41620,10 @@ class FileLoader extends Loader {
 
 					const callbacks = loading[ url ];
 					const reader = response.body.getReader();
-					const contentLength = response.headers.get( 'Content-Length' );
+
+					// Nginx needs X-File-Size check
+					// https://serverfault.com/questions/482875/why-does-nginx-remove-content-length-header-for-chunked-content
+					const contentLength = response.headers.get( 'Content-Length' ) || response.headers.get( 'X-File-Size' );
 					const total = contentLength ? parseInt( contentLength ) : 0;
 					const lengthComputable = total !== 0;
 					let loaded = 0;
@@ -42811,15 +42974,9 @@ class InstancedBufferGeometry extends BufferGeometry {
 
 	}
 
-	clone() {
-
-		return new this.constructor().copy( this );
-
-	}
-
 	toJSON() {
 
-		const data = super.toJSON( this );
+		const data = super.toJSON();
 
 		data.instanceCount = this.instanceCount;
 
@@ -43082,6 +43239,8 @@ class ObjectLoader extends Loader {
 			const metadata = json.metadata;
 
 			if ( metadata === undefined || metadata.type === undefined || metadata.type.toLowerCase() === 'geometry' ) {
+
+				if ( onError !== undefined ) onError( new Error( 'THREE.ObjectLoader: Can\'t load ' + url ) );
 
 				console.error( 'THREE.ObjectLoader: Can\'t load ' + url );
 				return;
@@ -43998,7 +44157,7 @@ class ObjectLoader extends Loader {
 
 				if ( child !== undefined ) {
 
-					object.addLevel( child, level.distance );
+					object.addLevel( child, level.distance, level.hysteresis );
 
 				}
 
@@ -48779,12 +48938,13 @@ class SpotLightHelper extends Object3D {
 		super();
 
 		this.light = light;
-		this.light.updateMatrixWorld();
 
 		this.matrix = light.matrixWorld;
 		this.matrixAutoUpdate = false;
 
 		this.color = color;
+
+		this.type = 'SpotLightHelper';
 
 		const geometry = new BufferGeometry();
 
@@ -48828,7 +48988,8 @@ class SpotLightHelper extends Object3D {
 
 	update() {
 
-		this.light.updateMatrixWorld();
+		this.light.updateWorldMatrix( true, false );
+		this.light.target.updateWorldMatrix( true, false );
 
 		const coneLength = this.light.distance ? this.light.distance : 1000;
 		const coneWidth = coneLength * Math.tan( this.light.angle );
@@ -48981,7 +49142,6 @@ class PointLightHelper extends Mesh {
 		super( geometry, material );
 
 		this.light = light;
-		this.light.updateMatrixWorld();
 
 		this.color = color;
 
@@ -49027,6 +49187,8 @@ class PointLightHelper extends Mesh {
 
 	update() {
 
+		this.light.updateWorldMatrix( true, false );
+
 		if ( this.color !== undefined ) {
 
 			this.material.color.set( this.color );
@@ -49067,12 +49229,13 @@ class HemisphereLightHelper extends Object3D {
 		super();
 
 		this.light = light;
-		this.light.updateMatrixWorld();
 
 		this.matrix = light.matrixWorld;
 		this.matrixAutoUpdate = false;
 
 		this.color = color;
+
+		this.type = 'HemisphereLightHelper';
 
 		const geometry = new OctahedronGeometry( size );
 		geometry.rotateY( Math.PI * 0.5 );
@@ -49124,6 +49287,8 @@ class HemisphereLightHelper extends Object3D {
 			colors.needsUpdate = true;
 
 		}
+
+		this.light.updateWorldMatrix( true, false );
 
 		mesh.lookAt( _vector$1.setFromMatrixPosition( this.light.matrixWorld ).negate() );
 
@@ -49278,12 +49443,13 @@ class DirectionalLightHelper extends Object3D {
 		super();
 
 		this.light = light;
-		this.light.updateMatrixWorld();
 
 		this.matrix = light.matrixWorld;
 		this.matrixAutoUpdate = false;
 
 		this.color = color;
+
+		this.type = 'DirectionalLightHelper';
 
 		if ( size === undefined ) size = 1;
 
@@ -49321,6 +49487,9 @@ class DirectionalLightHelper extends Object3D {
 	}
 
 	update() {
+
+		this.light.updateWorldMatrix( true, false );
+		this.light.target.updateWorldMatrix( true, false );
 
 		_v1.setFromMatrixPosition( this.light.matrixWorld );
 		_v2.setFromMatrixPosition( this.light.target.matrixWorld );

@@ -398,10 +398,6 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 
 				const uniforms = cache.get( light );
 
-				// (a) intensity is the total visible light emitted
-				//uniforms.color.copy( color ).multiplyScalar( intensity / ( light.width * light.height * Math.PI ) );
-
-				// (b) intensity is the brightness of the light
 				uniforms.color.copy( color ).multiplyScalar( intensity );
 
 				uniforms.halfWidth.set( light.width * 0.5, 0.0, 0.0 );
