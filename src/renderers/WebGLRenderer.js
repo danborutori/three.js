@@ -906,6 +906,10 @@ function WebGLRenderer( parameters = {} ) {
 		currentRenderState = null;
 
 	};
+
+	this.precompile = function( parameters, cacheKey ){
+		programCache.acquireProgram( parameters, cacheKey )
+	}
 	
 	// Animation Loop
 

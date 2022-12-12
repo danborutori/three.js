@@ -384,6 +384,16 @@ export class WebGLRenderer implements Renderer {
 	
 
 	/**
+	 * notify new program compiled
+	 */
+	onProgramCompiled: (parameters: any, cacheKey: string )=>void
+
+	/**
+	 * precompile given program
+	 */
+	precompile(parameters: any, cacheKey: string ): void
+
+	/**
 	 * Render a scene or an object using a camera.
 	 * The render is done to a previously specified {@link WebGLRenderTarget#renderTarget .renderTarget} set by calling
 	 * {@link WebGLRenderer#setRenderTarget .setRenderTarget} or to the canvas as usual.

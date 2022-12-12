@@ -491,6 +491,8 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			program = new WebGLProgram( renderer, cacheKey, parameters, bindingStates );
 			programs.push( program );
 
+			renderer.onProgramCompiled && renderer.onProgramCompiled(parameters, cacheKey);
+
 		}
 
 		return program;
