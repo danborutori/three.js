@@ -15196,6 +15196,7 @@
 			if (program === undefined) {
 				program = new WebGLProgram(renderer, cacheKey, parameters, bindingStates);
 				programs.push(program);
+				renderer.onProgramCompiled && renderer.onProgramCompiled(parameters, cacheKey);
 			}
 
 			return program;
@@ -21434,6 +21435,10 @@
 			});
 			renderStateStack.pop();
 			currentRenderState = null;
+		};
+
+		this.precompile = function (parameters, cacheKey) {
+			programCache.acquireProgram(parameters, cacheKey);
 		}; // Animation Loop
 
 
