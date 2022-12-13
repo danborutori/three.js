@@ -908,7 +908,12 @@ function WebGLRenderer( parameters = {} ) {
 	};
 
 	this.precompile = function( parameters, cacheKey ){
-		programCache.acquireProgram( parameters, cacheKey )
+		const program = programCache.acquireProgram( parameters, cacheKey );
+		return {
+			getUniforms: function(){
+				program.getUniforms( {} )
+			}
+		}
 	}
 	
 	// Animation Loop

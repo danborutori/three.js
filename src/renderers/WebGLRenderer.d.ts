@@ -391,7 +391,7 @@ export class WebGLRenderer implements Renderer {
 	/**
 	 * precompile given program
 	 */
-	precompile(parameters: any, cacheKey: string ): void
+	precompile(parameters: any, cacheKey: string ): {getUniforms: ()=>void}
 
 	/**
 	 * Render a scene or an object using a camera.
