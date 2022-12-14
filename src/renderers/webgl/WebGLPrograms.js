@@ -466,6 +466,13 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 
 	}
 
+	function updateCustomShaderID( parameters ){
+		if(!parameters.shaderID){
+			parameters.customVertexShaderID = _customShaders.getVertexShaderID(parameters)
+			parameters.customFragmentShaderID = _customShaders.getFragmentShaderID(parameters)
+		}
+	}
+
 	function acquireProgram( parameters, cacheKey ) {
 
 		let program;
@@ -531,6 +538,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 		getParameters: getParameters,
 		getProgramCacheKey: getProgramCacheKey,
 		getUniforms: getUniforms,
+		updateCustomShaderID: updateCustomShaderID,
 		acquireProgram: acquireProgram,
 		releaseProgram: releaseProgram,
 		releaseShaderCache: releaseShaderCache,

@@ -907,7 +907,9 @@ function WebGLRenderer( parameters = {} ) {
 
 	};
 
-	this.precompile = function( parameters, cacheKey ){
+	this.precompile = function( parameters ){
+		programCache.updateCustomShaderID(parameters)
+		const cacheKey = programCache.getProgramCacheKey(parameters)
 		const program = programCache.acquireProgram( parameters, cacheKey );
 		return {
 			finish: function(){
