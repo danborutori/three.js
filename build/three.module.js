@@ -19538,6 +19538,13 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 	};
 
+
+	this.flushCompile = function () {
+
+		new WebGLUniforms( gl, program, {} );
+
+	};
+
 	// free resource
 
 	this.destroy = function () {
@@ -29114,8 +29121,8 @@ function WebGLRenderer( parameters = {} ) {
 	this.precompile = function( parameters, cacheKey ){
 		const program = programCache.acquireProgram( parameters, cacheKey );
 		return {
-			getUniforms: function(){
-				program.getUniforms( {} );
+			finish: function(){
+				program.flushCompile();
 			}
 		}
 	};
