@@ -900,6 +900,13 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 	};
 
+
+	this.flushCompile = function () {
+
+		new WebGLUniforms( gl, program, {} );
+
+	};
+
 	// free resource
 
 	this.destroy = function () {
