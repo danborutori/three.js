@@ -1625,7 +1625,6 @@ function WebGLRenderer( parameters = {} ) {
 
 		let refreshProgram = false;
 		let refreshMaterial = false;
-		let refreshLights = false;
 
 		const p_uniforms = program.getUniforms(lights.staticSamplers),
 			m_uniforms = materialProperties.uniforms;
@@ -1634,7 +1633,6 @@ function WebGLRenderer( parameters = {} ) {
 
 			refreshProgram = true;
 			refreshMaterial = true;
-			refreshLights = true;
 
 		}
 
@@ -1666,7 +1664,6 @@ function WebGLRenderer( parameters = {} ) {
 				// the next material that does gets activated:
 
 				refreshMaterial = true;		// set to true on material change
-				refreshLights = true;		// remains set until update done
 
 			}
 
