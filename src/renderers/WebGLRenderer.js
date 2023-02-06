@@ -1,8 +1,8 @@
 import {
 	REVISION,
 	BackSide,
-	DoubleSide,
 	FrontSide,
+	DoubleSide,
 	RGBAFormat,
 	HalfFloatType,
 	FloatType,
@@ -833,7 +833,7 @@ function WebGLRenderer( parameters = {} ) {
 
 		function prepare( material, scene, object ) {
 
-			if ( material.transparent === true && material.side === DoubleSide ) {
+			if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false ) {
 
 				material.side = BackSide;
 				material.needsUpdate = true;
@@ -998,7 +998,7 @@ function WebGLRenderer( parameters = {} ) {
 		_frustum.setFromProjectionMatrix( _projScreenMatrix );
 
 		_localClippingEnabled = this.localClippingEnabled;
-		_clippingEnabled = clipping.init( this.clippingPlanes, _localClippingEnabled, camera );
+		_clippingEnabled = clipping.init( this.clippingPlanes, _localClippingEnabled );
 
 		currentRenderList = renderLists.get( scene, renderListStack.length );
 		currentRenderList.init();
@@ -1235,6 +1235,8 @@ function WebGLRenderer( parameters = {} ) {
 
 		currentRenderState.setupLightsView( camera );
 
+		if ( _clippingEnabled === true ) clipping.setGlobalState( _this.clippingPlanes, camera );
+
 		if ( transmissiveObjects.length > 0 ) renderTransmissionPass( opaqueObjects, scene, camera );
 
 		if ( viewport ) state.viewport( _currentViewport.copy( viewport ) );
@@ -1334,7 +1336,7 @@ function WebGLRenderer( parameters = {} ) {
 
 		material.onBeforeRender( _this, scene, camera, geometry, object, group );
 
-		// if ( material.transparent === true && material.side === DoubleSide ) {
+		// if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false ) {
 
 		// 	material.side = BackSide;
 		// 	material.needsUpdate = true;

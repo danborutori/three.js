@@ -16,7 +16,7 @@ class DirectionalLight extends Light {
 
 		this.map = colorTexture?color:undefined;
 		this.mapMatrix = new Matrix4();
-		this.position.copy( Object3D.DefaultUp );
+		this.position.copy( Object3D.DEFAULT_UP );
 		this.updateMatrix();
 
 		this.target = new Object3D();

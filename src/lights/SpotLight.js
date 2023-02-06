@@ -14,7 +14,7 @@ class SpotLight extends Light {
 
 		this.type = 'SpotLight';
 
-		this.position.copy( Object3D.DefaultUp );
+		this.position.copy( Object3D.DEFAULT_UP );
 		this.updateMatrix();
 		this.map = colorTexture?color:undefined
 		this.mapMatrix = new Matrix4()
