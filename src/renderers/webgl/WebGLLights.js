@@ -251,7 +251,7 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 	const matrix4 = new Matrix4();
 	const matrix42 = new Matrix4();
 
-	function setup( lights, physicallyCorrectLights ) {
+	function setup( lights, useLegacyLights ) {
 
 		let r = 0, g = 0, b = 0;
 
@@ -277,7 +277,7 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 		}
 		
 		// artist-friendly light intensity scaling factor
-		const scaleFactor = ( physicallyCorrectLights !== true ) ? Math.PI : 1;
+		const scaleFactor = ( useLegacyLights === true ) ? Math.PI : 1;
 
 		for ( let i = 0, l = lights.length; i < l; i ++ ) {
 

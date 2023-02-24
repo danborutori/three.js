@@ -48,7 +48,17 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 
 float getDistanceAttenuation( const in float lightDistance, const in float cutoffDistance, const in float decayExponent ) {
 
-	#if defined ( PHYSICALLY_CORRECT_LIGHTS )
+	#if defined ( LEGACY_LIGHTS )
+
+		if ( cutoffDistance > 0.0 && decayExponent > 0.0 ) {
+
+			return pow( saturate( - lightDistance / cutoffDistance + 1.0 ), decayExponent );
+
+		}
+
+		return 1.0;
+
+	#else
 
 		// based upon Frostbite 3 Moving to Physically-based Rendering
 		// page 32, equation 26: E[window1]
@@ -62,16 +72,6 @@ float getDistanceAttenuation( const in float lightDistance, const in float cutof
 		}
 
 		return distanceFalloff;
-
-	#else
-
-		if ( cutoffDistance > 0.0 && decayExponent > 0.0 ) {
-
-			return pow( saturate( - lightDistance / cutoffDistance + 1.0 ), decayExponent );
-
-		}
-
-		return 1.0;
 
 	#endif
 

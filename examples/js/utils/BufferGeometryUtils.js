@@ -11,8 +11,8 @@
 	const TrianglesDrawMode = THREE.TrianglesDrawMode;
 	const Vector3 = THREE.Vector3;
 	
-	function computeTangents() {
-	
+	function computeTangents() { // @deprecated, r140
+
 		throw new Error( 'BufferGeometryUtils: computeTangents renamed to computeMikkTSpaceTangents.' );
 	
 	}
@@ -843,13 +843,6 @@
 	 * @return {Object} An Object with original position/normal attributes and morphed ones.
 	 */
 	function computeMorphedAttributes( object ) {
-	
-		if ( object.geometry.isBufferGeometry !== true ) {
-	
-			console.error( 'THREE.BufferGeometryUtils: Geometry is not of type BufferGeometry.' );
-			return null;
-	
-		}
 	
 		const _vA = new Vector3();
 		const _vB = new Vector3();

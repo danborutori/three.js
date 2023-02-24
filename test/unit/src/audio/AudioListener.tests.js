@@ -1,15 +1,57 @@
 /* global QUnit */
 
-// import { AudioListener } from '../../../../src/audio/AudioListener.js';
+import { AudioListener } from '../../../../src/audio/AudioListener.js';
+
+import { Object3D } from '../../../../src/core/Object3D.js';
 
 export default QUnit.module( 'Audios', () => {
 
-	QUnit.module( 'AudioListener', () => {
+	QUnit.module( 'AudioListener', ( hooks ) => {
+
+		function mockWindowAudioContext() {
+
+			global.window = {
+				AudioContext: function () {
+
+					return {
+						createGain: () => {
+
+							return {
+								connect: () => {},
+							};
+
+						}
+					};
+
+				},
+			};
+
+		}
+
+		if ( typeof window === 'undefined' ) {
+
+			hooks.before( function () {
+
+				mockWindowAudioContext();
+
+			} );
+
+			hooks.after( function () {
+
+				global.window = undefined;
+
+			} );
+
+		}
 
 		// INHERITANCE
-		QUnit.todo( 'Extending', ( assert ) => {
+		QUnit.test( 'Extending', ( assert ) => {
 
-			assert.ok( false, 'everything\'s gonna be alright' );
+			const object = new AudioListener();
+			assert.strictEqual(
+				object instanceof Object3D, true,
+				'AudioListener extends from Object3D'
+			);
 
 		} );
 
@@ -20,7 +62,42 @@ export default QUnit.module( 'Audios', () => {
 
 		} );
 
-		// PUBLIC STUFF
+		// PROPERTIES
+		QUnit.test( 'type', ( assert ) => {
+
+			const object = new AudioListener();
+			assert.ok(
+				object.type === 'AudioListener',
+				'AudioListener.type should be AudioListener'
+			);
+
+		} );
+
+		QUnit.todo( 'context', ( assert ) => {
+
+			assert.ok( false, 'everything\'s gonna be alright' );
+
+		} );
+
+		QUnit.todo( 'gain', ( assert ) => {
+
+			assert.ok( false, 'everything\'s gonna be alright' );
+
+		} );
+
+		QUnit.todo( 'filter', ( assert ) => {
+
+			assert.ok( false, 'everything\'s gonna be alright' );
+
+		} );
+
+		QUnit.todo( 'timeDelta', ( assert ) => {
+
+			assert.ok( false, 'everything\'s gonna be alright' );
+
+		} );
+
+		// PUBLIC
 		QUnit.todo( 'getInput', ( assert ) => {
 
 			assert.ok( false, 'everything\'s gonna be alright' );
