@@ -309,44 +309,50 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 				
 				light.lightInUse = true;
 
-			} else if ( light.isDirectionalLight && (!staticLightConfig || directionalLength<staticLightConfig.directionalLength)) {
+			} else if ( light.isDirectionalLight ) {
 
-				const uniforms = cache.get( light );
+				if ( !staticLightConfig || directionalLength<staticLightConfig.directionalLength ) {
+					const uniforms = cache.get( light );
 
-				uniforms.color.copy( light.color ).multiplyScalar( light.intensity * scaleFactor );
+					uniforms.color.copy( light.color ).multiplyScalar( light.intensity * scaleFactor );
 
-				if ( light.castShadow && (!staticLightConfig || numDirectionalShadows<staticLightConfig.numDirectionalShadows) ) {
+					if ( light.castShadow && (!staticLightConfig || numDirectionalShadows<staticLightConfig.numDirectionalShadows) ) {
 
-					const shadow = light.shadow;
+						const shadow = light.shadow;
 
-					const shadowUniforms = shadowCache.get( light );
+						const shadowUniforms = shadowCache.get( light );
 
-					shadowUniforms.shadowBias = shadow.bias;
-					shadowUniforms.shadowNormalBias = shadow.normalBias;
-					shadowUniforms.shadowRadius = shadow.radius;
-					shadowUniforms.shadowMapSize = shadow.mapSize;
+						shadowUniforms.shadowBias = shadow.bias;
+						shadowUniforms.shadowNormalBias = shadow.normalBias;
+						shadowUniforms.shadowRadius = shadow.radius;
+						shadowUniforms.shadowMapSize = shadow.mapSize;
 
-					state.directionalShadow[ directionalLength ] = shadowUniforms;
-					state.directionalShadowMap[ directionalLength ] = shadowMap;
-					state.directionalShadowMatrix[ directionalLength ] = light.shadow.matrix;
+						state.directionalShadow[ directionalLength ] = shadowUniforms;
+						state.directionalShadowMap[ directionalLength ] = shadowMap;
+						state.directionalShadowMatrix[ directionalLength ] = light.shadow.matrix;
 
-					numDirectionalShadows ++;
-					light.shadowInUse = true;
-				}
-				
-				if(light.map && (!staticLightConfig || numDirectionalMaps<staticLightConfig.numDirectionalMaps) ){
-					uniforms.map = numDirectionalMaps;
-					state.directionalMap[numDirectionalMaps] = light.map;
-					state.directionalMapMatrix[numDirectionalMaps] = light.mapMatrix;
-					numDirectionalMaps++;
+						numDirectionalShadows ++;
+						light.shadowInUse = true;
+					}
+					
+					if(light.map && (!staticLightConfig || numDirectionalMaps<staticLightConfig.numDirectionalMaps) ){
+						uniforms.map = numDirectionalMaps;
+						state.directionalMap[numDirectionalMaps] = light.map;
+						state.directionalMapMatrix[numDirectionalMaps] = light.mapMatrix;
+						numDirectionalMaps++;
+					}else{
+						uniforms.map = -1;
+					}
+
+					state.directional[ directionalLength ] = uniforms;
+
+					directionalLength ++;
+					light.lightInUse = true;
 				}else{
-					uniforms.map = -1;
+					if ( light.castShadow ) {
+						light.shadowInUse = true;
+					}
 				}
-
-				state.directional[ directionalLength ] = uniforms;
-
-				directionalLength ++;
-				light.lightInUse = true;
 
 			} else if ( light.isSpotLight && (!staticLightConfig || spotLength<staticLightConfig.spotLength) ) {
 
