@@ -52,6 +52,7 @@ export default /* glsl */`
 	#endif
 	*/
 	
+	#if NUM_DIR_LIGHT_SHADOWS > 0 || NUM_SPOT_LIGHT_SHADOWS > 0 || NUM_POINT_LIGHT_SHADOWS > 0
 	layout (std140) uniform ShadowMapBlock{
 		#if NUM_DIR_LIGHT_SHADOWS > 0
 		mat4 directionalShadowMatrix[ NUM_DIR_LIGHT_SHADOWS ];
@@ -65,8 +66,8 @@ export default /* glsl */`
 		mat4 pointShadowMatrix[ NUM_POINT_LIGHT_SHADOWS ];
 		PointLightShadow pointLightShadows[ NUM_POINT_LIGHT_SHADOWS ];
 		#endif
-
 	};
+	#endif
 	
 #endif
 `;
