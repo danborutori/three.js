@@ -5,11 +5,10 @@ import { BufferAttribute } from './BufferAttribute';
  * see {@link https://github.com/mrdoob/three.js/blob/master/examples/jsm/utils/BufferGeometryUtils.js|examples/jsm/utils/BufferGeometryUtils.js}
  */
 export namespace BufferGeometryUtils {
-	export function mergeBufferGeometries(
+	export function mergeGeometries(
 		geometries: BufferGeometry[]
 	): BufferGeometry;
-	export function computeTangents( geometry: BufferGeometry ): null;
-	export function mergeBufferAttributes(
+	export function mergeAttributes(
 		attributes: BufferAttribute[]
 	): BufferAttribute;
 }
