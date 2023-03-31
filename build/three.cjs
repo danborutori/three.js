@@ -13695,7 +13695,7 @@ var dithering_fragment = "#ifdef DITHERING\n\tgl_FragColor.rgb = dithering( gl_F
 
 var dithering_pars_fragment = "#ifdef DITHERING\n\tvec3 dithering( vec3 color ) {\n\t\tfloat grid_position = rand( gl_FragCoord.xy );\n\t\tvec3 dither_shift_RGB = vec3( 0.25 / 255.0, -0.25 / 255.0, 0.25 / 255.0 );\n\t\tdither_shift_RGB = mix( 2.0 * dither_shift_RGB, -2.0 * dither_shift_RGB, grid_position );\n\t\treturn color + dither_shift_RGB;\n\t}\n#endif";
 
-var roughnessmap_fragment = "float roughnessFactor = roughness;\n#if defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\nvec4 texelRoughMetalness = texture2D( roughnessMap, vUv );\n#endif\n#ifdef USE_ROUGHNESSMAP\n\troughnessFactor *= texelRoughMetalness.g;\n#endif";
+var roughnessmap_fragment = "float roughnessFactor = roughness;\n#if defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\nvec4 texelRoughMetalness = texture2D( roughnessMap, vRoughnessMapUv );\n#endif\n#ifdef USE_ROUGHNESSMAP\n\troughnessFactor *= texelRoughMetalness.g;\n#endif";
 
 var roughnessmap_pars_fragment = "#ifdef USE_ROUGHNESSMAP\n\tuniform sampler2D roughnessMap;\n#endif";
 
@@ -29135,7 +29135,7 @@ class WebGLRenderer {
 			renderStates = new WebGLRenderStates( extensions, capabilities, parameters.staticLightConfig );
 			background = new WebGLBackground( _this, cubemaps, cubeuvmaps, state, objects, _alpha, premultipliedAlpha );
 			shadowMap = new WebGLShadowMap( _this, objects, capabilities );
-			uniformsGroups = new WebGLUniformsGroups( _gl, info, capabilities, state );
+			uniformsGroups = new WebGLUniformsGroups( _gl, info, capabilities, state,  );
 
 			bufferRenderer = new WebGLBufferRenderer( _gl, extensions, info, capabilities );
 			indexedBufferRenderer = new WebGLIndexedBufferRenderer( _gl, extensions, info, capabilities );
@@ -30278,35 +30278,9 @@ class WebGLRenderer {
 			materialProperties.needsLights = materialNeedsLights( material );
 			materialProperties.lightsStateVersion = lightsStateVersion;
 
-			if ( materialProperties.needsLights ) {
+			if ( materialProperties.needsLights ) ;
 
-				// wire up the material to this renderer's lighting state
-
-				uniforms.ambientLightColor.value = lights.state.ambient;
-				uniforms.lightProbe.value = lights.state.probe;
-				uniforms.directionalLights.value = lights.state.directional;
-				uniforms.directionalLightShadows.value = lights.state.directionalShadow;
-				uniforms.spotLights.value = lights.state.spot;
-				uniforms.spotLightShadows.value = lights.state.spotShadow;
-				uniforms.rectAreaLights.value = lights.state.rectArea;
-				uniforms.ltc_1.value = lights.state.rectAreaLTC1;
-				uniforms.ltc_2.value = lights.state.rectAreaLTC2;
-				uniforms.pointLights.value = lights.state.point;
-				uniforms.pointLightShadows.value = lights.state.pointShadow;
-				uniforms.hemisphereLights.value = lights.state.hemi;
-
-				uniforms.directionalShadowMap.value = lights.state.directionalShadowMap;
-				uniforms.directionalShadowMatrix.value = lights.state.directionalShadowMatrix;
-				uniforms.spotShadowMap.value = lights.state.spotShadowMap;
-				uniforms.spotLightMatrix.value = lights.state.spotLightMatrix;
-				uniforms.spotLightMap.value = lights.state.spotLightMap;
-				uniforms.pointShadowMap.value = lights.state.pointShadowMap;
-				uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
-				// TODO (abelnation): add area lights shadow info to uniforms
-
-			}
-
-			const progUniforms = program.getUniforms();
+			const progUniforms = program.getUniforms(lights.staticSamplers);
 			const uniformsList = WebGLUniforms.seqWithValue( progUniforms.seq, uniforms );
 
 			materialProperties.currentProgram = program;
