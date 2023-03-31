@@ -364,7 +364,7 @@
 	 * @param {BufferAttribute}
 	 * @return {BufferAttribute}
 	 */
-	export function deepCloneAttribute( attribute ) {
+	function deepCloneAttribute( attribute ) {
 	
 		if ( attribute.isInstancedInterleavedBufferAttribute || attribute.isInterleavedBufferAttribute ) {
 	
@@ -448,7 +448,7 @@
 	}
 	
 	// returns a new, non-interleaved version of the provided attribute
-	export function deinterleaveAttribute( attribute ) {
+	function deinterleaveAttribute( attribute ) {
 	
 		const cons = attribute.data.array.constructor;
 		const count = attribute.count;
@@ -496,7 +496,7 @@
 	}
 	
 	// deinterleaves all attributes on the geometry
-	export function deinterleaveGeometry( geometry ) {
+	function deinterleaveGeometry( geometry ) {
 	
 		const attributes = geometry.attributes;
 		const morphTargets = geometry.morphTargets;
