@@ -1470,31 +1470,31 @@ class WebGLRenderer {
 
 				// wire up the material to this renderer's lighting state
 
-				uniforms.ambientLightColor.value = lights.state.ambient;
-				uniforms.lightProbe.value = lights.state.probe;
-				uniforms.directionalLights.value = lights.state.directional;
-				uniforms.directionalLightShadows.value = lights.state.directionalShadow;
-				uniforms.spotLights.value = lights.state.spot;
-				uniforms.spotLightShadows.value = lights.state.spotShadow;
-				uniforms.rectAreaLights.value = lights.state.rectArea;
-				uniforms.ltc_1.value = lights.state.rectAreaLTC1;
-				uniforms.ltc_2.value = lights.state.rectAreaLTC2;
-				uniforms.pointLights.value = lights.state.point;
-				uniforms.pointLightShadows.value = lights.state.pointShadow;
-				uniforms.hemisphereLights.value = lights.state.hemi;
+				// uniforms.ambientLightColor.value = lights.state.ambient;
+				// uniforms.lightProbe.value = lights.state.probe;
+				// uniforms.directionalLights.value = lights.state.directional;
+				// uniforms.directionalLightShadows.value = lights.state.directionalShadow;
+				// uniforms.spotLights.value = lights.state.spot;
+				// uniforms.spotLightShadows.value = lights.state.spotShadow;
+				// uniforms.rectAreaLights.value = lights.state.rectArea;
+				// uniforms.ltc_1.value = lights.state.rectAreaLTC1;
+				// uniforms.ltc_2.value = lights.state.rectAreaLTC2;
+				// uniforms.pointLights.value = lights.state.point;
+				// uniforms.pointLightShadows.value = lights.state.pointShadow;
+				// uniforms.hemisphereLights.value = lights.state.hemi;
 
-				uniforms.directionalShadowMap.value = lights.state.directionalShadowMap;
-				uniforms.directionalShadowMatrix.value = lights.state.directionalShadowMatrix;
-				uniforms.spotShadowMap.value = lights.state.spotShadowMap;
-				uniforms.spotLightMatrix.value = lights.state.spotLightMatrix;
-				uniforms.spotLightMap.value = lights.state.spotLightMap;
-				uniforms.pointShadowMap.value = lights.state.pointShadowMap;
-				uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
+				// uniforms.directionalShadowMap.value = lights.state.directionalShadowMap;
+				// uniforms.directionalShadowMatrix.value = lights.state.directionalShadowMatrix;
+				// uniforms.spotShadowMap.value = lights.state.spotShadowMap;
+				// uniforms.spotLightMatrix.value = lights.state.spotLightMatrix;
+				// uniforms.spotLightMap.value = lights.state.spotLightMap;
+				// uniforms.pointShadowMap.value = lights.state.pointShadowMap;
+				// uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
 				// TODO (abelnation): add area lights shadow info to uniforms
 
 			}
 
-			const progUniforms = program.getUniforms();
+			const progUniforms = program.getUniforms(lights.staticSamplers);
 			const uniformsList = WebGLUniforms.seqWithValue( progUniforms.seq, uniforms );
 
 			materialProperties.currentProgram = program;
