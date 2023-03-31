@@ -11,14 +11,8 @@
 	const TrianglesDrawMode = THREE.TrianglesDrawMode;
 	const Vector3 = THREE.Vector3;
 	
-	function computeTangents() { // @deprecated, r140
-
-		throw new Error( 'BufferGeometryUtils: computeTangents renamed to computeMikkTSpaceTangents.' );
-	
-	}
-	
 	function computeMikkTSpaceTangents( geometry, MikkTSpace, negateSign = true ) {
-	
+
 		if ( ! MikkTSpace || ! MikkTSpace.isReady ) {
 	
 			throw new Error( 'BufferGeometryUtils: Initialized MikkTSpace library required.' );
@@ -110,7 +104,7 @@
 	 * @param  {Boolean} useGroups
 	 * @return {BufferGeometry}
 	 */
-	function mergeBufferGeometries( geometries, useGroups = false ) {
+	function mergeGeometries( geometries, useGroups = false ) {
 	
 		const isIndexed = geometries[ 0 ].index !== null;
 	
@@ -135,7 +129,7 @@
 	
 			if ( isIndexed !== ( geometry.index !== null ) ) {
 	
-				console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. All geometries must have compatible attributes; make sure index attribute exists among all geometries, or in none of them.' );
+				console.error( 'THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index ' + i + '. All geometries must have compatible attributes; make sure index attribute exists among all geometries, or in none of them.' );
 				return null;
 	
 			}
@@ -146,7 +140,7 @@
 	
 				if ( ! attributesUsed.has( name ) ) {
 	
-					console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. All geometries must have compatible attributes; make sure "' + name + '" attribute exists among all geometries, or in none of them.' );
+					console.error( 'THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index ' + i + '. All geometries must have compatible attributes; make sure "' + name + '" attribute exists among all geometries, or in none of them.' );
 					return null;
 	
 				}
@@ -163,7 +157,7 @@
 	
 			if ( attributesCount !== attributesUsed.size ) {
 	
-				console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. Make sure all geometries have the same number of attributes.' );
+				console.error( 'THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index ' + i + '. Make sure all geometries have the same number of attributes.' );
 				return null;
 	
 			}
@@ -172,7 +166,7 @@
 	
 			if ( morphTargetsRelative !== geometry.morphTargetsRelative ) {
 	
-				console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. .morphTargetsRelative must be consistent throughout all geometries.' );
+				console.error( 'THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index ' + i + '. .morphTargetsRelative must be consistent throughout all geometries.' );
 				return null;
 	
 			}
@@ -181,7 +175,7 @@
 	
 				if ( ! morphAttributesUsed.has( name ) ) {
 	
-					console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '.  .morphAttributes must be consistent throughout all geometries.' );
+					console.error( 'THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index ' + i + '.  .morphAttributes must be consistent throughout all geometries.' );
 					return null;
 	
 				}
@@ -206,7 +200,7 @@
 	
 				} else {
 	
-					console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. The geometry must have either an index or a position attribute' );
+					console.error( 'THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index ' + i + '. The geometry must have either an index or a position attribute' );
 					return null;
 	
 				}
@@ -248,11 +242,11 @@
 	
 		for ( const name in attributes ) {
 	
-			const mergedAttribute = mergeBufferAttributes( attributes[ name ] );
+			const mergedAttribute = mergeAttributes( attributes[ name ] );
 	
 			if ( ! mergedAttribute ) {
 	
-				console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed while trying to merge the ' + name + ' attribute.' );
+				console.error( 'THREE.BufferGeometryUtils: .mergeGeometries() failed while trying to merge the ' + name + ' attribute.' );
 				return null;
 	
 			}
@@ -282,11 +276,11 @@
 	
 				}
 	
-				const mergedMorphAttribute = mergeBufferAttributes( morphAttributesToMerge );
+				const mergedMorphAttribute = mergeAttributes( morphAttributesToMerge );
 	
 				if ( ! mergedMorphAttribute ) {
 	
-					console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed while trying to merge the ' + name + ' morphAttribute.' );
+					console.error( 'THREE.BufferGeometryUtils: .mergeGeometries() failed while trying to merge the ' + name + ' morphAttribute.' );
 					return null;
 	
 				}
@@ -305,7 +299,7 @@
 	 * @param {Array<BufferAttribute>} attributes
 	 * @return {BufferAttribute}
 	 */
-	function mergeBufferAttributes( attributes ) {
+	function mergeAttributes( attributes ) {
 	
 		let TypedArray;
 		let itemSize;
@@ -318,7 +312,7 @@
 	
 			if ( attribute.isInterleavedBufferAttribute ) {
 	
-				console.error( 'THREE.BufferGeometryUtils: .mergeBufferAttributes() failed. InterleavedBufferAttributes are not supported.' );
+				console.error( 'THREE.BufferGeometryUtils: .mergeAttributes() failed. InterleavedBufferAttributes are not supported.' );
 				return null;
 	
 			}
@@ -326,7 +320,7 @@
 			if ( TypedArray === undefined ) TypedArray = attribute.array.constructor;
 			if ( TypedArray !== attribute.array.constructor ) {
 	
-				console.error( 'THREE.BufferGeometryUtils: .mergeBufferAttributes() failed. BufferAttribute.array must be of consistent array types across matching attributes.' );
+				console.error( 'THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.array must be of consistent array types across matching attributes.' );
 				return null;
 	
 			}
@@ -334,7 +328,7 @@
 			if ( itemSize === undefined ) itemSize = attribute.itemSize;
 			if ( itemSize !== attribute.itemSize ) {
 	
-				console.error( 'THREE.BufferGeometryUtils: .mergeBufferAttributes() failed. BufferAttribute.itemSize must be consistent across matching attributes.' );
+				console.error( 'THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.itemSize must be consistent across matching attributes.' );
 				return null;
 	
 			}
@@ -342,7 +336,7 @@
 			if ( normalized === undefined ) normalized = attribute.normalized;
 			if ( normalized !== attribute.normalized ) {
 	
-				console.error( 'THREE.BufferGeometryUtils: .mergeBufferAttributes() failed. BufferAttribute.normalized must be consistent across matching attributes.' );
+				console.error( 'THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.normalized must be consistent across matching attributes.' );
 				return null;
 	
 			}
@@ -370,7 +364,7 @@
 	 * @param {BufferAttribute}
 	 * @return {BufferAttribute}
 	 */
-	function deepCloneAttribute( attribute ) {
+	export function deepCloneAttribute( attribute ) {
 	
 		if ( attribute.isInstancedInterleavedBufferAttribute || attribute.isInterleavedBufferAttribute ) {
 	
@@ -454,7 +448,7 @@
 	}
 	
 	// returns a new, non-interleaved version of the provided attribute
-	function deinterleaveAttribute( attribute ) {
+	export function deinterleaveAttribute( attribute ) {
 	
 		const cons = attribute.data.array.constructor;
 		const count = attribute.count;
@@ -502,7 +496,7 @@
 	}
 	
 	// deinterleaves all attributes on the geometry
-	function deinterleaveGeometry( geometry ) {
+	export function deinterleaveGeometry( geometry ) {
 	
 		const attributes = geometry.attributes;
 		const morphTargets = geometry.morphTargets;
@@ -914,9 +908,9 @@
 	
 			if ( object.isSkinnedMesh ) {
 	
-				object.boneTransform( a, _vA );
-				object.boneTransform( b, _vB );
-				object.boneTransform( c, _vC );
+				object.applyBoneTransform( a, _vA );
+				object.applyBoneTransform( b, _vB );
+				object.applyBoneTransform( c, _vC );
 	
 			}
 	
@@ -1324,10 +1318,25 @@
 	
 	}
 	
+	function mergeBufferGeometries( geometries, useGroups = false ) {
+	
+		console.warn( 'THREE.BufferGeometryUtils: mergeBufferGeometries() has been renamed to mergeGeometries().' ); // @deprecated, r151
+		return mergeGeometries( geometries, useGroups );
+	
+	}
+	
+	function mergeBufferAttributes( attributes ) {
+	
+		console.warn( 'THREE.BufferGeometryUtils: mergeBufferAttributes() has been renamed to mergeAttributes().' ); // @deprecated, r151
+		return mergeAttributes( attributes );
+	
+	}	
+	
 	THREE.BufferGeometryUtils = {};
-	THREE.BufferGeometryUtils.computeTangents = computeTangents;
 	THREE.BufferGeometryUtils.computeMikkTSpaceTangents = computeMikkTSpaceTangents;
+	THREE.BufferGeometryUtils.mergeGeometries = mergeGeometries;
 	THREE.BufferGeometryUtils.mergeBufferGeometries = mergeBufferGeometries;
+	THREE.BufferGeometryUtils.mergeAttributes = mergeAttributes;
 	THREE.BufferGeometryUtils.mergeBufferAttributes = mergeBufferAttributes;
 	THREE.BufferGeometryUtils.interleaveAttributes = interleaveAttributes;
 	THREE.BufferGeometryUtils.estimateBytesUsed = estimateBytesUsed;

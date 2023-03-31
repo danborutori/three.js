@@ -64,9 +64,7 @@ const exceptionList = [
 	'webgl_loader_pdb',
 	'webgl_multiple_canvases_circle',
 	'webgl_multiple_elements_text',
-	'webgl_nodes_playground',
 	'webgl_shaders_tonemapping',
-	'webgpu_nodes_playground',
 
 	// Unknown
 	// TODO: most of these can be fixed just by increasing idleTime and parseTime
@@ -195,7 +193,8 @@ async function main() {
 		headless: ! process.env.VISIBLE,
 		args: flags,
 		defaultViewport: viewport,
-		handleSIGINT: false
+		handleSIGINT: false,
+		protocolTimeout: 0
 	} );
 
 	// this line is intended to stop the script if the browser (in headful mode) is closed by user (while debugging)
