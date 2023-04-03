@@ -14,6 +14,7 @@ import { EventDispatcher } from './EventDispatcher';
 import { BufferGeometry } from './BufferGeometry';
 import { Intersection } from './Raycaster';
 import { AnimationClip } from '../animation/AnimationClip';
+import { Sphere } from '../math/Sphere';
 
 /**
  * Base class for scene graph objects
@@ -54,6 +55,12 @@ export class Object3D extends EventDispatcher {
 	 * @default []
 	 */
 	children: Object3D[];
+
+	/**
+	 * Object's bounding sphere.
+	 * @default undefined
+	 */
+	boundingSphere?: Sphere
 
 	/**
 	 * Up direction.
