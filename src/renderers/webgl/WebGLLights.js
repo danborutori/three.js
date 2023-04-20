@@ -354,51 +354,57 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 					}
 				}
 
-			} else if ( light.isSpotLight && (!staticLightConfig || spotLength<staticLightConfig.spotLength) ) {
+			} else if ( light.isSpotLight ) {
 
-				const uniforms = cache.get( light );
+				if(!staticLightConfig || spotLength<staticLightConfig.spotLength) {
+					const uniforms = cache.get( light );
 
-				uniforms.position.setFromMatrixPosition( light.matrixWorld );
+					uniforms.position.setFromMatrixPosition( light.matrixWorld );
 
-				uniforms.color.copy( color ).multiplyScalar( intensity * scaleFactor );
-				uniforms.distance = distance;
+					uniforms.color.copy( color ).multiplyScalar( intensity * scaleFactor );
+					uniforms.distance = distance;
 
-				uniforms.coneCos = Math.cos( light.angle );
-				uniforms.penumbraCos = Math.cos( light.angle * ( 1 - light.penumbra ) );
-				uniforms.decay = light.decay;
+					uniforms.coneCos = Math.cos( light.angle );
+					uniforms.penumbraCos = Math.cos( light.angle * ( 1 - light.penumbra ) );
+					uniforms.decay = light.decay;
 
-				if ( light.castShadow && (!staticLightConfig || numSpotShadows<staticLightConfig.numSpotShadows) ) {
+					if ( light.castShadow && (!staticLightConfig || numSpotShadows<staticLightConfig.numSpotShadows) ) {
 
-					const shadow = light.shadow;
+						const shadow = light.shadow;
 
-					const shadowUniforms = shadowCache.get( light );
+						const shadowUniforms = shadowCache.get( light );
 
-					shadowUniforms.shadowBias = shadow.bias;
-					shadowUniforms.shadowNormalBias = shadow.normalBias;
-					shadowUniforms.shadowRadius = shadow.radius;
-					shadowUniforms.shadowMapSize = shadow.mapSize;
+						shadowUniforms.shadowBias = shadow.bias;
+						shadowUniforms.shadowNormalBias = shadow.normalBias;
+						shadowUniforms.shadowRadius = shadow.radius;
+						shadowUniforms.shadowMapSize = shadow.mapSize;
 
-					state.spotShadow[ spotLength ] = shadowUniforms;
-					state.spotShadowMap[ spotLength ] = shadowMap;
-					state.spotShadowMatrix[ spotLength ] = light.shadow.matrix;
+						state.spotShadow[ spotLength ] = shadowUniforms;
+						state.spotShadowMap[ spotLength ] = shadowMap;
+						state.spotShadowMatrix[ spotLength ] = light.shadow.matrix;
 
-					numSpotShadows ++;
-					light.shadowInUse = true;
+						numSpotShadows ++;
+						light.shadowInUse = true;
+					}
+					
+					if(light.map && (!staticLightConfig || numSpotMaps<staticLightConfig.numSpotMaps)){
+						uniforms.map = numSpotMaps;
+						state.spotMap[numSpotMaps] = light.map;
+						state.spotMapMatrix[numSpotMaps] = light.mapMatrix;
+						numSpotMaps++;
+					}else{
+						uniforms.map = -1;
+					}
+
+					state.spot[ spotLength ] = uniforms;
+
+					spotLength ++;
+					light.lightInUse = true;
+				} else {
+					if ( light.castShadow ) {
+						light.shadowInUse = true;
+					}
 				}
-				
-				if(light.map && (!staticLightConfig || numSpotMaps<staticLightConfig.numSpotMaps)){
-					uniforms.map = numSpotMaps;
-					state.spotMap[numSpotMaps] = light.map;
-					state.spotMapMatrix[numSpotMaps] = light.mapMatrix;
-					numSpotMaps++;
-				}else{
-					uniforms.map = -1;
-				}
-
-				state.spot[ spotLength ] = uniforms;
-
-				spotLength ++;
-				light.lightInUse = true;
 
 			} else if ( light.isRectAreaLight && (!staticLightConfig || rectAreaLength<staticLightConfig.rectAreaLength) ) {
 
