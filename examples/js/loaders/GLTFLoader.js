@@ -61,7 +61,7 @@
 	const Vector2 = THREE.Vector2;
 	const Vector3 = THREE.Vector3;
 	const VectorKeyframeTrack = THREE.VectorKeyframeTrack;
-	const sRGBEncoding = THREE.sRGBEncoding;
+	const SRGBColorSpace = THREE.SRGBColorSpace;
 	
 	const toTrianglesDrawMode = THREE.toTrianglesDrawMode;
 	
@@ -665,7 +665,7 @@
 	
 				if ( metallicRoughness.baseColorTexture !== undefined ) {
 	
-					pending.push( parser.assignTexture( materialParams, 'map', metallicRoughness.baseColorTexture, sRGBEncoding ) );
+					pending.push( parser.assignTexture( materialParams, 'map', metallicRoughness.baseColorTexture, SRGBColorSpace ) );
 	
 				}
 	
@@ -946,7 +946,7 @@
 	
 			if ( extension.sheenColorTexture !== undefined ) {
 	
-				pending.push( parser.assignTexture( materialParams, 'sheenColorMap', extension.sheenColorTexture, sRGBEncoding ) );
+				pending.push( parser.assignTexture( materialParams, 'sheenColorMap', extension.sheenColorTexture, SRGBColorSpace ) );
 	
 			}
 	
@@ -1179,7 +1179,7 @@
 	
 			if ( extension.specularColorTexture !== undefined ) {
 	
-				pending.push( parser.assignTexture( materialParams, 'specularColorMap', extension.specularColorTexture, sRGBEncoding ) );
+				pending.push( parser.assignTexture( materialParams, 'specularColorMap', extension.specularColorTexture, SRGBColorSpace ) );
 	
 			}
 	
@@ -2033,7 +2033,9 @@
 		NORMAL: 'normal',
 		TANGENT: 'tangent',
 		TEXCOORD_0: 'uv',
-		TEXCOORD_1: 'uv2',
+		TEXCOORD_1: 'uv1',
+		TEXCOORD_2: 'uv2',
+		TEXCOORD_3: 'uv3',
 		COLOR_0: 'color',
 		WEIGHTS_0: 'skinWeight',
 		JOINTS_0: 'skinIndex',
@@ -3123,7 +3125,7 @@
 		 * @param {Object} mapDef
 		 * @return {Promise<Texture>}
 		 */
-		assignTexture( materialParams, mapName, mapDef, encoding ) {
+		assignTexture( materialParams, mapName, mapDef, colorSpace ) {
 	
 			const parser = this;
 	
@@ -3152,9 +3154,9 @@
 	
 				}
 	
-				// if ( encoding !== undefined ) {
+				// if ( colorSpace !== undefined ) {
 	
-					// texture.encoding = encoding;
+				// 	texture.colorSpace = colorSpace;
 	
 				// }
 	
@@ -3264,7 +3266,7 @@
 
 			if ( material.aoMap && geometry.attributes.uv2 === undefined && geometry.attributes.uv !== undefined ) {
 
-				geometry.setAttribute( 'uv2', geometry.attributes.uv );
+				geometry.setAttribute( 'uv1', geometry.attributes.uv );
 	
 			}
 	
@@ -3323,7 +3325,7 @@
 	
 				if ( metallicRoughness.baseColorTexture !== undefined ) {
 	
-					pending.push( parser.assignTexture( materialParams, 'map', metallicRoughness.baseColorTexture, sRGBEncoding ) );
+					pending.push( parser.assignTexture( materialParams, 'map', metallicRoughness.baseColorTexture, SRGBColorSpace ) );
 	
 				}
 	
@@ -3414,7 +3416,7 @@
 	
 			if ( materialDef.emissiveTexture !== undefined && materialType !== MeshBasicMaterial ) {
 	
-				pending.push( parser.assignTexture( materialParams, 'emissiveMap', materialDef.emissiveTexture, sRGBEncoding ) );
+				pending.push( parser.assignTexture( materialParams, 'emissiveMap', materialDef.emissiveTexture, SRGBColorSpace ) );
 	
 			}
 	
@@ -4443,7 +4445,7 @@
 		} );
 	
 	}
-	
+		
 	THREE.GLTFLoader = GLTFLoader;
 	
 
