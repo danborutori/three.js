@@ -10,38 +10,38 @@
 	const TriangleStripDrawMode = THREE.TriangleStripDrawMode;
 	const TrianglesDrawMode = THREE.TrianglesDrawMode;
 	const Vector3 = THREE.Vector3;
-	
+
 	function computeMikkTSpaceTangents( geometry, MikkTSpace, negateSign = true ) {
- 
+
 		if ( ! MikkTSpace || ! MikkTSpace.isReady ) {
-	
+
 			throw new Error( 'BufferGeometryUtils: Initialized MikkTSpace library required.' );
-	
+
 		}
-	
+
 		if ( ! geometry.hasAttribute( 'position' ) || ! geometry.hasAttribute( 'normal' ) || ! geometry.hasAttribute( 'uv' ) ) {
-	
+
 			throw new Error( 'BufferGeometryUtils: Tangents require "position", "normal", and "uv" attributes.' );
-	
-		}
-	
+
+	}
+
 		function getAttributeArray( attribute ) {
-	
+
 			if ( attribute.normalized || attribute.isInterleavedBufferAttribute ) {
-	
-				const dstArray = new Float32Array( attribute.getCount() * attribute.itemSize );
-	
-				for ( let i = 0, j = 0; i < attribute.getCount(); i ++ ) {
-	
+
+				const dstArray = new Float32Array( attribute.count * attribute.itemSize );
+
+				for ( let i = 0, j = 0; i < attribute.count; i ++ ) {
+
 					dstArray[ j ++ ] = attribute.getX( i );
 					dstArray[ j ++ ] = attribute.getY( i );
-	
+
 					if ( attribute.itemSize > 2 ) {
-	
+
 						dstArray[ j ++ ] = attribute.getZ( i );
-	
+
 					}
-	
+		
 				}
 	
 				return dstArray;
