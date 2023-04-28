@@ -1,9 +1,10 @@
 (function(){
 
-	const Clock = THREE.Clock
-	const Vector2 = THREE.Vector2	
 	const BufferGeometry = THREE.BufferGeometry
+	const Clock = THREE.Clock
 	const Float32BufferAttribute = THREE.Float32BufferAttribute
+	const Vector2 = THREE.Vector2	
+	const OrthographicCamera = THREE.OrthographicCamera
 	const Mesh = THREE.Mesh
 	const WebGLRenderTarget = THREE.WebGLRenderTarget
 	const CopyShader = THREE.CopyShader	
