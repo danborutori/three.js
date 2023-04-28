@@ -152,7 +152,7 @@ export class Texture extends EventDispatcher {
 	/**
 	 * @default THREE.LinearEncoding
 	 */
-	encoding: TextureEncoding;
+	colorSpace: TextureColorSpace;
 
 	/**
 	 * @default 0

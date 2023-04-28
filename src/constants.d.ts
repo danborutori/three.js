@@ -322,6 +322,13 @@ export const RGBM7Encoding: TextureEncoding;
 export const RGBM16Encoding: TextureEncoding;
 export const RGBDEncoding: TextureEncoding;
 
+// Texture ColorSpace
+export enum TextureColorSpace {}
+export const NoColorSpace: TextureColorSpace;
+export const SRGBColorSpace: TextureColorSpace;
+export const LinearSRGBColorSpace: TextureColorSpace;
+export const DisplayP3ColorSpace: TextureColorSpace;
+
 // Depth packing strategies
 export enum DepthPackingStrategies {}
 export const BasicDepthPacking: DepthPackingStrategies;
