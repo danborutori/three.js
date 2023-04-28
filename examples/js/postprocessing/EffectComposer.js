@@ -7,14 +7,14 @@
 	const OrthographicCamera = THREE.OrthographicCamera
 	const Mesh = THREE.Mesh
 	const WebGLRenderTarget = THREE.WebGLRenderTarget
-	const CopyShader = THREE.CopyShader	
-	const ShaderPass = THREE.ShaderPass	
 	const MaskPass = THREE.MaskPass	
 	const ClearMaskPass = THREE.ClearMaskPass	
 
 	class EffectComposer {
 
 		constructor( renderer, renderTarget ) {
+			const CopyShader = THREE.CopyShader	
+			const ShaderPass = THREE.ShaderPass	
 
 			this.renderer = renderer;
 
