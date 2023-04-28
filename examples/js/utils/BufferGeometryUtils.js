@@ -12,7 +12,7 @@
 	const Vector3 = THREE.Vector3;
 	
 	function computeMikkTSpaceTangents( geometry, MikkTSpace, negateSign = true ) {
-
+ 
 		if ( ! MikkTSpace || ! MikkTSpace.isReady ) {
 	
 			throw new Error( 'BufferGeometryUtils: Initialized MikkTSpace library required.' );
@@ -108,8 +108,14 @@
 	
 		const isIndexed = geometries[ 0 ].index !== null;
 	
-		const attributesUsed = new Set( Object.keys( geometries[ 0 ].attributes ) );
-		const morphAttributesUsed = new Set( Object.keys( geometries[ 0 ].morphAttributes ) );
+		const attributesUsed = geometries.reduce(function(a,b){
+            const setB = new Set(Object.keys( b.attributes ));
+            return new Set([...a].filter(i => setB.has(i)));
+        }, new Set( Object.keys( geometries[ 0 ].attributes )));
+        const morphAttributesUsed = geometries.reduce(function(a,b){
+            const setB = new Set(Object.keys( b.morphAttributes ));
+            return new Set([...a].filter(i => setB.has(i)));
+        }, new Set( Object.keys( geometries[ 0 ].morphAttributes )));
 	
 		const attributes = {};
 		const morphAttributes = {};
@@ -140,8 +146,7 @@
 	
 				if ( ! attributesUsed.has( name ) ) {
 	
-					console.error( 'THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index ' + i + '. All geometries must have compatible attributes; make sure "' + name + '" attribute exists among all geometries, or in none of them.' );
-					return null;
+					continue
 	
 				}
 	
@@ -175,8 +180,7 @@
 	
 				if ( ! morphAttributesUsed.has( name ) ) {
 	
-					console.error( 'THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index ' + i + '.  .morphAttributes must be consistent throughout all geometries.' );
-					return null;
+					continue
 	
 				}
 	
