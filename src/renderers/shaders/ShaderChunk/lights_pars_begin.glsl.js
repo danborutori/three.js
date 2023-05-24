@@ -63,7 +63,7 @@ float getDistanceAttenuation( const in float lightDistance, const in float cutof
 		// based upon Frostbite 3 Moving to Physically-based Rendering
 		// page 32, equation 26: E[window1]
 		// https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
-		float distanceFalloff = 1.0 / max( pow( lightDistance, decayExponent ), 0.25 );
+		float distanceFalloff = 1.0 / max( pow( lightDistance, decayExponent ), 0.5 );
 
 		if ( cutoffDistance > 0.0 ) {
 
