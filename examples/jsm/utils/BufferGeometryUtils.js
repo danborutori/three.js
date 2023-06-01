@@ -376,17 +376,6 @@ function mergeAttributes( attributes ) {
 
 		}
 	
-		const array = new TypedArray( arrayLength );
-		let offset = 0;
-	
-		for ( let i = 0; i < attributes.length; ++ i ) {
-	
-			array.set( attributes[ i ].array, offset );
-	
-			offset += attributes[ i ].array.length;
-	
-		}
-
 		if ( gpuType === - 1 ) gpuType = attribute.gpuType;
 		if ( gpuType !== attribute.gpuType ) {
 
