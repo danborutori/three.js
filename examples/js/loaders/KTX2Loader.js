@@ -20,7 +20,7 @@
 	const FileLoader = THREE.FileLoader;
 	const FloatType = THREE.FloatType;
 	const HalfFloatType = THREE.HalfFloatType;
-	const LinearEncoding = THREE.LinearEncoding;
+	const NoColorSpace = THREE.NoColorSpace;
 	const LinearFilter = THREE.LinearFilter;
 	const LinearMipmapLinearFilter = THREE.LinearMipmapLinearFilter;
 	const Loader = THREE.Loader;
@@ -36,7 +36,7 @@
 	const RGBA_S3TC_DXT5_Format = THREE.RGBA_S3TC_DXT5_Format;
 	const RGBAFormat = THREE.RGBAFormat;
 	const RGFormat = THREE.RGFormat;
-	const sRGBEncoding = THREE.sRGBEncoding;
+	const SRGBColorSpace = THREE.SRGBColorSpace;
 	const UnsignedByteType = THREE.UnsignedByteType;
 
 	const WorkerPool = THREE.WorkerPool;
