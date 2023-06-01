@@ -23,7 +23,7 @@
 
 			throw new Error( 'BufferGeometryUtils: Tangents require "position", "normal", and "uv" attributes.' );
 
-	}
+		}
 
 		function getAttributeArray( attribute ) {
 
@@ -328,25 +328,52 @@
 				return null;
 	
 			}
-	
-			if ( itemSize === undefined ) itemSize = attribute.itemSize;
-			if ( itemSize !== attribute.itemSize ) {
-	
-				console.error( 'THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.itemSize must be consistent across matching attributes.' );
-				return null;
-	
-			}
-	
-			if ( normalized === undefined ) normalized = attribute.normalized;
-			if ( normalized !== attribute.normalized ) {
-	
-				console.error( 'THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.normalized must be consistent across matching attributes.' );
-				return null;
-	
-			}
-	
-			arrayLength += attribute.array.length;
-	
+
+			mergedGeometry.morphAttributes[ name ].push( mergedMorphAttribute );
+
+		}
+
+		return mergedGeometry;
+
+	}
+
+/**
+ * @param {Array<BufferAttribute>} attributes
+ * @return {BufferAttribute}
+ */
+function mergeAttributes( attributes ) {
+
+	let TypedArray;
+	let itemSize;
+	let normalized;
+	let gpuType = - 1;
+	let arrayLength = 0;
+
+	for ( let i = 0; i < attributes.length; ++ i ) {
+
+		const attribute = attributes[ i ];
+
+		if ( attribute.isInterleavedBufferAttribute ) {
+
+			console.error( 'THREE.BufferGeometryUtils: .mergeAttributes() failed. InterleavedBufferAttributes are not supported.' );
+			return null;
+
+		}
+
+		if ( TypedArray === undefined ) TypedArray = attribute.array.constructor;
+		if ( TypedArray !== attribute.array.constructor ) {
+
+			console.error( 'THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.array must be of consistent array types across matching attributes.' );
+			return null;
+
+		}
+
+		if ( itemSize === undefined ) itemSize = attribute.itemSize;
+		if ( itemSize !== attribute.itemSize ) {
+
+			console.error( 'THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.itemSize must be consistent across matching attributes.' );
+			return null;
+
 		}
 	
 		const array = new TypedArray( arrayLength );
@@ -359,15 +386,45 @@
 			offset += attributes[ i ].array.length;
 	
 		}
-	
-		return new BufferAttribute( array, itemSize, normalized );
-	
+
+		if ( gpuType === - 1 ) gpuType = attribute.gpuType;
+		if ( gpuType !== attribute.gpuType ) {
+
+			console.error( 'THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.gpuType must be consistent across matching attributes.' );
+			return null;
+
+		}
+
+		arrayLength += attribute.array.length;
+
 	}
-	
-	/**
-	 * @param {BufferAttribute}
-	 * @return {BufferAttribute}
-	 */
+
+	const array = new TypedArray( arrayLength );
+	let offset = 0;
+
+	for ( let i = 0; i < attributes.length; ++ i ) {
+
+		array.set( attributes[ i ].array, offset );
+
+		offset += attributes[ i ].array.length;
+
+	}
+
+	const result = new BufferAttribute( array, itemSize, normalized );
+	if ( gpuType !== undefined ) {
+
+		result.gpuType = gpuType;
+
+	}
+
+	return result;
+
+}
+
+/**
+ * @param {BufferAttribute}
+ * @return {BufferAttribute}
+ */
 	function deepCloneAttribute( attribute ) {
 	
 		if ( attribute.isInstancedInterleavedBufferAttribute || attribute.isInterleavedBufferAttribute ) {

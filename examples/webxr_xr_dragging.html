@@ -32,8 +32,6 @@
 			import { XRButton } from 'three/addons/webxr/XRButton.js';
 			import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 
-			THREE.ColorManagement.enabled = false; // TODO: Consider enabling color management.
-
 			let container;
 			let camera, scene, renderer;
 			let controller1, controller2;
@@ -71,7 +69,7 @@
 				floor.receiveShadow = true;
 				scene.add( floor );
 
-				scene.add( new THREE.HemisphereLight( 0x808080, 0x606060 ) );
+				scene.add( new THREE.HemisphereLight( 0xbcbcbc, 0xa5a5a5 ) );
 
 				const light = new THREE.DirectionalLight( 0xffffff );
 				light.position.set( 0, 6, 0 );
@@ -201,6 +199,8 @@
 
 				}
 
+				controller.userData.targetRayMode = event.data.targetRayMode;
+
 			}
 
 			function onSelectEnd( event ) {
@@ -217,10 +217,11 @@
 
 				}
 
-
 			}
 
 			function getIntersections( controller ) {
+
+				controller.updateMatrixWorld();
 
 				tempMatrix.identity().extractRotation( controller.matrixWorld );
 
@@ -232,6 +233,10 @@
 			}
 
 			function intersectObjects( controller ) {
+
+				// Do not highlight in mobile-ar
+
+				if ( controller.userData.targetRayMode === 'screen' ) return;
 
 				// Do not highlight when already selected
 
