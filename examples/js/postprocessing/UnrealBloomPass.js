@@ -12,6 +12,7 @@
 	const Pass = THREE.Pass
 	const CopyShader = THREE.CopyShader
 	const LuminosityHighPassShader = THREE.LuminosityHighPassShader
+	const FullScreenQuad = THREE.FullScreenQuad
 
 	/**
 	 * UnrealBloomPass is inspired by the bloom pass of Unreal Engine. It creates a
