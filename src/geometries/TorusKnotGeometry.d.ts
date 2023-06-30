@@ -35,4 +35,4 @@ export class TorusKnotGeometry extends BufferGeometry {
 
 }
 
-export { TorusKnotGeometry as TorusKnotBufferGeometry };
+export { TorusKnotGeometry };

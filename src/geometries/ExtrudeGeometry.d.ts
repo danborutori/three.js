@@ -70,4 +70,4 @@ export class ExtrudeGeometry extends BufferGeometry {
 
 }
 
-export { ExtrudeGeometry as ExtrudeBufferGeometry };
+export { ExtrudeGeometry };

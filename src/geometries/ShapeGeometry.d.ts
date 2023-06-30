@@ -12,4 +12,4 @@ export class ShapeGeometry extends BufferGeometry {
 
 }
 
-export { ShapeGeometry as ShapeBufferGeometry };
+export { ShapeGeometry };

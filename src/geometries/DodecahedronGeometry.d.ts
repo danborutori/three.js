@@ -15,4 +15,4 @@ export class DodecahedronGeometry extends PolyhedronGeometry {
 
 }
 
-export { DodecahedronGeometry as DodecahedronBufferGeometry };
+export { DodecahedronGeometry };

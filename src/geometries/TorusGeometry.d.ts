@@ -32,4 +32,4 @@ export class TorusGeometry extends BufferGeometry {
 
 }
 
-export { TorusGeometry as TorusBufferGeometry };
+export { TorusGeometry };

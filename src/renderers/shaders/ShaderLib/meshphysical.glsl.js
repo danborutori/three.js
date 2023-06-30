@@ -130,6 +130,7 @@ varying vec3 vViewPosition;
 #include <map_pars_fragment>
 #include <alphamap_pars_fragment>
 #include <alphatest_pars_fragment>
+#include <alphahash_pars_fragment>
 #include <aomap_pars_fragment>
 #include <lightmap_pars_fragment>
 #include <emissivemap_pars_fragment>
@@ -165,6 +166,7 @@ void main() {
 	#include <color_fragment>
 	#include <alphamap_fragment>
 	#include <alphatest_fragment>
+	#include <alphahash_fragment>
 	#include <roughnessmap_fragment>
 	#include <metalnessmap_fragment>
 	#include <normal_fragment_begin>
@@ -209,7 +211,7 @@ void main() {
 
 	#endif
 
-	#include <output_fragment>
+	#include <opaque_fragment>
 	#ifdef gl_FragNormal
 		gl_FragNormal = vec4( normal*0.5+0.5, diffuseColor.a );
 	#endif
@@ -219,10 +221,8 @@ void main() {
 	#ifdef gl_FragDiffuseColor
 		gl_FragDiffuseColor = diffuseColor;
 	#endif
-
-	
 	#include <tonemapping_fragment>
-	#include <encodings_fragment>
+	#include <colorspace_fragment>
 	#include <fog_fragment>
 	#include <premultiplied_alpha_fragment>
 	#include <dithering_fragment>

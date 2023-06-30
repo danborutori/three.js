@@ -41,4 +41,4 @@ export class CylinderGeometry extends BufferGeometry {
 
 }
 
-export { CylinderGeometry as CylinderBufferGeometry };
+export { CylinderGeometry };

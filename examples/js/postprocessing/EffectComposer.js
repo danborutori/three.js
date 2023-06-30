@@ -4,6 +4,7 @@
 	const Clock = THREE.Clock
 	const Float32BufferAttribute = THREE.Float32BufferAttribute
 	const HalfFloatType = THREE.HalfFloatType	
+	const NoBlending = THREE.NoBlending
 	const Vector2 = THREE.Vector2	
 	const OrthographicCamera = THREE.OrthographicCamera
 	const Mesh = THREE.Mesh
@@ -49,6 +50,7 @@
 			this.passes = [];
 	
 			this.copyPass = new ShaderPass( CopyShader );
+			this.copyPass.material.blending = NoBlending;
 	
 			this.clock = new Clock();
 	

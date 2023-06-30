@@ -29,4 +29,4 @@ export class CircleGeometry extends BufferGeometry {
 
 }
 
-export { CircleGeometry as CircleBufferGeometry };
+export { CircleGeometry };

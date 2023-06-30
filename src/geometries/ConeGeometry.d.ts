@@ -28,4 +28,4 @@ export class ConeGeometry extends CylinderGeometry {
 
 }
 
-export { ConeGeometry as ConeBufferGeometry };
+export { ConeGeometry };

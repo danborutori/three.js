@@ -35,4 +35,4 @@ export class RingGeometry extends BufferGeometry {
 
 }
 
-export { RingGeometry as RingBufferGeometry };
+export { RingGeometry };

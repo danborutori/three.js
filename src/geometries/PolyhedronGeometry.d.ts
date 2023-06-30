@@ -29,4 +29,4 @@ export class PolyhedronGeometry extends BufferGeometry {
 
 }
 
-export { PolyhedronGeometry as PolyhedronBufferGeometry };
+export { PolyhedronGeometry };

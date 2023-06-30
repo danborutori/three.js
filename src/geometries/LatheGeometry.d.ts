@@ -30,4 +30,4 @@ export class LatheGeometry extends BufferGeometry {
 
 }
 
-export { LatheGeometry as LatheBufferGeometry };
+export { LatheGeometry };

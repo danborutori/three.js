@@ -29,4 +29,4 @@ export class PlaneGeometry extends BufferGeometry {
 
 }
 
-export { PlaneGeometry as PlaneBufferGeometry };
+export { PlaneGeometry };

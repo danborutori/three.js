@@ -36,4 +36,4 @@ export class TextGeometry extends ExtrudeGeometry {
 
 }
 
-export { TextGeometry as TextBufferGeometry };
+export { TextGeometry };
