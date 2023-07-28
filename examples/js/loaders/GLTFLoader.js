@@ -3932,7 +3932,6 @@
 					if ( node.updateMatrix ) {
 	
 						node.updateMatrix();
-						node.matrixAutoUpdate = true;
 	
 					}
 	
@@ -4281,7 +4280,6 @@
 			const tracks = [];
 	
 			const targetName = node.name ? node.name : node.uuid;
-	
 			const targetNames = [];
 	
 			if ( PATH_PROPERTIES[ target.path ] === PATH_PROPERTIES.weights ) {
@@ -4318,7 +4316,12 @@
 	
 				case PATH_PROPERTIES.position:
 				case PATH_PROPERTIES.scale:
+	
+					TypedKeyframeTrack = VectorKeyframeTrack;
+					break;
+	
 				default:
+	
 					switch ( outputAccessor.itemSize ) {
 	
 						case 1:
@@ -4326,6 +4329,7 @@
 							break;
 						case 2:
 						case 3:
+						default:
 							TypedKeyframeTrack = VectorKeyframeTrack;
 							break;
 	
@@ -4336,6 +4340,7 @@
 			}
 	
 			const interpolation = sampler.interpolation !== undefined ? INTERPOLATION[ sampler.interpolation ] : InterpolateLinear;
+	
 	
 			const outputArray = this._getArrayFromAccessor( outputAccessor );
 	
@@ -4349,7 +4354,7 @@
 				);
 	
 				// Override interpolation with custom factory method.
-				if ( interpolation === 'CUBICSPLINE' ) {
+				if ( sampler.interpolation === 'CUBICSPLINE' ) {
 	
 					this._createCubicSplineTrackInterpolant( track );
 	
