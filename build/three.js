@@ -25614,7 +25614,10 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 						if ( texture.type === FloatType ) {
 
-							glInternalFormat = _gl.DEPTH_COMPONENT32F;
+							if( texture.format === DepthStencilFormat )
+								glInternalFormat = _gl.DEPTH32F_STENCIL8;
+							else
+								glInternalFormat = _gl.DEPTH_COMPONENT32F;
 
 						} else if ( texture.type === UnsignedIntType ) {
 

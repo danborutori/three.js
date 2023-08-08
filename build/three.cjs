@@ -25609,7 +25609,10 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 					if ( texture.type === FloatType ) {
 
-						glInternalFormat = _gl.DEPTH_COMPONENT32F;
+						if( texture.format === DepthStencilFormat )
+							glInternalFormat = _gl.DEPTH32F_STENCIL8;
+						else
+							glInternalFormat = _gl.DEPTH_COMPONENT32F;
 
 					} else if ( texture.type === UnsignedIntType ) {
 
