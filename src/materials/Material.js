@@ -109,8 +109,6 @@ class Material extends EventDispatcher {
 
 	}
 
-	onProgramCompiled( /* parameters, cacheKey */ ){}
-
 	setValues( values ) {
 
 		if ( values === undefined ) return;

@@ -569,7 +569,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 		}
 	}
 
-	function acquireProgram( parameters, cacheKey, material ) {
+	function acquireProgram( parameters, cacheKey ) {
 
 		let program;
 
@@ -594,7 +594,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			program = new WebGLProgram( renderer, cacheKey, parameters, bindingStates );
 			programs.push( program );
 
-			material.onProgramCompiled(parameters, cacheKey);
+			renderer.onProgramCompiled && renderer.onProgramCompiled(parameters, cacheKey);
 
 		}
 

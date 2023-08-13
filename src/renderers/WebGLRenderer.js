@@ -1501,10 +1501,10 @@ class WebGLRenderer {
 	
 				material.onBeforeCompile( parameters, _this );
 	
-				programCache.acquireProgram( parameters, programCacheKey, material );
+				programCache.acquireProgram( parameters, programCacheKey );
 			}
 		}
-
+	
 		function preRenderObject( object, scene, material ){
 	
 			if ( material ) {
