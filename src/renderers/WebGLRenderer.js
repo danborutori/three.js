@@ -1615,7 +1615,7 @@ class WebGLRenderer {
 
 				material.onBeforeCompile( parameters, _this );
 
-				program = programCache.acquireProgram( parameters, programCacheKey );
+				program = programCache.acquireProgram( parameters, programCacheKey, material );
 				programs.set( programCacheKey, program );
 
 				materialProperties.uniforms = parameters.uniforms;

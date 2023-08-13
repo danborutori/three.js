@@ -386,7 +386,7 @@ export class WebGLRenderer implements Renderer {
 	/**
 	 * notify new program compiled
 	 */
-	onProgramCompiled: (parameters: any, cacheKey: string )=>void
+	onProgramCompiled: (parameters: any, cacheKey: string, material: Material )=>void
 
 	/**
 	 * precompile given program
