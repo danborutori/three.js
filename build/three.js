@@ -30876,7 +30876,7 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 		
 					material.onBeforeCompile( parameters, _this );
 		
-					programCache.acquireProgram( parameters, programCacheKey );
+					programCache.acquireProgram( parameters, programCacheKey, material );
 				}
 			}
 		
