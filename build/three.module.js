@@ -21239,7 +21239,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 		}
 	}
 
-	function acquireProgram( parameters, cacheKey ) {
+	function acquireProgram( parameters, cacheKey, material ) {
 
 		let program;
 
@@ -21264,7 +21264,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			program = new WebGLProgram( renderer, cacheKey, parameters, bindingStates );
 			programs.push( program );
 
-			renderer.onProgramCompiled && renderer.onProgramCompiled(parameters, cacheKey);
+			renderer.onProgramCompiled && renderer.onProgramCompiled(parameters, cacheKey, material);
 
 		}
 
@@ -30983,7 +30983,7 @@ class WebGLRenderer {
 
 				material.onBeforeCompile( parameters, _this );
 
-				program = programCache.acquireProgram( parameters, programCacheKey );
+				program = programCache.acquireProgram( parameters, programCacheKey, material );
 				programs.set( programCacheKey, program );
 
 				materialProperties.uniforms = parameters.uniforms;

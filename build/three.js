@@ -21246,7 +21246,7 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 			}
 		}
 
-		function acquireProgram( parameters, cacheKey ) {
+		function acquireProgram( parameters, cacheKey, material ) {
 
 			let program;
 
@@ -21271,7 +21271,7 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 				program = new WebGLProgram( renderer, cacheKey, parameters, bindingStates );
 				programs.push( program );
 
-				renderer.onProgramCompiled && renderer.onProgramCompiled(parameters, cacheKey);
+				renderer.onProgramCompiled && renderer.onProgramCompiled(parameters, cacheKey, material);
 
 			}
 
@@ -30990,7 +30990,7 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 					material.onBeforeCompile( parameters, _this );
 
-					program = programCache.acquireProgram( parameters, programCacheKey );
+					program = programCache.acquireProgram( parameters, programCacheKey, material );
 					programs.set( programCacheKey, program );
 
 					materialProperties.uniforms = parameters.uniforms;
