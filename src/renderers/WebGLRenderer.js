@@ -1501,7 +1501,7 @@ class WebGLRenderer {
 	
 				material.onBeforeCompile( parameters, _this );
 	
-				programCache.acquireProgram( parameters, programCacheKey );
+				programCache.acquireProgram( parameters, programCacheKey, material );
 			}
 		}
 	
