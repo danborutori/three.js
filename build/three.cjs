@@ -30365,17 +30365,6 @@ class WebGLRenderer {
 
 		};
 
-		this.precompile = function( parameters ){
-			programCache.updateCustomShaderID(parameters);
-			const cacheKey = programCache.getProgramCacheKey(parameters);
-			const program = programCache.acquireProgram( parameters, cacheKey );
-			return {
-				finish: function(){
-					program.flushCompile();
-				}
-			}
-		};
-	
 		// Animation Loop
 
 		let onAnimationFrameCallback = null;
@@ -30817,22 +30806,7 @@ class WebGLRenderer {
 		function renderObjects( renderList, scene, camera )  {
 
 			const overrideMaterial = scene.isScene === true ? scene.overrideMaterial : null;
-
-			for ( let i = 0, l = renderList.length; i < l; i ++ ) {
-
-				const renderItem = renderList[ i ];
-	
-				const object = renderItem.object;
-				const material = overrideMaterial === null ? renderItem.material : overrideMaterial;
-	
-				if ( object.layers.test( camera.layers ) ) {
-	
-					preRenderObject( object, scene, material );
-	
-				}
-	
-			}
-
+			
 			for ( let i = 0, l = renderList.length; i < l; i ++ ) {
 
 				const renderItem = renderList[ i ];
@@ -30850,53 +30824,6 @@ class WebGLRenderer {
 
 			}
 
-		}
-
-		function startProgramCompile( material, scene, object ){
-			const materialProperties = properties.get( material );
-	
-			if( !materialProperties.currentProgram ){
-	
-				if ( scene.isScene !== true ) scene = _emptyScene; // scene could be a Mesh, Line, Points, ...
-	
-				const lights = currentRenderState.state.lights;
-				const shadowsArray = currentRenderState.state.shadowsArray;
-	
-				const parameters = programCache.getParameters( material, lights.state, shadowsArray, scene, object );
-				const programCacheKey = programCache.getProgramCacheKey( parameters );
-	
-				parameters.uniforms = programCache.getUniforms( material );
-	
-				material.onBuild( object, parameters, _this );
-	
-				material.onBeforeCompile( parameters, _this );
-	
-				programCache.acquireProgram( parameters, programCacheKey, material );
-			}
-		}
-	
-		function preRenderObject( object, scene, material ){
-	
-			if ( material ) {
-	
-				if ( Array.isArray( material ) ) {
-	
-					for ( let i = 0; i < material.length; i ++ ) {
-	
-						const material2 = material[ i ];
-	
-						startProgramCompile( material2, scene, object );
-	
-					}
-	
-				} else {
-	
-					startProgramCompile( material, scene, object );
-	
-				}
-	
-			}
-	
 		}
 
 		function renderObject( object, scene, camera, geometry, material, group ) {
