@@ -200,11 +200,6 @@ export class WebGLRenderer implements Renderer {
 	outputEncoding: TextureEncoding;
 
 	/**
-	 * @default true
-	 */
-	useLegacyLights: boolean;
-
-	/**
 	 * @default THREE.NoToneMapping
 	 */
 	toneMapping: ToneMapping;
@@ -387,11 +382,6 @@ export class WebGLRenderer implements Renderer {
 	 * notify new program compiled
 	 */
 	onProgramCompiled: (parameters: any, cacheKey: string, material: Material )=>void
-
-	/**
-	 * precompile given program
-	 */
-	precompile(parameters: any): {finish: ()=>void}
 
 	/**
 	 * Render a scene or an object using a camera.
