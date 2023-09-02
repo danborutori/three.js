@@ -58,15 +58,7 @@ import { WebGLUtils } from './webgl/WebGLUtils.js';
 import { WebXRManager } from './webxr/WebXRManager.js';
 import { WebGLMaterials } from './webgl/WebGLMaterials.js';
 import { WebGLUniformsGroups } from './webgl/WebGLUniformsGroups.js';
-import { createElementNS } from '../utils.js';
-
-function createCanvasElement() {
-
-	const canvas = createElementNS( 'canvas' );
-	canvas.style.display = 'block';
-	return canvas;
-
-}
+import { createCanvasElement } from '../utils.js';
 
 class WebGLRenderer {
 
@@ -1803,22 +1795,6 @@ class WebGLRenderer {
 						2.0 / ( Math.log( camera.far + 1.0 ) / Math.LN2 ) );
 
 				}
-
-				if ( _currentCamera !== camera ) {
-
-					_currentCamera = camera;
-
-					// lighting uniforms depend on the camera so enforce an update
-					// now, in case this material supports lights - or later, when
-					// the next material that does gets activated:
-
-					refreshMaterial = true;		// set to true on material change
-					refreshLights = true;		// remains set until update done
-
-				}
-
-				// load material specific uniforms
-				// (shader material also gets them for the sake of genericity)
 
 			}
 

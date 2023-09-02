@@ -7,6 +7,7 @@
 	const BufferGeometry = THREE.BufferGeometry;
 	const ClampToEdgeWrapping = THREE.ClampToEdgeWrapping;
 	const Color = THREE.Color;
+	const ColorManagement = THREE.ColorManagement;
 	const DirectionalLight = THREE.DirectionalLight;
 	const DoubleSide = THREE.DoubleSide;
 	const FileLoader = THREE.FileLoader;
@@ -26,6 +27,7 @@
 	const LinearFilter = THREE.LinearFilter;
 	const LinearMipmapLinearFilter = THREE.LinearMipmapLinearFilter;
 	const LinearMipmapNearestFilter = THREE.LinearMipmapNearestFilter;
+	const LinearSRGBColorSpace = THREE.LinearSRGBColorSpace;
 	const Loader = THREE.Loader;
 	const LoaderUtils = THREE.LoaderUtils;
 	const Material = THREE.Material;
@@ -547,7 +549,7 @@
 	
 			const color = new Color( 0xffffff );
 	
-			if ( lightDef.color !== undefined ) color.fromArray( lightDef.color );
+			if ( lightDef.color !== undefined ) color.setRGB( ...lightDef.color, LinearSRGBColorSpace );
 	
 			const range = lightDef.range !== undefined ? lightDef.range : 0;
 	
@@ -665,7 +667,7 @@
 	
 					const array = metallicRoughness.baseColorFactor;
 	
-					materialParams.color.fromArray( array );
+					materialParams.color.setRGB( ...array, LinearSRGBColorSpace );
 					materialParams.opacity = array[ 3 ];
 	
 				}
@@ -941,7 +943,7 @@
 	
 			if ( extension.sheenColorFactor !== undefined ) {
 	
-				materialParams.sheenColor.fromArray( extension.sheenColorFactor );
+				materialParams.sheenColor.setRGB( ...extension.sheenColorFactor, LinearSRGBColorSpace );
 	
 			}
 	
@@ -1079,7 +1081,7 @@
 			materialParams.attenuationDistance = extension.attenuationDistance || Infinity;
 	
 			const colorArray = extension.attenuationColor || [ 1, 1, 1 ];
-			materialParams.attenuationColor = new Color( colorArray[ 0 ], colorArray[ 1 ], colorArray[ 2 ] );
+			materialParams.attenuationColor = new Color().setRGB( ...colorArray, LinearSRGBColorSpace );
 	
 			return Promise.all( pending );
 	
@@ -1182,7 +1184,7 @@
 			}
 	
 			const colorArray = extension.specularColorFactor || [ 1, 1, 1 ];
-			materialParams.specularColor = new Color( colorArray[ 0 ], colorArray[ 1 ], colorArray[ 2 ] );
+			materialParams.specularColor = new Color().setRGB( ...colorArray, LinearSRGBColorSpace );
 	
 			if ( extension.specularColorTexture !== undefined ) {
 	
@@ -3346,7 +3348,7 @@
 	
 			// workarounds for mesh and geometry
 
-			if ( material.aoMap && geometry.attributes.uv2 === undefined && geometry.attributes.uv !== undefined ) {
+			if ( material.aoMap && geometry.attributes.uv1 === undefined && geometry.attributes.uv !== undefined ) {
 
 				geometry.setAttribute( 'uv1', geometry.attributes.uv );
 	
@@ -3400,7 +3402,7 @@
 	
 					const array = metallicRoughness.baseColorFactor;
 	
-					materialParams.color.fromArray( array );
+					materialParams.color.setRGB( array[ 0 ], array[ 1 ], array[ 2 ], LinearSRGBColorSpace );
 					materialParams.opacity = array[ 3 ];
 	
 				}
@@ -3492,7 +3494,7 @@
 	
 			if ( materialDef.emissiveFactor !== undefined && materialType !== MeshBasicMaterial ) {
 	
-				materialParams.emissive = new Color().fromArray( materialDef.emissiveFactor );
+				materialParams.emissive = new Color().setRGB( ...materialDef.emissiveFactor, LinearSRGBColorSpace );
 	
 			}
 	
@@ -4570,6 +4572,12 @@
 			} );
 	
 			pending.push( accessor );
+	
+		}
+	
+		if ( ColorManagement.workingColorSpace !== LinearSRGBColorSpace && 'COLOR_0' in attributes ) {
+	
+			console.warn( `THREE.GLTFLoader: Converting vertex colors from "srgb-linear" to "${ColorManagement.workingColorSpace}" not supported.` );
 	
 		}
 	
