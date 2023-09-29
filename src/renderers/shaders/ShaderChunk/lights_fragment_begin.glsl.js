@@ -13,21 +13,21 @@ export default /* glsl */`
  * - Add diffuse light probe (irradiance cubemap) support.
  */
 
-GeometricContext geometry;
+vec3 geometryPosition = - vViewPosition;
+vec3 geometryNormal = normal;
+vec3 geometryViewDir = ( isOrthographic ) ? vec3( 0, 0, 1 ) : normalize( vViewPosition );
 
-geometry.position = - vViewPosition;
-geometry.normal = normal;
-geometry.viewDir = ( isOrthographic ) ? vec3( 0, 0, 1 ) : normalize( vViewPosition );
+vec3 geometryClearcoatNormal;
 
 #ifdef USE_CLEARCOAT
 
-	geometry.clearcoatNormal = clearcoatNormal;
+	geometryClearcoatNormal = clearcoatNormal;
 
 #endif
 
 #ifdef USE_IRIDESCENCE
 
-	float dotNVi = saturate( dot( normal, geometry.viewDir ) );
+	float dotNVi = saturate( dot( normal, geometryViewDir ) );
 
 	if ( material.iridescenceThickness == 0.0 ) {
 
@@ -64,14 +64,14 @@ IncidentLight directLight;
 
 		pointLight = pointLights[ i ];
 
-		getPointLightInfo( pointLight, geometry, directLight );
+		getPointLightInfo( pointLight, geometryPosition, directLight );
 
 		#if defined( USE_SHADOWMAP ) && ( UNROLLED_LOOP_INDEX < NUM_POINT_LIGHT_SHADOWS )
 		pointLightShadow = pointLightShadows[ i ];
 		directLight.color *= ( directLight.visible && receiveShadow ) ? getPointShadow( pointShadowMap[ i ], pointLightShadow.shadowMapSize, pointLightShadow.shadowBias, pointLightShadow.shadowRadius, vPointShadowCoord[ i ], pointLightShadow.shadowCameraNear, pointLightShadow.shadowCameraFar ) : 1.0;
 		#endif
 
-		RE_Direct( directLight, geometry, material, reflectedLight );
+		RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );
 
 	}
 	#pragma unroll_loop_end
@@ -90,7 +90,7 @@ IncidentLight directLight;
 
 		spotLight = spotLights[ i ];
 
-		getSpotLightInfo( spotLight, geometry, directLight );
+		getSpotLightInfo( spotLight, geometryPosition, directLight );
 
 		#if NUM_SPOT_MAP > 0
 			if( spotLight.map >= 0 ){ 
@@ -104,7 +104,7 @@ IncidentLight directLight;
 		directLight.color *= ( directLight.visible && receiveShadow ) ? getShadow( spotShadowMap[ i ], spotLightShadow.shadowMapSize, spotLightShadow.shadowBias, spotLightShadow.shadowRadius, vSpotLightCoord[ i ] ) : 1.0;
 		#endif
 
-		RE_Direct( directLight, geometry, material, reflectedLight );
+		RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );
 
 	}
 	#pragma unroll_loop_end
@@ -123,7 +123,7 @@ IncidentLight directLight;
 
 		directionalLight = directionalLights[ i ];
 
-		getDirectionalLightInfo( directionalLight, geometry, directLight );
+		getDirectionalLightInfo( directionalLight, directLight );
 
 		#if NUM_DIRECTIONAL_MAP > 0
 			if( directionalLight.map >= 0 ) {
@@ -138,7 +138,7 @@ IncidentLight directLight;
 		directLight.color *= ( directLight.visible && receiveShadow ) ? getShadow( directionalShadowMap[ i ], directionalLightShadow.shadowMapSize, directionalLightShadow.shadowBias, directionalLightShadow.shadowRadius, vDirectionalShadowCoord[ i ], false ) : 1.0;
 		#endif
 
-		RE_Direct( directLight, geometry, material, reflectedLight );
+		RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );
 
 	}
 	#pragma unroll_loop_end
@@ -153,7 +153,7 @@ IncidentLight directLight;
 	for ( int i = 0; i < NUM_RECT_AREA_LIGHTS; i ++ ) {
 
 		rectAreaLight = rectAreaLights[ i ];
-		RE_Direct_RectArea( rectAreaLight, geometry, material, reflectedLight );
+		RE_Direct_RectArea( rectAreaLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );
 
 	}
 	#pragma unroll_loop_end
@@ -166,14 +166,18 @@ IncidentLight directLight;
 
 	vec3 irradiance = getAmbientLightIrradiance( ambientLightColor );
 
-	irradiance += getLightProbeIrradiance( lightProbe, geometry.normal );
+	#if defined( USE_LIGHT_PROBES )
+
+		irradiance += getLightProbeIrradiance( lightProbe, geometryNormal );
+
+	#endif
 
 	#if ( NUM_HEMI_LIGHTS > 0 )
 
 		#pragma unroll_loop_start
 		for ( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {
 
-			irradiance += getHemisphereLightIrradiance( hemisphereLights[ i ], geometry.normal );
+			irradiance += getHemisphereLightIrradiance( hemisphereLights[ i ], geometryNormal );
 
 		}
 		#pragma unroll_loop_end

@@ -1,9 +1,10 @@
-import { BackSide, DoubleSide, CubeUVReflectionMapping, ObjectSpaceNormalMap, TangentSpaceNormalMap, NoToneMapping, NormalBlending, LinearSRGBColorSpace, SRGBColorSpace } from '../../constants.js';
+import { BackSide, DoubleSide, CubeUVReflectionMapping, ObjectSpaceNormalMap, TangentSpaceNormalMap, NoToneMapping, NormalBlending, LinearSRGBColorSpace, SRGBTransfer } from '../../constants.js';
 import { Layers } from '../../core/Layers.js';
 import { WebGLProgram } from './WebGLProgram.js';
 import { WebGLShaderCache } from './WebGLShaderCache.js';
 import { ShaderLib } from '../shaders/ShaderLib.js';
 import { UniformsUtils } from '../shaders/UniformsUtils.js';
+import { ColorManagement } from '../../math/ColorManagement.js';
 
 function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities, bindingStates, clipping ) {
 
@@ -325,6 +326,8 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			numDirectionalMaps: lights.directionalMap.length,
 			numSpotMaps: lights.spotMap.length,
 
+			numLightProbes: lights.numLightProbes,
+
 			numClippingPlanes: clipping.numPlanes,
 			numClipIntersection: clipping.numIntersection,
 
@@ -336,7 +339,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			toneMapping: toneMapping,
 			useLegacyLights: renderer._useLegacyLights,
 
-			decodeVideoTexture: HAS_MAP && ( material.map.isVideoTexture === true ) && ( material.map.colorSpace === SRGBColorSpace ),
+			decodeVideoTexture: HAS_MAP && ( material.map.isVideoTexture === true ) && ( ColorManagement.getTransfer( material.map.colorSpace ) === SRGBTransfer ),
 
 			premultipliedAlpha: material.premultipliedAlpha,
 
@@ -449,6 +452,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 		array.push( parameters.numSpotLightShadows );
 		array.push( parameters.numDirectionalMaps );
 		array.push( parameters.numSpotMaps );
+		array.push( parameters.numLightProbes );
 		array.push( parameters.shadowMapType );
 		array.push( parameters.toneMapping );
 		array.push( parameters.numClippingPlanes );

@@ -214,7 +214,8 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 			numSpotShadows: - 1,
 			
 			numDirectionalMaps: -1,
-			numSpotMaps: -1
+			numSpotMaps: -1,
+			numLightProbes: - 1
 		},
 
 		ambient: [ 0, 0, 0 ],
@@ -239,8 +240,8 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 		spotMap: [],
 		spotMapMatrix: [],
 		hemi: [],
-		
-		staticSamplerUnitCount: 0
+		staticSamplerUnitCount: 0,
+		numLightProbes: 0
 	};
 
 	for ( let i = 0; i < 9; i ++ ) state.probe.push( new Vector3() );
@@ -269,11 +270,13 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 
 		let numDirectionalMaps = 0;
 		let numSpotMaps = 0;
+		let numLightProbes = 0;
 
 		if(staticLightConfig && staticLightConfig.sortFunc){
 			lights.sort( function(a,b){ return staticLightConfig.sortFunc(a,b) } );
 		}else{
-			lights.sort( shadowCastingLightsFirst );
+			// ordering : [shadow casting + map texturing, map texturing, shadow casting, none ]
+			lights.sort( shadowCastingAndTexturingLightsFirst );
 		}
 		
 		// artist-friendly light intensity scaling factor
@@ -308,6 +311,8 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 				}
 				
 				light.lightInUse = true;
+
+				numLightProbes ++;
 
 			} else if ( light.isDirectionalLight ) {
 
@@ -570,7 +575,8 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 			hash.numPointShadows !== numPointShadows ||
 			hash.numSpotShadows !== numSpotShadows ||
 			hash.numDirectionalMaps !== numDirectionalMaps ||
-			hash.numSpotMaps !== numSpotMaps ) {
+			hash.numSpotMaps !== numSpotMaps ||
+			hash.numLightProbes !== numLightProbes ) {
 
 			state.directional.length = directionalLength;
 			state.spot.length = spotLength;
@@ -593,6 +599,8 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 			state.spotMap.length = numSpotMaps;
 			state.spotMapMatrix.length = numSpotMaps;
 			
+			state.numLightProbes = numLightProbes;
+
 			hash.directionalLength = directionalLength;
 			hash.pointLength = pointLength;
 			hash.spotLength = spotLength;
@@ -605,7 +613,8 @@ function WebGLLights( extensions, capabilities, staticLightConfig ) {
 			
 			hash.numDirectionalMaps = numDirectionalMaps;
 			hash.numSpotMaps = numSpotMaps;
-			
+			hash.numLightProbes = numLightProbes;
+
 			state.staticSamplerUnitCount = 0;
 			if( state.directionalMap.length>0 ){
 				staticSamplers["directionalMap[0]"] = state.directionalMap.map(function(){
