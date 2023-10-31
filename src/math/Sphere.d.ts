@@ -32,6 +32,8 @@ export class Sphere {
 	getBoundingBox( target: Box3 ): Box3;
 	applyMatrix4( matrix: Matrix4 ): Sphere;
 	translate( offset: Vector3 ): Sphere;
+	expandByPoint( point: Vector3 ): Sphere; 
+	union( sphere: Sphere ): Sphere;
 	equals( sphere: Sphere ): boolean;
 
 	/**

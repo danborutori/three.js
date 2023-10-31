@@ -46,4 +46,6 @@ export class PointLight extends Light {
 
 	power: number;
 
+	readonly isPointLight: true;
+
 }
