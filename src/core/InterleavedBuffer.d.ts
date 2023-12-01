@@ -33,7 +33,7 @@ export class InterleavedBuffer {
 	setUsage( usage: Usage ): InterleavedBuffer;
 	clone( data: object ): InterleavedBuffer;
 	addUpdateRange( start: number, end: number ): void;
-	clearUpdatRanges(): void;
+	clearUpdateRanges(): void;
 	copy( source: InterleavedBuffer ): this;
 	copyAt(
 		index1: number,

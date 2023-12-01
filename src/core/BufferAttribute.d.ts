@@ -45,7 +45,7 @@ export class BufferAttribute {
 	setUsage( usage: Usage ): this;
 	clone(): BufferAttribute;
 	addUpdateRange( start: number, end: number ): void;
-	clearUpdatRanges(): void;
+	clearUpdateRanges(): void;
 	copy( source: BufferAttribute ): this;
 	copyAt(
 		index1: number,
