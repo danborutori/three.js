@@ -22,11 +22,6 @@ export class BufferAttribute {
 	usage: Usage;
 
 	/**
-	 * @default { offset: number; count: number }
-	 */
-	updateRange: { offset: number; count: number };
-
-	/**
 	 * @default 0
 	 */
 	version: number;
@@ -49,6 +44,8 @@ export class BufferAttribute {
 	onUpload( callback: () => void ): this;
 	setUsage( usage: Usage ): this;
 	clone(): BufferAttribute;
+	addUpdateRange( start: number, end: number ): void;
+	clearUpdatRanges(): void;
 	copy( source: BufferAttribute ): this;
 	copyAt(
 		index1: number,

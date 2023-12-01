@@ -192,6 +192,32 @@ export class Object3D extends EventDispatcher {
 	readonly isObject3D: true;
 
 	/**
+	 * Calls before rendering object shadow
+	 */
+	onBeforeShadow: ( 
+		renderer: WebGLRenderer,
+		scene: Scene,
+		camera: Camera,
+		shadowCamera: Camera,
+		geometry: BufferGeometry,
+		depthMaterial: Material,
+		group: Group
+	) => void;
+
+	/**
+	 * Calls after rendering object shadow
+	 */
+	onAfterShadow: ( 
+		renderer: WebGLRenderer,
+		scene: Scene,
+		camera: Camera,
+		shadowCamera: Camera,
+		geometry: BufferGeometry,
+		depthMaterial: Material,
+		group: Group
+	) => void;
+
+	/**
 	 * Calls before rendering object
 	 */
 	onBeforeRender: (

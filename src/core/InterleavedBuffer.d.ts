@@ -17,11 +17,6 @@ export class InterleavedBuffer {
 	usage: Usage;
 
 	/**
-	 * @default { offset: number; count: number }
-	 */
-	updateRange: { offset: number; count: number };
-
-	/**
 	 * @default 0
 	 */
 	version: number;
@@ -37,6 +32,8 @@ export class InterleavedBuffer {
 
 	setUsage( usage: Usage ): InterleavedBuffer;
 	clone( data: object ): InterleavedBuffer;
+	addUpdateRange( start: number, end: number ): void;
+	clearUpdatRanges(): void;
 	copy( source: InterleavedBuffer ): this;
 	copyAt(
 		index1: number,
