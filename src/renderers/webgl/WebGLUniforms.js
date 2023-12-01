@@ -46,8 +46,14 @@ import { Texture } from '../../textures/Texture.js';
 import { DataArrayTexture } from '../../textures/DataArrayTexture.js';
 import { Data3DTexture } from '../../textures/Data3DTexture.js';
 import { Vector3 } from '../../math/Vector3.js';
+import { DepthTexture } from '../../textures/DepthTexture.js';
+import { LessEqualCompare } from '../../constants.js';
 
 const emptyTexture = /*@__PURE__*/ new Texture();
+
+const emptyShadowTexture = /*@__PURE__*/ new DepthTexture( 1, 1 );
+emptyShadowTexture.compareFunction = LessEqualCompare;
+
 const emptyArrayTexture = /*@__PURE__*/ new DataArrayTexture();
 const empty3dTexture = /*@__PURE__*/ new Data3DTexture();
 const emptyCubeTexture = /*@__PURE__*/ new CubeTexture();
@@ -569,7 +575,9 @@ function setValueT1( gl, v, textures ) {
 
 	}
 
-	textures.setTexture2D( v || emptyTexture, unit );
+	const emptyTexture2D = ( this.type === gl.SAMPLER_2D_SHADOW ) ? emptyShadowTexture : emptyTexture;
+
+	textures.setTexture2D( v || emptyTexture2D, unit );
 
 }
 
@@ -953,6 +961,7 @@ class SingleUniform {
 		this.id = id;
 		this.addr = addr;
 		this.cache = [];
+		this.type = activeInfo.type;
 		this.setValue = getSingularSetter( activeInfo.type );
 
 		// this.path = activeInfo.name; // DEBUG
@@ -968,6 +977,7 @@ class PureArrayUniform {
 		this.id = id;
 		this.addr = addr;
 		this.cache = [];
+		this.type = activeInfo.type;
 		this.size = activeInfo.size;
 		this.setValue = getPureArraySetter( activeInfo.type );
 
