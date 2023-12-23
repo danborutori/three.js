@@ -1925,7 +1925,7 @@
 	
 			return parser.getDependency( 'bufferView', bufferViewIndex ).then( function ( bufferView ) {
 	
-				return new Promise( function ( resolve ) {
+				return new Promise( function ( resolve, reject ) {
 	
 					dracoLoader.decodeDracoFile( bufferView, function ( geometry ) {
 	
@@ -1940,7 +1940,7 @@
 	
 						resolve( geometry );
 	
-					}, threeAttributeMap, attributeTypeMap );
+					}, threeAttributeMap, attributeTypeMap, LinearSRGBColorSpace, reject );
 	
 				} );
 	
