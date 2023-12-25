@@ -20,6 +20,7 @@ export * from './objects/SkinnedMesh';
 export * from './objects/Skeleton';
 export * from './objects/Bone';
 export * from './objects/Mesh';
+export * from './objects/BatchedMesh';
 export * from './objects/LineSegments';
 export * from './objects/LineLoop';
 export * from './objects/Line';
