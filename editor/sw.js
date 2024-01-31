@@ -26,6 +26,8 @@ const assets = [
 
 	'../examples/jsm/libs/meshopt_decoder.module.js',
 
+	'../examples/jsm/libs/mikktspace.module.js',
+
 	'../examples/jsm/libs/motion-controllers.module.js',
 
 	'../examples/jsm/libs/rhino3dm/rhino3dm.wasm',
@@ -72,6 +74,8 @@ const assets = [
 	'../examples/jsm/exporters/USDZExporter.js',
 
 	'../examples/jsm/helpers/VertexNormalsHelper.js',
+
+	'../examples/jsm/utils/BufferGeometryUtils.js',
 
 	'../examples/jsm/webxr/VRButton.js',
 	'../examples/jsm/webxr/XRControllerModelFactory.js',
@@ -269,8 +273,13 @@ async function networkFirst( request ) {
 
 		}
 
-		const cache = await caches.open( cacheName );
-		cache.put( request, response.clone() );
+		if ( request.method === 'GET' ) {
+
+			const cache = await caches.open( cacheName );
+			cache.put( request, response.clone() );
+
+		}
+
 		return response;
 
 	} catch {
