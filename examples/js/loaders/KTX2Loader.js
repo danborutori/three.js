@@ -158,12 +158,8 @@
 						|| renderer.extensions.has( 'WEBKIT_WEBGL_compressed_texture_pvrtc' )
 				};
 	
-				if ( renderer.capabilities.isWebGL2 ) {
-	
-					// https://github.com/mrdoob/three.js/pull/22928
-					this.workerConfig.etc1Supported = false;
-	
-				}
+				// https://github.com/mrdoob/three.js/pull/22928
+				this.workerConfig.etc1Supported = false;
 	
 			}
 	

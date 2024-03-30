@@ -2633,6 +2633,12 @@
 	
 				} ) ).then( function () {
 	
+					for ( const scene of result.scenes ) {
+
+						scene.updateMatrixWorld();
+	
+					}
+					
 					onLoad( result );
 	
 				} );

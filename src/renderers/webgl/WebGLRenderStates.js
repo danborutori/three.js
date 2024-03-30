@@ -1,8 +1,8 @@
 import { WebGLLights } from './WebGLLights.js';
 
-function WebGLRenderState( extensions, capabilities, staticLightConfig ) {
+function WebGLRenderState( extensions, staticLightConfig ) {
 
-	const lights = new WebGLLights( extensions, capabilities, staticLightConfig );
+	const lights = new WebGLLights( extensions,  staticLightConfig );
 
 	const lightsArray = [];
 	const shadowsArray = [];
@@ -42,7 +42,9 @@ function WebGLRenderState( extensions, capabilities, staticLightConfig ) {
 		lightsArray: lightsArray,
 		shadowsArray: shadowsArray,
 
-		lights: lights
+		lights: lights,
+
+		transmissionRenderTarget: null
 	};
 
 	return {
@@ -57,7 +59,7 @@ function WebGLRenderState( extensions, capabilities, staticLightConfig ) {
 
 }
 
-function WebGLRenderStates( extensions, capabilities, staticLightConfig ) {
+function WebGLRenderStates( extensions, staticLightConfig ) {
 
 	let renderStates = new WeakMap();
 
@@ -68,14 +70,14 @@ function WebGLRenderStates( extensions, capabilities, staticLightConfig ) {
 
 		if ( renderStateArray === undefined ) {
 
-			renderState = new WebGLRenderState( extensions, capabilities, staticLightConfig  );
+			renderState = new WebGLRenderState( extensions, staticLightConfig  );
 			renderStates.set( scene, [ renderState ] );
 
 		} else {
 
 			if ( renderCallDepth >= renderStateArray.length ) {
 
-				renderState = new WebGLRenderState( extensions, capabilities, staticLightConfig );
+				renderState = new WebGLRenderState( extensions, staticLightConfig );
 				renderStateArray.push( renderState );
 
 			} else {
