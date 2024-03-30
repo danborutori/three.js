@@ -1871,9 +1871,9 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 				const nTextureProperties = properties.get( renderTarget.normalTexture );
 				nTextureProperties.__webglTexture = _gl.createTexture();
 				state.bindTexture( _gl.TEXTURE_2D, nTextureProperties.__webglTexture );
-				setTextureParameters( _gl.TEXTURE_2D, renderTarget.normalTexture, supportsMips );
+				setTextureParameters( _gl.TEXTURE_2D, renderTarget.normalTexture );
 				setupFrameBufferNormalTexture( renderTargetProperties.__webglFramebuffer, renderTarget, _gl.COLOR_ATTACHMENT1, _gl.TEXTURE_2D );
-				if ( textureNeedsGenerateMipmaps( renderTarget.normalTexture, supportsMips ) ) {
+				if ( textureNeedsGenerateMipmaps( renderTarget.normalTexture ) ) {
 
 					generateMipmap( _gl.TEXTURE_2D, renderTarget.normalTexture, renderTarget.width, renderTarget.height );
 
@@ -1883,9 +1883,9 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 				const mTextureProperties = properties.get( renderTarget.metalnessTexture );
 				mTextureProperties.__webglTexture = _gl.createTexture();
 				state.bindTexture( _gl.TEXTURE_2D, mTextureProperties.__webglTexture );
-				setTextureParameters( _gl.TEXTURE_2D, renderTarget.metalnessTexture, supportsMips );
+				setTextureParameters( _gl.TEXTURE_2D, renderTarget.metalnessTexture );
 				setupFrameBufferMetalnessTexture( renderTargetProperties.__webglFramebuffer, renderTarget, _gl.COLOR_ATTACHMENT2, _gl.TEXTURE_2D );
-				if ( textureNeedsGenerateMipmaps( renderTarget.metalnessTexture, supportsMips ) ) {
+				if ( textureNeedsGenerateMipmaps( renderTarget.metalnessTexture ) ) {
 
 					generateMipmap( _gl.TEXTURE_2D, renderTarget.metalnessTexture, renderTarget.width, renderTarget.height );
 
@@ -1895,9 +1895,9 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 				const dTextureProperties = properties.get( renderTarget.diffuseColorTexture );
 				dTextureProperties.__webglTexture = _gl.createTexture();
 				state.bindTexture( _gl.TEXTURE_2D, dTextureProperties.__webglTexture );
-				setTextureParameters( _gl.TEXTURE_2D, renderTarget.diffuseColorTexture, supportsMips );
+				setTextureParameters( _gl.TEXTURE_2D, renderTarget.diffuseColorTexture );
 				setupFrameBufferDiffuseColorTexture( renderTargetProperties.__webglFramebuffer, renderTarget, _gl.COLOR_ATTACHMENT3, _gl.TEXTURE_2D );
-				if ( textureNeedsGenerateMipmaps( renderTarget.diffuseColorTexture, supportsMips ) ) {
+				if ( textureNeedsGenerateMipmaps( renderTarget.diffuseColorTexture ) ) {
 
 					generateMipmap( _gl.TEXTURE_2D, renderTarget.diffuseColorTexture, renderTarget.width, renderTarget.height );
 
