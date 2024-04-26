@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js webgl - GLTFloader + transmission + nodes</title>
+		<title>three.js webgpu - GLTFloader + transmission</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link type="text/css" rel="stylesheet" href="main.css">
 	</head>
-
 	<body>
+
 		<div id="info">
-			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - GLTFLoader + <a href="https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_transmission" target="_blank" rel="noopener">KHR_materials_transmission</a> + Nodes<br />
+			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> webgpu - GLTFLoader + <a href="https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_transmission" target="_blank" rel="noopener">KHR_materials_transmission</a><br />
 			Iridescent Dish With Olives by <a href="https://github.com/echadwick-wayfair" target="_blank" rel="noopener">Eric Chadwick</a><br />
 			<a href="https://hdrihaven.com/hdri/?h=royal_esplanade" target="_blank" rel="noopener">Royal Esplanade</a> from <a href="https://hdrihaven.com/" target="_blank" rel="noopener">HDRI Haven</a>
 		</div>
@@ -18,8 +18,7 @@
 			{
 				"imports": {
 					"three": "../build/three.module.js",
-					"three/addons/": "./jsm/",
-					"three/nodes": "./jsm/nodes/Nodes.js"
+					"three/addons/": "./jsm/"
 				}
 			}
 		</script>
@@ -27,9 +26,6 @@
 		<script type="module">
 
 			import * as THREE from 'three';
-			import { NodeMaterial, float, texture } from 'three/nodes';
-
-			import { nodeFrame } from 'three/addons/renderers/webgl-legacy/nodes/WebGLNodes.js';
 
 			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 			import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -37,10 +33,11 @@
 
 			import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
+			import WebGPURenderer from 'three/addons/renderers/webgpu/WebGPURenderer.js';
+
 			let camera, scene, renderer, controls, clock, mixer;
 
 			init();
-			animate();
 
 			function init() {
 
@@ -56,12 +53,14 @@
 
 				new RGBELoader()
 					.setPath( 'textures/equirectangular/' )
-					.load( 'royal_esplanade_1k.hdr', function ( envMap ) {
+					.load( 'royal_esplanade_1k.hdr', function ( texture ) {
 
-						envMap.mapping = THREE.EquirectangularReflectionMapping;
+						texture.mapping = THREE.EquirectangularReflectionMapping;
 
-						scene.background = envMap;
-						scene.environment = envMap;
+						scene.background = texture;
+						scene.backgroundBlurriness = 0.35;
+
+						scene.environment = texture;
 
 						// model
 
@@ -70,38 +69,17 @@
 							.setDRACOLoader( new DRACOLoader().setDecoderPath( 'jsm/libs/draco/gltf/' ) )
 							.load( 'IridescentDishWithOlives.glb', function ( gltf ) {
 
-								// nodes
-
-								const glassMesh = gltf.scene.getObjectByName( 'glassCover' );
-
-								const material = glassMesh.material;
-
-								if ( material && material.transmission > 0 ) {
-
-									const nodeMaterial = NodeMaterial.fromMaterial( material ); // @TODO: NodeMaterial.fromMaterial can be removed if WebGLNodes will apply it by default (as in WebGPURenderer)
-									nodeMaterial.transmissionNode = float( 1 );
-									nodeMaterial.iorNode = float( 1.5 );
-									nodeMaterial.thicknessNode = texture( material.thicknessMap ).g.mul( 0.1 );
-									//nodeMaterial.attenuationDistanceNode;
-									//nodeMaterial.attenuationColorNode;
-
-									// ignore traditional maps
-									nodeMaterial.transmissionMap = null;
-									nodeMaterial.thicknessMap = null;
-
-									glassMesh.material = nodeMaterial;
-
-								}
-
 								mixer = new THREE.AnimationMixer( gltf.scene );
 								mixer.clipAction( gltf.animations[ 0 ] ).play();
+
 								scene.add( gltf.scene );
 
 							} );
 
 					} );
 
-				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer = new WebGPURenderer( { antialias: true } );
+				renderer.setAnimationLoop( render );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -109,6 +87,8 @@
 				container.appendChild( renderer.domElement );
 
 				controls = new OrbitControls( camera, renderer.domElement );
+				controls.autoRotate = true;
+				controls.autoRotateSpeed = - 0.75;
 				controls.enableDamping = true;
 				controls.minDistance = 0.5;
 				controls.maxDistance = 1;
@@ -130,21 +110,11 @@
 
 			//
 
-			function animate() {
-
-				requestAnimationFrame( animate );
+			function render() {
 
 				if ( mixer ) mixer.update( clock.getDelta() );
 
-				controls.update(); // required if damping enabled
-
-				render();
-
-			}
-
-			function render() {
-
-				nodeFrame.update();
+				controls.update();
 
 				renderer.render( scene, camera );
 

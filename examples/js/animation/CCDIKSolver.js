@@ -45,8 +45,8 @@
 	 * } ];
 	 */
 	
-	class CCDIKSolver {
-	
+	 class CCDIKSolver {
+
 		/**
 		 * @param {THREE.SkinnedMesh} mesh
 		 * @param {Array<Object>} iks
@@ -211,11 +211,12 @@
 		/**
 		 * Creates Helper
 		 *
+		 * @param {number} sphereSize
 		 * @return {CCDIKHelper}
 		 */
-		createHelper() {
+		createHelper( sphereSize ) {
 	
-			return new CCDIKHelper( this.mesh, this.iks );
+			return new CCDIKHelper( this.mesh, this.iks, sphereSize );
 	
 		}
 	
@@ -287,6 +288,7 @@
 	 *
 	 * @param {SkinnedMesh} mesh
 	 * @param {Array<Object>} iks
+	 * @param {number} sphereSize
 	 */
 	class CCDIKHelper extends Object3D {
 	

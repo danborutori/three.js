@@ -119,7 +119,7 @@
 		}
 	
 		async detectSupportAsync( renderer ) {
-
+	
 			this.workerConfig = {
 				astcSupported: await renderer.hasFeatureAsync( 'texture-compression-astc' ),
 				etc1Supported: await renderer.hasFeatureAsync( 'texture-compression-etc1' ),
@@ -128,11 +128,11 @@
 				bptcSupported: await renderer.hasFeatureAsync( 'texture-compression-bptc' ),
 				pvrtcSupported: await renderer.hasFeatureAsync( 'texture-compression-pvrtc' )
 			};
-
+	
 			return this;
-
+	
 		}
-
+	
 		detectSupport( renderer ) {
 	
 			if ( renderer.isWebGPURenderer === true ) {
@@ -157,9 +157,6 @@
 					pvrtcSupported: renderer.extensions.has( 'WEBGL_compressed_texture_pvrtc' )
 						|| renderer.extensions.has( 'WEBKIT_WEBGL_compressed_texture_pvrtc' )
 				};
-	
-				// https://github.com/mrdoob/three.js/pull/22928
-				this.workerConfig.etc1Supported = false;
 	
 			}
 	
@@ -385,7 +382,7 @@
 		RGB_ETC1_Format: RGB_ETC1_Format,
 		RGB_ETC2_Format: RGB_ETC2_Format,
 		RGB_PVRTC_4BPPV1_Format: RGB_PVRTC_4BPPV1_Format,
-		RGB_S3TC_DXT1_Format: RGB_S3TC_DXT1_Format,
+		RGBA_S3TC_DXT1_Format: RGBA_S3TC_DXT1_Format,
 	};
 	
 	
@@ -601,7 +598,7 @@
 				if: 'dxtSupported',
 				basisFormat: [ BasisFormat.ETC1S, BasisFormat.UASTC_4x4 ],
 				transcoderFormat: [ TranscoderFormat.BC1, TranscoderFormat.BC3 ],
-				engineFormat: [ EngineFormat.RGB_S3TC_DXT1_Format, EngineFormat.RGBA_S3TC_DXT5_Format ],
+				engineFormat: [ EngineFormat.RGBA_S3TC_DXT1_Format, EngineFormat.RGBA_S3TC_DXT5_Format ],
 				priorityETC1S: 4,
 				priorityUASTC: 5,
 				needsPowerOfTwo: false,
@@ -876,7 +873,7 @@
 			texture = container.pixelDepth === 0
 				? new DataTexture( mipmaps[ 0 ].data, container.pixelWidth, container.pixelHeight )
 				: new Data3DTexture( mipmaps[ 0 ].data, container.pixelWidth, container.pixelHeight, container.pixelDepth );
-
+	
 		} else {
 	
 			if ( container.pixelDepth > 0 ) throw new Error( 'THREE.KTX2Loader: Unsupported pixelDepth.' );
