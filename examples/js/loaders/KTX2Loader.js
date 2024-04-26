@@ -37,6 +37,7 @@
 	const RGBA_ETC2_EAC_Format = THREE.RGBA_ETC2_EAC_Format;
 	const RGBA_PVRTC_4BPPV1_Format = THREE.RGBA_PVRTC_4BPPV1_Format;
 	const RGBA_S3TC_DXT5_Format = THREE.RGBA_S3TC_DXT5_Format;
+	const RGBA_S3TC_DXT1_Format = THREE.RGBA_S3TC_DXT1_Format;
 	const RGBAFormat = THREE.RGBAFormat;
 	const RGFormat = THREE.RGFormat;
 	const SRGBColorSpace = THREE.SRGBColorSpace;
