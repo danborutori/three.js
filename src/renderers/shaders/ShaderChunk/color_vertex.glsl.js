@@ -3,7 +3,7 @@ export default /* glsl */`
 
 	vColor = vec4( 1.0 );
 
-#elif defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR )
+#elif defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR ) || defined( USE_BATCHING_COLOR )
 
 	vColor = vec4( 1.0 );
 
@@ -18,6 +18,14 @@ export default /* glsl */`
 #ifdef USE_INSTANCING_COLOR
 
 	vColor.xyzw *= vec4(instanceColor.xyz,1);
+
+#endif
+
+#ifdef USE_BATCHING_COLOR
+
+	vec3 batchingColor = getBatchingColor( batchId );
+
+	vColor.xyz *= batchingColor.xyz;
 
 #endif
 `;
