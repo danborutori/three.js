@@ -186,8 +186,8 @@ export default /* glsl */`
 
 	}
 
-	float getShadow( sampler2D shadowMap, vec2 shadowMapSize, float shadowBias, float shadowRadius, vec4 shadowCoord ) {
-		return getShadow( shadowMap, shadowMapSize, shadowBias, shadowRadius, shadowCoord, true );
+	float getShadow( sampler2D shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord ) {
+		return getShadow( shadowMap, shadowMapSize, shadowIntensity, shadowBias, shadowRadius, shadowCoord, true );
 	}
 
 	// cubeToUV() maps a 3D direction vector suitable for cube texture mapping to a 2D
