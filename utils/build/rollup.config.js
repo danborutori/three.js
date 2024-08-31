@@ -156,7 +156,33 @@ const builds = [
 				file: 'build/three.min.js'
 			}
 		]
+	},
+	
+	{
+		input: 'src/Three.WebGPU.js',
+		plugins: [
+			header()
+		],
+		output: [
+			{
+				format: 'esm',
+				file: 'build/three.webgpu.js'
+			}
+		]
+	},
+	{
+		input: 'src/Three.WebGPU.js',
+		plugins: [
+			header(),
+			terser()
+		],
+		output: [
+			{
+				format: 'esm',
+				file: 'build/three.webgpu.min.js'
+			}
+		]
 	}
 ];
 
-export default ( args ) => args.configOnlyModule ? builds[ 0 ] : builds;
+export default ( args ) => args.configOnlyModule ? [ builds[ 0 ], builds[ 5 ] ] : builds;

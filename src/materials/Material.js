@@ -68,7 +68,7 @@ class Material extends EventDispatcher {
 
 		this.alphaToCoverage = false;
 		this.premultipliedAlpha = false;
-		this.forceSinglePass = false;
+		this.forceSinglePass = true;
 
 		this.visible = true;
 
@@ -99,6 +99,10 @@ class Material extends EventDispatcher {
 		this._alphaTest = value;
 
 	}
+
+	// onBeforeRender and onBeforeCompile only supported in WebGLRenderer
+
+	onBeforeRender( /* renderer, scene, camera, geometry, object, group */ ) {}
 
 	onBeforeCompile( /* shaderobject, renderer */ ) {}
 
@@ -521,13 +525,6 @@ class Material extends EventDispatcher {
 		console.warn( 'Material: onBuild() has been removed.' ); // @deprecated, r166
 
 	}
-
-	onBeforeRender( /* renderer, scene, camera, geometry, object, group */ ) {
-
-		console.warn( 'Material: onBeforeRender() has been removed.' ); // @deprecated, r166
-
-	}
-
 
 }
 
