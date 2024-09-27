@@ -268,16 +268,6 @@
 	
 		}
 	
-		setDDSLoader() {
-	
-			throw new Error(
-	
-				'THREE.GLTFLoader: "MSFT_texture_dds" no longer supported. Please update to "KHR_texture_basisu".'
-	
-			);
-	
-		}
-	
 		setKTX2Loader( ktx2Loader ) {
 	
 			this.ktx2Loader = ktx2Loader;
@@ -3159,6 +3149,9 @@
 	
 					}
 	
+					// Ignore normalized since we copy from sparse
+					bufferAttribute.normalized = false;
+	
 					for ( let i = 0, il = sparseIndices.length; i < il; i ++ ) {
 	
 						const index = sparseIndices[ i ];
@@ -3170,6 +3163,8 @@
 						if ( itemSize >= 5 ) throw new Error( 'THREE.GLTFLoader: Unsupported itemSize in sparse BufferAttribute.' );
 	
 					}
+	
+					bufferAttribute.normalized = normalized;
 	
 				}
 	

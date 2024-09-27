@@ -654,6 +654,7 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			parameters.numLightProbes > 0 ? '#define USE_LIGHT_PROBES' : '',
 
 			parameters.logarithmicDepthBuffer ? '#define USE_LOGDEPTHBUF' : '',
+			parameters.reverseDepthBuffer ? '#define USE_REVERSEDEPTHBUF' : '',
 
 			`
 			layout (std140) uniform CommonBlock{
@@ -822,6 +823,7 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			parameters.decodeVideoTexture ? '#define DECODE_VIDEO_TEXTURE' : '',
 
 			parameters.logarithmicDepthBuffer ? '#define USE_LOGDEPTHBUF' : '',
+			parameters.reverseDepthBuffer ? '#define USE_REVERSEDEPTHBUF' : '',
 
 			`
 			layout (std140) uniform CommonBlock{

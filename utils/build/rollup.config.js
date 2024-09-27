@@ -96,6 +96,30 @@ const builds = [
 		]
 	},
 	{
+		input: 'src/Three.WebGPU.js',
+		plugins: [
+			header()
+		],
+		output: [
+			{
+				format: 'esm',
+				file: 'build/three.webgpu.js'
+			}
+		]
+	},
+	{
+		input: 'src/Three.WebGPU.Nodes.js',
+		plugins: [
+			header()
+		],
+		output: [
+			{
+				format: 'esm',
+				file: 'build/three.webgpu.nodes.js'
+			}
+		]
+	},
+	{
 		input: 'src/Three.js',
 		plugins: [
 			glsl(),
@@ -106,6 +130,32 @@ const builds = [
 			{
 				format: 'esm',
 				file: 'build/three.module.min.js'
+			}
+		]
+	},
+	{
+		input: 'src/Three.WebGPU.js',
+		plugins: [
+			header(),
+			terser()
+		],
+		output: [
+			{
+				format: 'esm',
+				file: 'build/three.webgpu.min.js'
+			}
+		]
+	},
+	{
+		input: 'src/Three.WebGPU.Nodes.js',
+		plugins: [
+			header(),
+			terser()
+		],
+		output: [
+			{
+				format: 'esm',
+				file: 'build/three.webgpu.nodes.min.js'
 			}
 		]
 	},
@@ -130,22 +180,6 @@ const builds = [
 		plugins: [
 			glsl(),
 			header(),
-			deprecationWarning()
-		],
-		output: [
-			{
-				format: 'umd',
-				name: 'THREE',
-				file: 'build/three.js',
-				indent: '\t'
-			}
-		]
-	},
-	{ // @deprecated, r150
-		input: 'src/Three.js',
-		plugins: [
-			glsl(),
-			header(),
 			deprecationWarning(),
 			terser()
 		],
@@ -156,33 +190,7 @@ const builds = [
 				file: 'build/three.min.js'
 			}
 		]
-	},
-	
-	{
-		input: 'src/Three.WebGPU.js',
-		plugins: [
-			header()
-		],
-		output: [
-			{
-				format: 'esm',
-				file: 'build/three.webgpu.js'
-			}
-		]
-	},
-	{
-		input: 'src/Three.WebGPU.js',
-		plugins: [
-			header(),
-			terser()
-		],
-		output: [
-			{
-				format: 'esm',
-				file: 'build/three.webgpu.min.js'
-			}
-		]
 	}
 ];
 
-export default ( args ) => args.configOnlyModule ? [ builds[ 0 ], builds[ 5 ] ] : builds;
+export default ( args ) => args.configOnlyModule ? builds.slice( 0, 5 ) : builds;
