@@ -20,6 +20,7 @@ export interface WebGLRenderTargetOptions {
 	metalnessTexture?: Texture;
 	diffuseColorTexture?: Texture;
 	encoding?: TextureEncoding;
+	count?: number;
 }
 
 export class WebGLRenderTarget extends EventDispatcher {
@@ -41,6 +42,7 @@ export class WebGLRenderTarget extends EventDispatcher {
 	scissorTest: boolean;
 	viewport: Vector4;
 	texture: Texture;
+	textures: Texture[];
 
 	/**
 	 * @default true
