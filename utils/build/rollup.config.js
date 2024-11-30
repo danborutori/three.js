@@ -60,104 +60,126 @@ function header() {
 
 }
 
-function deprecationWarning() {
-
-	return {
-
-		renderChunk( code ) {
-
-			code = new MagicString( code );
-
-			code.prepend( `console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated with r150+, and will be removed with r160. Please use ES Modules or alternatives: https://threejs.org/docs/index.html#manual/en/introduction/Installation' );\n` );
-
-			return {
-				code: code.toString(),
-				map: code.generateMap()
-			};
-
-		}
-
-	};
-
-}
-
+/**
+ * @type {Array<import('rollup').RollupOptions>}
+ */
 const builds = [
 	{
-		input: 'src/Three.js',
+		input: {
+			'three.core.js': 'src/Three.Core.js',
+			'three.webgpu.nodes.js': 'src/Three.WebGPU.Nodes.js',
+		},
 		plugins: [
 			glsl(),
 			header()
 		],
+		preserveEntrySignatures: 'allow-extension',
 		output: [
 			{
 				format: 'esm',
-				file: 'build/three.module.js'
+				dir: 'build',
+				minifyInternalExports: false,
+				entryFileNames: '[name]',
 			}
 		]
 	},
 	{
-		input: 'src/Three.WebGPU.js',
+		input: {
+			'three.core.js': 'src/Three.Core.js',
+			'three.module.js': 'src/Three.js',
+			'three.webgpu.js': 'src/Three.WebGPU.js',
+		},
+		plugins: [
+			glsl(),
+			header()
+		],
+		preserveEntrySignatures: 'allow-extension',
+		output: [
+			{
+				format: 'esm',
+				dir: 'build',
+				minifyInternalExports: false,
+				entryFileNames: '[name]',
+			}
+		]
+	},
+	{
+		input: {
+			'three.tsl.js': 'src/Three.TSL.js',
+		},
 		plugins: [
 			header()
 		],
+		preserveEntrySignatures: 'allow-extension',
 		output: [
 			{
 				format: 'esm',
-				file: 'build/three.webgpu.js'
+				dir: 'build',
+				minifyInternalExports: false,
+				entryFileNames: '[name]',
 			}
-		]
-	},
-	{
-		input: 'src/Three.WebGPU.Nodes.js',
-		plugins: [
-			header()
 		],
-		output: [
-			{
-				format: 'esm',
-				file: 'build/three.webgpu.nodes.js'
-			}
-		]
+		external: [ 'three/webgpu' ]
 	},
 	{
-		input: 'src/Three.js',
+		input: {
+			'three.core.min.js': 'src/Three.Core.js',
+			'three.webgpu.nodes.min.js': 'src/Three.WebGPU.Nodes.js',
+		},
 		plugins: [
 			glsl(),
 			header(),
 			terser()
 		],
+		preserveEntrySignatures: 'allow-extension',
 		output: [
 			{
 				format: 'esm',
-				file: 'build/three.module.min.js'
+				dir: 'build',
+				minifyInternalExports: false,
+				entryFileNames: '[name]',
 			}
 		]
 	},
 	{
-		input: 'src/Three.WebGPU.js',
+		input: {
+			'three.core.min.js': 'src/Three.Core.js',
+			'three.module.min.js': 'src/Three.js',
+			'three.webgpu.min.js': 'src/Three.WebGPU.js',
+		},
 		plugins: [
+			glsl(),
 			header(),
 			terser()
 		],
+		preserveEntrySignatures: 'allow-extension',
 		output: [
 			{
 				format: 'esm',
-				file: 'build/three.webgpu.min.js'
+				dir: 'build',
+				minifyInternalExports: false,
+				entryFileNames: '[name]',
 			}
 		]
 	},
 	{
-		input: 'src/Three.WebGPU.Nodes.js',
+		input: {
+			'three.tsl.min.js': 'src/Three.TSL.js'
+		},
 		plugins: [
 			header(),
 			terser()
 		],
+		preserveEntrySignatures: 'allow-extension',
 		output: [
 			{
 				format: 'esm',
-				file: 'build/three.webgpu.nodes.min.js'
+				dir: 'build',
+				minifyInternalExports: false,
+				entryFileNames: '[name]',
 			}
-		]
+		],
+		external: [ 'three/webgpu' ]
 	},
 	{
 		input: 'src/Three.js',
@@ -180,7 +202,6 @@ const builds = [
 		plugins: [
 			glsl(),
 			header(),
-			deprecationWarning(),
 			terser()
 		],
 		output: [
@@ -193,4 +214,4 @@ const builds = [
 	}
 ];
 
-export default ( args ) => args.configOnlyModule ? builds.slice( 0, 5 ) : builds;
+export default ( args ) => args.configOnlyModule ? builds.slice( 0, 4 ) : builds;
