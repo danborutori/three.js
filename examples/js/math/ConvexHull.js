@@ -1270,7 +1270,7 @@
 
 	THREE.ConvexHull = ConvexHull
 	THREE.Face = Face
-	THREEE.HalfEdge = HalfEdge
+	THREE.HalfEdge = HalfEdge
 	THREE.VertexNode = VertexNode
 	THREE.VertexList = VertexList
 
