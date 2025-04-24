@@ -70,6 +70,11 @@
 	
 	class GLTFLoader extends Loader {
 
+		/**
+		 * Constructs a new glTF loader.
+		 *
+		 * @param {LoadingManager} [manager] - The loading manager.
+		 */
 		constructor( manager, textureLoader ) {
 	
 			super( manager );
@@ -184,6 +189,15 @@
 	
 		}
 	
+		/**
+		 * Starts loading from the given URL and passes the loaded glTF asset
+		 * to the `onLoad()` callback.
+		 *
+		 * @param {string} url - The path/URL of the file to be loaded. This can also be a data URI.
+		 * @param {function(GLTFLoader~LoadObject)} onLoad - Executed when the loading process has been finished.
+		 * @param {onProgressCallback} onProgress - Executed while the loading is in progress.
+		 * @param {onErrorCallback} onError - Executed when errors occur.
+		 */
 		load( url, onLoad, onProgress, onError ) {
 	
 			const scope = this;
@@ -261,6 +275,13 @@
 	
 		}
 	
+		/**
+		 * Sets the given Draco loader to this loader. Required for decoding assets
+		 * compressed with the `KHR_draco_mesh_compression` extension.
+		 *
+		 * @param {DRACOLoader} dracoLoader - The Draco loader to set.
+		 * @return {GLTFLoader} A reference to this loader.
+		 */
 		setDRACOLoader( dracoLoader ) {
 	
 			this.dracoLoader = dracoLoader;
@@ -268,6 +289,13 @@
 	
 		}
 	
+		/**
+		 * Sets the given KTX2 loader to this loader. Required for loading KTX2
+		 * compressed textures.
+		 *
+		 * @param {KTX2Loader} ktx2Loader - The KTX2 loader to set.
+		 * @return {GLTFLoader} A reference to this loader.
+		 */
 		setKTX2Loader( ktx2Loader ) {
 	
 			this.ktx2Loader = ktx2Loader;
@@ -275,6 +303,13 @@
 	
 		}
 	
+		/**
+		 * Sets the given meshopt decoder. Required for decoding assets
+		 * compressed with the `EXT_meshopt_compression` extension.
+		 *
+		 * @param {Object} meshoptDecoder - The meshopt decoder to set.
+		 * @return {GLTFLoader} A reference to this loader.
+		 */
 		setMeshoptDecoder( meshoptDecoder ) {
 	
 			this.meshoptDecoder = meshoptDecoder;
@@ -282,6 +317,14 @@
 	
 		}
 	
+		/**
+		 * Registers a plugin callback. This API is internally used to implement the various
+		 * glTF extensions but can also used by third-party code to add additional logic
+		 * to the loader.
+		 *
+		 * @param {function(parser:GLTFParser)} callback - The callback function to register.
+		 * @return {GLTFLoader} A reference to this loader.
+		 */
 		register( callback ) {
 	
 			if ( this.pluginCallbacks.indexOf( callback ) === - 1 ) {
@@ -294,6 +337,12 @@
 	
 		}
 	
+		/**
+		 * Unregisters a plugin callback.
+		 *
+		 * @param {Function} callback - The callback function to unregister.
+		 * @return {GLTFLoader} A reference to this loader.
+		 */
 		unregister( callback ) {
 	
 			if ( this.pluginCallbacks.indexOf( callback ) !== - 1 ) {
@@ -306,6 +355,14 @@
 	
 		}
 	
+		/**
+		 * Parses the given FBX data and returns the resulting group.
+		 *
+		 * @param {string|ArrayBuffer} data - The raw glTF data.
+		 * @param {string} path - The URL base path.
+		 * @param {function(GLTFLoader~LoadObject)} onLoad - Executed when the loading process has been finished.
+		 * @param {onErrorCallback} onError - Executed when errors occur.
+		 */
 		parse( data, path, onLoad, onError ) {
 	
 			let json;
@@ -430,6 +487,14 @@
 	
 		}
 	
+		/**
+		 * Async version of {@link GLTFLoader#parse}.
+		 *
+		 * @async
+		 * @param {string|ArrayBuffer} data - The raw glTF data.
+		 * @param {string} path - The URL base path.
+		 * @return {Promise<GLTFLoader~LoadObject>} A Promise that resolves with the loaded glTF when the parsing has been finished.
+		 */
 		parseAsync( data, path ) {
 	
 			const scope = this;
@@ -513,6 +578,8 @@
 	 * Punctual Lights Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_lights_punctual
+	 *
+	 * @private
 	 */
 	class GLTFLightsExtension {
 	
@@ -649,6 +716,8 @@
 	 * Unlit Materials Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit
+	 *
+	 * @private
 	 */
 	class GLTFMaterialsUnlitExtension {
 	
@@ -702,6 +771,8 @@
 	 * Materials Emissive Strength Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/blob/5768b3ce0ef32bc39cdf1bef10b948586635ead3/extensions/2.0/Khronos/KHR_materials_emissive_strength/README.md
+	 *
+	 * @private
 	 */
 	class GLTFMaterialsEmissiveStrengthExtension {
 	
@@ -741,6 +812,8 @@
 	 * Clearcoat Materials Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_clearcoat
+	 *
+	 * @private
 	 */
 	class GLTFMaterialsClearcoatExtension {
 	
@@ -825,6 +898,8 @@
 	 * Materials dispersion Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_dispersion
+	 *
+	 * @private
 	 */
 	class GLTFMaterialsDispersionExtension {
 	
@@ -871,6 +946,8 @@
 	 * Iridescence Materials Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_iridescence
+	 *
+	 * @private
 	 */
 	class GLTFMaterialsIridescenceExtension {
 	
@@ -959,6 +1036,8 @@
 	 * Sheen Materials Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_sheen
+	 *
+	 * @private
 	 */
 	class GLTFMaterialsSheenExtension {
 	
@@ -1035,6 +1114,8 @@
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_transmission
 	 * Draft: https://github.com/KhronosGroup/glTF/pull/1698
+	 *
+	 * @private
 	 */
 	class GLTFMaterialsTransmissionExtension {
 	
@@ -1093,6 +1174,8 @@
 	 * Materials Volume Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_volume
+	 *
+	 * @private
 	 */
 	class GLTFMaterialsVolumeExtension {
 	
@@ -1152,6 +1235,8 @@
 	 * Materials ior Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_ior
+	 *
+	 * @private
 	 */
 	class GLTFMaterialsIorExtension {
 	
@@ -1198,6 +1283,8 @@
 	 * Materials specular Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_specular
+	 *
+	 * @private
 	 */
 	class GLTFMaterialsSpecularExtension {
 	
@@ -1262,6 +1349,8 @@
 	 * Materials bump Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/EXT_materials_bump
+	 *
+	 * @private
 	 */
 	class GLTFMaterialsBumpExtension {
 	
@@ -1316,6 +1405,8 @@
 	 * Materials anisotropy Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_anisotropy
+	 *
+	 * @private
 	 */
 	class GLTFMaterialsAnisotropyExtension {
 	
@@ -1380,6 +1471,8 @@
 	 * BasisU Texture Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_texture_basisu
+	 *
+	 * @private
 	 */
 	class GLTFTextureBasisUExtension {
 	
@@ -1431,6 +1524,8 @@
 	 * WebP Texture Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/EXT_texture_webp
+	 *
+	 * @private
 	 */
 	class GLTFTextureWebPExtension {
 	
@@ -1438,7 +1533,6 @@
 	
 			this.parser = parser;
 			this.name = EXTENSIONS.EXT_TEXTURE_WEBP;
-			this.isSupported = null;
 	
 		}
 	
@@ -1467,46 +1561,7 @@
 	
 			}
 	
-			return this.detectSupport().then( function ( isSupported ) {
-	
-				if ( isSupported ) return parser.loadTextureImage( textureIndex, extension.source, loader );
-	
-				if ( json.extensionsRequired && json.extensionsRequired.indexOf( name ) >= 0 ) {
-	
-					throw new Error( 'THREE.GLTFLoader: WebP required by asset but unsupported.' );
-	
-				}
-	
-				// Fall back to PNG or JPEG.
-				return parser.loadTexture( textureIndex );
-	
-			} );
-	
-		}
-	
-		detectSupport() {
-	
-			if ( ! this.isSupported ) {
-	
-				this.isSupported = new Promise( function ( resolve ) {
-	
-					const image = new Image();
-	
-					// Lossy test image. Support for lossy images doesn't guarantee support for all
-					// WebP images, unfortunately.
-					image.src = 'data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
-	
-					image.onload = image.onerror = function () {
-	
-						resolve( image.height === 1 );
-	
-					};
-	
-				} );
-	
-			}
-	
-			return this.isSupported;
+			return parser.loadTextureImage( textureIndex, extension.source, loader );
 	
 		}
 	
@@ -1516,6 +1571,8 @@
 	 * AVIF Texture Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/EXT_texture_avif
+	 *
+	 * @private
 	 */
 	class GLTFTextureAVIFExtension {
 	
@@ -1523,7 +1580,6 @@
 	
 			this.parser = parser;
 			this.name = EXTENSIONS.EXT_TEXTURE_AVIF;
-			this.isSupported = null;
 	
 		}
 	
@@ -1552,44 +1608,7 @@
 	
 			}
 	
-			return this.detectSupport().then( function ( isSupported ) {
-	
-				if ( isSupported ) return parser.loadTextureImage( textureIndex, extension.source, loader );
-	
-				if ( json.extensionsRequired && json.extensionsRequired.indexOf( name ) >= 0 ) {
-	
-					throw new Error( 'THREE.GLTFLoader: AVIF required by asset but unsupported.' );
-	
-				}
-	
-				// Fall back to PNG or JPEG.
-				return parser.loadTexture( textureIndex );
-	
-			} );
-	
-		}
-	
-		detectSupport() {
-	
-			if ( ! this.isSupported ) {
-	
-				this.isSupported = new Promise( function ( resolve ) {
-	
-					const image = new Image();
-	
-					// Lossy test image.
-					image.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAABcAAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAEAAAABAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQAMAAAAABNjb2xybmNseAACAAIABoAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAAB9tZGF0EgAKCBgABogQEDQgMgkQAAAAB8dSLfI=';
-					image.onload = image.onerror = function () {
-	
-						resolve( image.height === 1 );
-	
-					};
-	
-				} );
-	
-			}
-	
-			return this.isSupported;
+			return parser.loadTextureImage( textureIndex, extension.source, loader );
 	
 		}
 	
@@ -1599,6 +1618,8 @@
 	 * meshopt BufferView Compression Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/EXT_meshopt_compression
+	 *
+	 * @private
 	 */
 	class GLTFMeshoptCompression {
 	
@@ -1684,6 +1705,7 @@
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/EXT_mesh_gpu_instancing
 	 *
+	 * @private
 	 */
 	class GLTFMeshGpuInstancing {
 	
@@ -1912,6 +1934,8 @@
 	 * DRACO Mesh Compression Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_draco_mesh_compression
+	 *
+	 * @private
 	 */
 	class GLTFDracoMeshCompressionExtension {
 	
@@ -1995,6 +2019,8 @@
 	 * Texture Transform Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_texture_transform
+	 *
+	 * @private
 	 */
 	class GLTFTextureTransformExtension {
 	
@@ -2054,6 +2080,8 @@
 	 * Mesh Quantization Extension
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_mesh_quantization
+	 *
+	 * @private
 	 */
 	class GLTFMeshQuantizationExtension {
 	
@@ -2141,7 +2169,7 @@
 	
 	}
 	
-	const _q = new Quaternion();
+	const _quaternion = new Quaternion();
 	
 	class GLTFCubicSplineQuaternionInterpolant extends GLTFCubicSplineInterpolant {
 	
@@ -2149,7 +2177,7 @@
 	
 			const result = super.interpolate_( i1, t0, t, t1 );
 	
-			_q.fromArray( result ).normalize().toArray( result );
+			_quaternion.fromArray( result ).normalize().toArray( result );
 	
 			return result;
 	
@@ -2256,7 +2284,8 @@
 	/**
 	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#default-material
 	 *
-	 * @param {Object<String, Material>} cache
+	 * @private
+	 * @param {Object<string, Material>} cache
 	 * @return {Material}
 	 */
 	function createDefaultMaterial( cache ) {
@@ -2297,7 +2326,9 @@
 	}
 	
 	/**
-	 * @param {Object3D|Material|BufferGeometry} object
+	 *
+	 * @private
+	 * @param {Object3D|Material|BufferGeometry|Object} object
 	 * @param {GLTF.definition} gltfDef
 	 */
 	function assignExtrasToUserData( object, gltfDef ) {
@@ -2321,6 +2352,7 @@
 	/**
 	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#morph-targets
 	 *
+	 * @private
 	 * @param {BufferGeometry} geometry
 	 * @param {Array<GLTF.Target>} targets
 	 * @param {GLTFParser} parser
@@ -2408,6 +2440,8 @@
 	}
 	
 	/**
+	 *
+	 * @private
 	 * @param {Mesh} mesh
 	 * @param {GLTF.Mesh} meshDef
 	 */
@@ -2685,11 +2719,11 @@
 				} ) ).then( function () {
 	
 					for ( const scene of result.scenes ) {
-
+	
 						scene.updateMatrixWorld();
 	
 					}
-					
+	
 					onLoad( result );
 	
 				} );
@@ -2700,6 +2734,8 @@
 	
 		/**
 		 * Marks the special nodes/meshes in json for efficient parse.
+		 *
+		 * @private
 		 */
 		_markDefs() {
 	
@@ -2761,6 +2797,7 @@
 		 *
 		 * Example: CesiumMilkTruck sample model reuses "Wheel" meshes.
 		 *
+		 * @private
 		 * @param {Object} cache
 		 * @param {Object3D} index
 		 */
@@ -2781,8 +2818,9 @@
 		/**
 		 * Returns a reference to a shared resource, cloning it if necessary.
 		 *
+		 * @private
 		 * @param {Object} cache
-		 * @param {Number} index
+		 * @param {number} index
 		 * @param {Object} object
 		 * @return {Object}
 		 */
@@ -2857,6 +2895,8 @@
 	
 		/**
 		 * Requests the specified dependency asynchronously, with caching.
+		 *
+		 * @private
 		 * @param {string} type
 		 * @param {number} index
 		 * @return {Promise<Object3D|Material|THREE.Texture|AnimationClip|ArrayBuffer|Object>}
@@ -2965,6 +3005,8 @@
 	
 		/**
 		 * Requests all dependencies of the specified type asynchronously, with caching.
+		 *
+		 * @private
 		 * @param {string} type
 		 * @return {Promise<Array<Object>>}
 		 */
@@ -2993,6 +3035,8 @@
 	
 		/**
 		 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffers-and-buffer-views
+		 *
+		 * @private
 		 * @param {number} bufferIndex
 		 * @return {Promise<ArrayBuffer>}
 		 */
@@ -3030,6 +3074,8 @@
 	
 		/**
 		 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffers-and-buffer-views
+		 *
+		 * @private
 		 * @param {number} bufferViewIndex
 		 * @return {Promise<ArrayBuffer>}
 		 */
@@ -3049,6 +3095,8 @@
 	
 		/**
 		 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#accessors
+		 *
+		 * @private
 		 * @param {number} accessorIndex
 		 * @return {Promise<BufferAttribute|InterleavedBufferAttribute>}
 		 */
@@ -3188,6 +3236,8 @@
 	
 		/**
 		 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#textures
+		 *
+		 * @private
 		 * @param {number} textureIndex
 		 * @return {Promise<THREE.Texture|null>}
 		 */
@@ -3336,7 +3386,7 @@
 					URL.revokeObjectURL( sourceURI );
 	
 				}
-
+	
 				assignExtrasToUserData( texture, sourceDef );
 	
 				texture.userData.mimeType = sourceDef.mimeType || getImageURIMimeType( sourceDef.uri );
@@ -3358,10 +3408,11 @@
 		/**
 		 * Asynchronously assigns a texture to the given material parameters.
 		 *
+		 * @private
 		 * @param {Object} materialParams
 		 * @param {string} mapName
 		 * @param {Object} mapDef
-		 * @param {string} colorSpace
+		 * @param {string} [colorSpace]
 		 * @return {Promise<Texture>}
 		 */
 		assignTexture( materialParams, mapName, mapDef, colorSpace ) {
@@ -3413,7 +3464,9 @@
 		 * but reuse of the same glTF material may require multiple threejs materials
 		 * to accommodate different primitive types, defines, etc. New materials will
 		 * be created if necessary, and reused from a cache.
-		 * @param  {Object3D} mesh Mesh, Line, or Points instance.
+		 *
+		 * @private
+		 * @param {Object3D} mesh Mesh, Line, or Points instance.
 		 */
 		assignFinalMaterial( mesh ) {
 	
@@ -3521,6 +3574,8 @@
 	
 		/**
 		 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#materials
+		 *
+		 * @private
 		 * @param {number} materialIndex
 		 * @return {Promise<Material>}
 		 */
@@ -3681,8 +3736,9 @@
 		/**
 		 * When Object3D instances are targeted by animation, they need unique names.
 		 *
-		 * @param {String} originalName
-		 * @return {String}
+		 * @private
+		 * @param {string} originalName
+		 * @return {string}
 		 */
 		createUniqueName( originalName ) {
 	
@@ -3707,6 +3763,7 @@
 		 *
 		 * Creates BufferGeometries from primitives.
 		 *
+		 * @private
 		 * @param {Array<GLTF.Primitive>} primitives
 		 * @return {Promise<Array<BufferGeometry>>}
 		 */
@@ -3774,8 +3831,10 @@
 	
 		/**
 		 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#meshes
+		 *
+		 * @private
 		 * @param {number} meshIndex
-		 * @return {Promise<Group|Mesh|SkinnedMesh>}
+		 * @return {Promise<Group|Mesh|SkinnedMesh|Line|Points>}
 		 */
 		loadMesh( meshIndex ) {
 	
@@ -3922,6 +3981,8 @@
 	
 		/**
 		 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#cameras
+		 *
+		 * @private
 		 * @param {number} cameraIndex
 		 * @return {Promise<THREE.Camera>}
 		 */
@@ -3958,6 +4019,8 @@
 	
 		/**
 		 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#skins
+		 *
+		 * @private
 		 * @param {number} skinIndex
 		 * @return {Promise<Skeleton>}
 		 */
@@ -4028,6 +4091,8 @@
 	
 		/**
 		 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#animations
+		 *
+		 * @private
 		 * @param {number} animationIndex
 		 * @return {Promise<AnimationClip>}
 		 */
@@ -4155,6 +4220,8 @@
 	
 		/**
 		 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#nodes-and-hierarchy
+		 *
+		 * @private
 		 * @param {number} nodeIndex
 		 * @return {Promise<Object3D>}
 		 */
@@ -4362,6 +4429,8 @@
 	
 		/**
 		 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#scenes
+		 *
+		 * @private
 		 * @param {number} sceneIndex
 		 * @return {Promise<Group>}
 		 */
@@ -4477,7 +4546,7 @@
 					TypedKeyframeTrack = QuaternionKeyframeTrack;
 					break;
 	
-				case PATH_PROPERTIES.position:
+				case PATH_PROPERTIES.translation:
 				case PATH_PROPERTIES.scale:
 	
 					TypedKeyframeTrack = VectorKeyframeTrack;
@@ -4576,6 +4645,8 @@
 	}
 	
 	/**
+	 *
+	 * @private
 	 * @param {BufferGeometry} geometry
 	 * @param {GLTF.Primitive} primitiveDef
 	 * @param {GLTFParser} parser
@@ -4691,6 +4762,8 @@
 	}
 	
 	/**
+	 *
+	 * @private
 	 * @param {BufferGeometry} geometry
 	 * @param {GLTF.Primitive} primitiveDef
 	 * @param {GLTFParser} parser
