@@ -1894,6 +1894,9 @@ class WebGLRenderer {
 			//
 
 			const currentRenderTarget = _this.getRenderTarget();
+			const currentActiveCubeFace = _this.getActiveCubeFace();
+			const currentActiveMipmapLevel = _this.getActiveMipmapLevel();
+
 			_this.setRenderTarget( transmissionRenderTarget );
 
 			_this.getClearColor( _currentClearColor );
@@ -1963,7 +1966,7 @@ class WebGLRenderer {
 
 			}
 
-			_this.setRenderTarget( currentRenderTarget );
+			_this.setRenderTarget( currentRenderTarget, currentActiveCubeFace, currentActiveMipmapLevel );
 
 			_this.setClearColor( _currentClearColor, _currentClearAlpha );
 
@@ -2820,7 +2823,7 @@ class WebGLRenderer {
 		 * @param {number} [activeCubeFaceIndex] - The active cube face index.
 		 * @param {number} [textureIndex=0] - The texture index of an MRT render target.
 		 */
-		this.readRenderTargetPixels = function ( renderTarget, x, y, width, height, buffer, activeCubeFaceIndex, colorAttachment ) {
+		this.readRenderTargetPixels = function ( renderTarget, x, y, width, height, buffer, activeCubeFaceIndex, textureIndex = 0 ) {
 
 			if ( ! ( renderTarget && renderTarget.isWebGLRenderTarget ) ) {
 
@@ -2865,8 +2868,9 @@ class WebGLRenderer {
 
 					if ( ( x >= 0 && x <= ( renderTarget.width - width ) ) && ( y >= 0 && y <= ( renderTarget.height - height ) ) ) {
 
-						const readBufferAttachment = colorAttachment!==undefined?colorAttachment:0
-						_gl.readBuffer(_gl.COLOR_ATTACHMENT0+readBufferAttachment);
+						// when using MRT, select the correct color buffer for the subsequent read command
+
+						if ( renderTarget.textures.length > 1 ) _gl.readBuffer( _gl.COLOR_ATTACHMENT0 + textureIndex );
 
 						_gl.readPixels( x, y, width, height, utils.convert( textureFormat ), utils.convert( textureType ), buffer );
 
