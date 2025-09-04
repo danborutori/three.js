@@ -4177,7 +4177,11 @@
 	
 				}
 	
-				return new AnimationClip( animationName, undefined, tracks );
+				const animation = new AnimationClip( animationName, undefined, tracks );
+
+            	assignExtrasToUserData( animation, animationDef );
+
+            	return animation;
 	
 			} );
 	
