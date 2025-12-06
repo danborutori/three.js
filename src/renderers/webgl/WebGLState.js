@@ -1,6 +1,7 @@
 import { NotEqualDepth, GreaterDepth, GreaterEqualDepth, EqualDepth, LessEqualDepth, LessDepth, AlwaysDepth, NeverDepth, CullFaceFront, CullFaceBack, CullFaceNone, DoubleSide, BackSide, CustomBlending, MultiplyBlending, SubtractiveBlending, AdditiveBlending, NoBlending, NormalBlending, AddEquation, SubtractEquation, ReverseSubtractEquation, MinEquation, MaxEquation, ZeroFactor, OneFactor, SrcColorFactor, SrcAlphaFactor, SrcAlphaSaturateFactor, DstColorFactor, DstAlphaFactor, OneMinusSrcColorFactor, OneMinusSrcAlphaFactor, OneMinusDstColorFactor, OneMinusDstAlphaFactor, ConstantColorFactor, OneMinusConstantColorFactor, ConstantAlphaFactor, OneMinusConstantAlphaFactor } from '../../constants.js';
 import { Color } from '../../math/Color.js';
 import { Vector4 } from '../../math/Vector4.js';
+import { error } from '../../utils.js';
 
 const reversedFuncs = {
 	[ NeverDepth ]: AlwaysDepth,
@@ -672,7 +673,7 @@ function WebGLState( gl, extensions ) {
 							break;
 
 						default:
-							console.error( 'THREE.WebGLState: Invalid blending: ', blending );
+							error( 'WebGLState: Invalid blending: ', blending );
 							break;
 
 					}
@@ -690,15 +691,15 @@ function WebGLState( gl, extensions ) {
 							break;
 
 						case SubtractiveBlending:
-							console.error( 'THREE.WebGLState: SubtractiveBlending requires material.premultipliedAlpha = true' );
+							error( 'WebGLState: SubtractiveBlending requires material.premultipliedAlpha = true' );
 							break;
 
 						case MultiplyBlending:
-							console.error( 'THREE.WebGLState: MultiplyBlending requires material.premultipliedAlpha = true' );
+							error( 'WebGLState: MultiplyBlending requires material.premultipliedAlpha = true' );
 							break;
 
 						default:
-							console.error( 'THREE.WebGLState: Invalid blending: ', blending );
+							error( 'WebGLState: Invalid blending: ', blending );
 							break;
 
 					}
@@ -985,7 +986,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( error ) {
 
-			console.error( 'THREE.WebGLState:', error );
+			error( 'WebGLState:', error );
 
 		}
 
@@ -999,7 +1000,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( error ) {
 
-			console.error( 'THREE.WebGLState:', error );
+			error( 'WebGLState:', error );
 
 		}
 
@@ -1013,7 +1014,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( error ) {
 
-			console.error( 'THREE.WebGLState:', error );
+			error( 'WebGLState:', error );
 
 		}
 
@@ -1027,7 +1028,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( error ) {
 
-			console.error( 'THREE.WebGLState:', error );
+			error( 'WebGLState:', error );
 
 		}
 
@@ -1041,7 +1042,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( error ) {
 
-			console.error( 'THREE.WebGLState:', error );
+			error( 'WebGLState:', error );
 
 		}
 
@@ -1055,7 +1056,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( error ) {
 
-			console.error( 'THREE.WebGLState:', error );
+			error( 'WebGLState:', error );
 
 		}
 
@@ -1069,7 +1070,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( error ) {
 
-			console.error( 'THREE.WebGLState:', error );
+			error( 'WebGLState:', error );
 
 		}
 
@@ -1083,7 +1084,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( error ) {
 
-			console.error( 'THREE.WebGLState:', error );
+			error( 'WebGLState:', error );
 
 		}
 
@@ -1097,7 +1098,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( error ) {
 
-			console.error( 'THREE.WebGLState:', error );
+			error( 'WebGLState:', error );
 
 		}
 
@@ -1111,7 +1112,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( error ) {
 
-			console.error( 'THREE.WebGLState:', error );
+			error( 'WebGLState:', error );
 
 		}
 
