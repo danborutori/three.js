@@ -8,6 +8,7 @@ import { PointLight } from '../../lights/PointLight.js';
 import { RectAreaLight } from '../../lights/RectAreaLight.js';
 import { HemisphereLight } from '../../lights/HemisphereLight.js';
 import { UniformsLib } from '../shaders/UniformsLib.js';
+import { RGFormat } from '../../constants.js';
 
 function UniformsCache() {
 
@@ -290,8 +291,23 @@ function WebGLLights( extensions, staticLightConfig ) {
 			const intensity = light.intensity;
 			const distance = light.distance;
 
-			const shadowMap = ( light.shadow && light.shadow.map ) ? light.shadow.map.texture : null;
-			light.shadowInUse = false;
+			let shadowMap = null;
+
+			if ( light.shadow && light.shadow.map ) {
+
+				if ( light.shadow.map.texture.format === RGFormat ) {
+
+					// VSM uses color texture with blurred mean/std_dev
+					shadowMap = light.shadow.map.texture;
+
+				} else {
+
+					// Other types use depth texture
+					shadowMap = light.shadow.map.depthTexture || light.shadow.map.texture;
+
+				}
+
+			}
 			light.lightInUse = false;
 
 			if ( light.isAmbientLight ) {

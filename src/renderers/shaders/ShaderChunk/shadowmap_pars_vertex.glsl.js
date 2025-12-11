@@ -17,8 +17,6 @@ export default /* glsl */`
 
 	#if NUM_SPOT_LIGHT_SHADOWS > 0
 
-		varying vec4 vSpotShadowCoord[ NUM_SPOT_LIGHT_SHADOWS ];
-
 		struct SpotLightShadow {
 			float shadowIntensity;
 			float shadowBias;
