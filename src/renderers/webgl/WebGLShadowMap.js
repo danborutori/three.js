@@ -41,7 +41,7 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 
 		_viewport = new Vector4(),
 
-		_depthMaterial = new MeshDepthMaterial(),
+		_depthMaterial = new MeshDepthMaterial( { depthPacking: RGBADepthPacking } ),
 		_distanceMaterial = new MeshDistanceMaterial(),
 
 		_materialCache = {},
