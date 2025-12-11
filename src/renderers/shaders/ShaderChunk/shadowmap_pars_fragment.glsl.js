@@ -98,7 +98,6 @@ export default /* glsl */`
 
 		float getShadow( sampler2DShadow shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord, bool doFrustumTest) {
 
-		        if ( !doFrustumTest || frustumTest ) {
 			float shadow = 1.0;
 
 			shadowCoord.xyz /= shadowCoord.w;
