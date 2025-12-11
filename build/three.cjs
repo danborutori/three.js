@@ -68801,7 +68801,10 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 
 					} else {
 
-						shadow.map = new WebGLRenderTarget( _shadowMapSize.x, _shadowMapSize.y );
+						shadow.map = new WebGLRenderTarget( _shadowMapSize.x, _shadowMapSize.y,{
+							format: RedFormat,
+							type: FloatType
+						} );
 						shadow.map.depthTexture = new DepthTexture( _shadowMapSize.x, _shadowMapSize.y, UnsignedIntType );
 
 					}
