@@ -136,7 +136,6 @@ const UniformsLib = {
 			shadowMapSize: {}
 		} },
 
-		directionalShadowMap: { value: [] },
 		directionalShadowMatrix: { value: [] },
 
 		spotLights: { value: [], properties: {
@@ -158,8 +157,8 @@ const UniformsLib = {
 			shadowMapSize: {}
 		} },
 
-		spotShadowMap: { value: [] },
-		spotShadowMatrix: { value: [] },
+		spotLightMap: { value: [] },
+		spotLightMatrix: { value: [] },
 
 		pointLights: { value: [], properties: {
 			color: {},
@@ -178,7 +177,6 @@ const UniformsLib = {
 			shadowCameraFar: {}
 		} },
 
-		pointShadowMap: { value: [] },
 		pointShadowMatrix: { value: [] },
 		
 		directionalMap: { value: [] },

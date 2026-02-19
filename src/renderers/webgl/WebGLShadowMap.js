@@ -96,10 +96,10 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 
 		if ( lights.length === 0 ) return;
 
-		if ( lights.type === PCFSoftShadowMap ) {
+		if ( this.type === PCFSoftShadowMap ) {
 
 			warn( 'WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.' );
-			lights.type = PCFShadowMap;
+			this.type = PCFShadowMap;
 
 		}
 
@@ -199,6 +199,9 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 
 			}
 
+			const reversedDepthBuffer = renderer.state.buffers.depth.getReversed();
+			shadow.camera._reversedDepth = reversedDepthBuffer;
+
 			if ( shadow.map === null || typeChanged === true ) {
 
 				if ( shadow.map !== null ) {
@@ -259,8 +262,6 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 
 					shadow.map.depthTexture.name = light.name + '.shadowMap';
 					shadow.map.depthTexture.format = DepthFormat;
-
-					const reversedDepthBuffer = renderer.state.buffers.depth.getReversed();
 
 					if ( this.type === PCFShadowMap ) {
 
