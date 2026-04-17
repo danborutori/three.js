@@ -73094,7 +73094,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		const glFormat = utils.convert( renderTarget.normalTexture.format );
 		const glType = utils.convert( renderTarget.normalTexture.type );
-		const glInternalFormat = getInternalFormat( renderTarget.normalTexture.internalFormat, glFormat, glType, renderTarget.normalTexture.colorSpace );
+		const glInternalFormat = getInternalFormat( renderTarget.normalTexture.internalFormat, glFormat, glType, renderTarget.normalTexture.normalized, renderTarget.normalTexture.colorSpace );
 		state.texImage2D( textureTarget, 0, glInternalFormat, renderTarget.width, renderTarget.height, 0, glFormat, glType, null );
 		_gl.bindFramebuffer( _gl.FRAMEBUFFER, framebuffer );
 		_gl.framebufferTexture2D( _gl.FRAMEBUFFER, attachment, textureTarget, properties.get( renderTarget.normalTexture ).__webglTexture, 0 );
@@ -73106,7 +73106,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		const glFormat = utils.convert( renderTarget.metalnessTexture.format );
 		const glType = utils.convert( renderTarget.metalnessTexture.type );
-		const glInternalFormat = getInternalFormat( renderTarget.metalnessTexture.internalFormat, glFormat, glType, renderTarget.metalnessTexture.colorSpace );
+		const glInternalFormat = getInternalFormat( renderTarget.metalnessTexture.internalFormat, glFormat, glType, renderTarget.metalnessTexture.normalized, renderTarget.metalnessTexture.colorSpace );
 		state.texImage2D( textureTarget, 0, glInternalFormat, renderTarget.width, renderTarget.height, 0, glFormat, glType, null );
 		_gl.bindFramebuffer( _gl.FRAMEBUFFER, framebuffer );
 		_gl.framebufferTexture2D( _gl.FRAMEBUFFER, attachment, textureTarget, properties.get( renderTarget.metalnessTexture ).__webglTexture, 0 );
@@ -73118,7 +73118,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		const glFormat = utils.convert( renderTarget.diffuseColorTexture.format );
 		const glType = utils.convert( renderTarget.diffuseColorTexture.type );
-		const glInternalFormat = getInternalFormat( renderTarget.diffuseColorTexture.internalFormat, glFormat, glType, renderTarget.diffuseColorTexture.colorSpace );
+		const glInternalFormat = getInternalFormat( renderTarget.diffuseColorTexture.internalFormat, glFormat, glType, renderTarget.diffuseColorTexture.normalized, renderTarget.diffuseColorTexture.colorSpace );
 		state.texImage2D( textureTarget, 0, glInternalFormat, renderTarget.width, renderTarget.height, 0, glFormat, glType, null );
 		_gl.bindFramebuffer( _gl.FRAMEBUFFER, framebuffer );
 		_gl.framebufferTexture2D( _gl.FRAMEBUFFER, attachment, textureTarget, properties.get( renderTarget.diffuseColorTexture ).__webglTexture, 0 );
