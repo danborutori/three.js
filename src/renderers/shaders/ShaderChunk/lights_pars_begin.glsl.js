@@ -268,4 +268,5 @@ layout (std140) uniform LightBlock {
 
 };
 
+#include <lightprobes_pars_fragment>
 `;

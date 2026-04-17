@@ -59,6 +59,7 @@
     const UnsignedByteType = THREE.UnsignedByteType;
 	const UnsignedInt5999Type = THREE.UnsignedInt5999Type;
     const UnsignedInt101111Type = THREE.UnsignedInt101111Type;
+	const UnsignedShortType = THREE.UnsignedShortType;	    
 
 	const WorkerPool = THREE.WorkerPool;
 	
@@ -99,6 +100,7 @@
     const VK_FORMAT_PVRTC1_2BPP_SRGB_BLOCK_IMG = KTX.VK_FORMAT_PVRTC1_2BPP_SRGB_BLOCK_IMG;
     const VK_FORMAT_PVRTC1_2BPP_UNORM_BLOCK_IMG = KTX.VK_FORMAT_PVRTC1_2BPP_UNORM_BLOCK_IMG;
     const VK_FORMAT_R16G16B16A16_SFLOAT = KTX.VK_FORMAT_R16G16B16A16_SFLOAT;
+	const VK_FORMAT_R16G16B16A16_UNORM = KTX.VK_FORMAT_R16G16B16A16_UNORM;
     const VK_FORMAT_R16G16_SFLOAT = KTX.VK_FORMAT_R16G16_SFLOAT;
     const VK_FORMAT_R16_SFLOAT = KTX.VK_FORMAT_R16_SFLOAT;
     const VK_FORMAT_R32G32B32A32_SFLOAT = KTX.VK_FORMAT_R32G32B32A32_SFLOAT;
@@ -974,6 +976,8 @@ const FORMAT_MAP = {
 	[ VK_FORMAT_R16G16_SFLOAT ]: RGFormat,
 	[ VK_FORMAT_R16_SFLOAT ]: RedFormat,
 
+	[ VK_FORMAT_R16G16B16A16_UNORM ]: RGBAFormat,
+
 	[ VK_FORMAT_R8G8B8A8_SRGB ]: RGBAFormat,
 	[ VK_FORMAT_R8G8B8A8_UNORM ]: RGBAFormat,
 	[ VK_FORMAT_R8G8_SRGB ]: RGFormat,
@@ -1031,6 +1035,8 @@ const TYPE_MAP = {
 	[ VK_FORMAT_R16G16B16A16_SFLOAT ]: HalfFloatType,
 	[ VK_FORMAT_R16G16_SFLOAT ]: HalfFloatType,
 	[ VK_FORMAT_R16_SFLOAT ]: HalfFloatType,
+
+	[ VK_FORMAT_R16G16B16A16_UNORM ]: UnsignedShortType,
 
 	[ VK_FORMAT_R8G8B8A8_SRGB ]: UnsignedByteType,
 	[ VK_FORMAT_R8G8B8A8_UNORM ]: UnsignedByteType,
@@ -1159,7 +1165,7 @@ async function createRawTexture( container ) {
 
 			);
 
-		} else if ( TYPE_MAP[ vkFormat ] === HalfFloatType ) {
+		} else if ( TYPE_MAP[ vkFormat ] === HalfFloatType || TYPE_MAP[ vkFormat ] === UnsignedShortType ) {
 
 			data = new Uint16Array(
 

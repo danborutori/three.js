@@ -1216,6 +1216,8 @@
 			if ( extension === null ) return Promise.resolve();
 
 			materialParams.ior = extension.ior !== undefined ? extension.ior : 1.5;
+
+			if ( materialParams.ior === 0 ) materialParams.ior = 1000; // see #26167
 	
 			return Promise.resolve();
 	
@@ -4471,17 +4473,27 @@
 			const targetName = node.name ? node.name : node.uuid;
 			const targetNames = [];
 	
+			function collectMorphTargets( object ) {
+
+				if ( object.morphTargetInfluences ) {
+
+					targetNames.push( object.name ? object.name : object.uuid );
+
+				}
+
+			}
+
+
 			if ( PATH_PROPERTIES[ target.path ] === PATH_PROPERTIES.weights ) {
 	
-				node.traverse( function ( object ) {
-	
-					if ( object.morphTargetInfluences ) {
-	
-						targetNames.push( object.name ? object.name : object.uuid );
-	
-					}
-	
-				} );
+				collectMorphTargets( node );
+				
+				// for multi-primitive meshes, the node is a Group containing the sub-meshes
+				if ( node.isGroup ) {
+
+					node.children.forEach( collectMorphTargets );
+
+				}
 	
 			} else {
 	
