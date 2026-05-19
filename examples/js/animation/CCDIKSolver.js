@@ -14,6 +14,7 @@
 	const Line = THREE.Line;
 
 	const _q = new Quaternion();
+	const _quaternion = new Quaternion();
 	const _targetPos = new Vector3();
 	const _targetVec = new Vector3();
 	const _effectorPos = new Vector3();
