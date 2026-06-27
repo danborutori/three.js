@@ -180,9 +180,9 @@
 	}
 
 	/**
-	 * Sets the transcoder path.
+	 * Sets the transcoder path to optionally set the decoder load path from a CDN.
 	 *
-	 * The WASM transcoder and JS wrapper are available from the `examples/jsm/libs/basis` directory.
+	 * By default The WASM transcoder and JS wrapper are loaded from the `examples/jsm/libs/basis` directory.
 	 *
 	 * @param {string} path - The transcoder path to set.
 	 * @return {KTX2Loader} A reference to this loader.
@@ -264,16 +264,18 @@
 			};
 
 			if ( typeof navigator !== 'undefined' &&
-				navigator.platform.indexOf( 'Linux' ) >= 0 && navigator.userAgent.indexOf( 'Firefox' ) >= 0 &&
+				typeof navigator.platform !== 'undefined' && typeof navigator.userAgent !== 'undefined' &&
+				navigator.platform.indexOf( 'Linux' ) >= 0 && navigator.userAgent.indexOf( 'Android' ) < 0 &&
 				this.workerConfig.astcSupported && this.workerConfig.etc2Supported &&
 				this.workerConfig.bptcSupported && this.workerConfig.dxtSupported ) {
 
-				// On Linux, Mesa drivers for AMD and Intel GPUs expose ETC2 and ASTC even though the hardware doesn't support these.
+				// On Linux, Mesa drivers for AMD and Intel GPUs expose ETC1,ETC2 and ASTC even though the hardware doesn't support these.
 				// Using these extensions will result in expensive software decompression on the main thread inside the driver, causing performance issues.
-				// When using ANGLE (e.g. via Chrome), these extensions are not exposed except for some specific Intel GPU models - however, Firefox doesn't perform this filtering.
+				// In general, browsers should not expose extensions for emulated formats, but Chrome and Firefox currently do so on Linux.
 				// Since a granular filter is a little too fragile and we can transcode into other GPU formats, disable formats that are likely to be emulated.
 
 				this.workerConfig.astcSupported = false;
+				this.workerConfig.etc1Supported = false;
 				this.workerConfig.etc2Supported = false;
 
 			}
@@ -290,18 +292,30 @@
 
 		if ( ! this.transcoderPending ) {
 
-			// Load transcoder wrapper.
 			const jsLoader = new FileLoader( this.manager );
-			jsLoader.setPath( this.transcoderPath );
 			jsLoader.setWithCredentials( this.withCredentials );
-			const jsContent = jsLoader.loadAsync( 'basis_transcoder.js' );
 
-			// Load transcoder WASM binary.
 			const binaryLoader = new FileLoader( this.manager );
-			binaryLoader.setPath( this.transcoderPath );
-			binaryLoader.setResponseType( 'arraybuffer' );
 			binaryLoader.setWithCredentials( this.withCredentials );
-			const binaryContent = binaryLoader.loadAsync( 'basis_transcoder.wasm' );
+			binaryLoader.setResponseType( 'arraybuffer' );
+
+			let jsContent, binaryContent;
+			if ( this.transcoderPath === '' ) {
+
+				jsContent = jsLoader.loadAsync( WASM_JS_URL );
+				binaryContent = binaryLoader.loadAsync( WASM_BIN_URL );
+
+			} else {
+
+				// Load transcoder wrapper.
+				jsLoader.setPath( this.transcoderPath );
+				jsContent = jsLoader.loadAsync( 'basis_transcoder.js' );
+
+				// Load transcoder WASM binary.
+				binaryLoader.setPath( this.transcoderPath );
+				binaryContent = binaryLoader.loadAsync( 'basis_transcoder.wasm' );
+
+			}
 
 			this.transcoderPending = Promise.all( [ jsContent, binaryContent ] )
 				.then( ( [ jsContent, binaryContent ] ) => {
@@ -966,6 +980,8 @@ KTX2Loader.BasisWorker = function () {
 
 const UNCOMPRESSED_FORMATS = new Set( [ RGBAFormat, RGBFormat, RGFormat, RedFormat ] );
 
+const NORMALIZED_VK_FORMATS = new Set( [ VK_FORMAT_R16G16B16A16_UNORM ] );
+
 const FORMAT_MAP = {
 
 	[ VK_FORMAT_R32G32B32A32_SFLOAT ]: RGBAFormat,
@@ -991,9 +1007,9 @@ const FORMAT_MAP = {
 	[ VK_FORMAT_ETC2_R8G8B8A8_SRGB_BLOCK ]: RGBA_ETC2_EAC_Format,
 	[ VK_FORMAT_ETC2_R8G8B8_SRGB_BLOCK ]: RGB_ETC2_Format,
 	[ VK_FORMAT_EAC_R11_UNORM_BLOCK ]: R11_EAC_Format,
-    [ VK_FORMAT_EAC_R11_SNORM_BLOCK ]: SIGNED_R11_EAC_Format,
-    [ VK_FORMAT_EAC_R11G11_UNORM_BLOCK ]: RG11_EAC_Format,
-    [ VK_FORMAT_EAC_R11G11_SNORM_BLOCK ]: SIGNED_RG11_EAC_Format,
+	[ VK_FORMAT_EAC_R11_SNORM_BLOCK ]: SIGNED_R11_EAC_Format,
+	[ VK_FORMAT_EAC_R11G11_UNORM_BLOCK ]: RG11_EAC_Format,
+	[ VK_FORMAT_EAC_R11G11_SNORM_BLOCK ]: SIGNED_RG11_EAC_Format,
 
 	[ VK_FORMAT_ASTC_4x4_SFLOAT_BLOCK_EXT ]: RGBA_ASTC_4x4_Format,
 	[ VK_FORMAT_ASTC_4x4_SRGB_BLOCK ]: RGBA_ASTC_4x4_Format,
@@ -1007,8 +1023,8 @@ const FORMAT_MAP = {
 	[ VK_FORMAT_BC1_RGB_SRGB_BLOCK ]: RGB_S3TC_DXT1_Format,
 	[ VK_FORMAT_BC1_RGB_UNORM_BLOCK ]: RGB_S3TC_DXT1_Format,
 
-	[ VK_FORMAT_BC3_SRGB_BLOCK ]: RGBA_S3TC_DXT3_Format,
-	[ VK_FORMAT_BC3_UNORM_BLOCK ]: RGBA_S3TC_DXT3_Format,
+	[ VK_FORMAT_BC3_SRGB_BLOCK ]: RGBA_S3TC_DXT5_Format,
+	[ VK_FORMAT_BC3_UNORM_BLOCK ]: RGBA_S3TC_DXT5_Format,
 
 	[ VK_FORMAT_BC4_SNORM_BLOCK ]: SIGNED_RED_RGTC1_Format,
 	[ VK_FORMAT_BC4_UNORM_BLOCK ]: RED_RGTC1_Format,
@@ -1051,9 +1067,9 @@ const TYPE_MAP = {
 	[ VK_FORMAT_ETC2_R8G8B8A8_SRGB_BLOCK ]: UnsignedByteType,
 	[ VK_FORMAT_ETC2_R8G8B8_SRGB_BLOCK ]: UnsignedByteType,
 	[ VK_FORMAT_EAC_R11_UNORM_BLOCK ]: UnsignedByteType,
-    [ VK_FORMAT_EAC_R11_UNORM_BLOCK ]: UnsignedByteType,
-    [ VK_FORMAT_EAC_R11G11_UNORM_BLOCK ]: UnsignedByteType,
-    [ VK_FORMAT_EAC_R11G11_UNORM_BLOCK ]: UnsignedByteType,
+	[ VK_FORMAT_EAC_R11_SNORM_BLOCK ]: UnsignedByteType,
+	[ VK_FORMAT_EAC_R11G11_UNORM_BLOCK ]: UnsignedByteType,
+	[ VK_FORMAT_EAC_R11G11_SNORM_BLOCK ]: UnsignedByteType,
 
 	[ VK_FORMAT_ASTC_4x4_SFLOAT_BLOCK_EXT ]: HalfFloatType,
 	[ VK_FORMAT_ASTC_4x4_SRGB_BLOCK ]: UnsignedByteType,
@@ -1215,6 +1231,7 @@ async function createRawTexture( container ) {
 		texture.minFilter = useMipmaps ? NearestMipmapNearestFilter : NearestFilter;
 		texture.magFilter = NearestFilter;
 		texture.generateMipmaps = container.levelCount === 0;
+		texture.normalized = NORMALIZED_VK_FORMATS.has( vkFormat );
 
 	} else {
 
