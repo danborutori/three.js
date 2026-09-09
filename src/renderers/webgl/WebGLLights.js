@@ -28,6 +28,7 @@ function UniformsCache() {
 
 			switch ( light.type ) {
 
+				case 'SunLight':
 				case 'DirectionalLight':
 					uniforms = {
 						direction: new Vector3(),
@@ -105,6 +106,7 @@ function ShadowUniformsCache() {
 
 			switch ( light.type ) {
 
+				case 'SunLight':
 				case 'DirectionalLight':
 					uniforms = {
 						shadowIntensity: 1,
@@ -207,12 +209,14 @@ function WebGLLights( extensions, staticLightConfig ) {
 		version: 0,
 
 		hash: {
+			sunLength: - 1,
 			directionalLength: - 1,
 			pointLength: - 1,
 			spotLength: - 1,
 			rectAreaLength: - 1,
 			hemiLength: - 1,
 
+			numSunShadows: - 1,
 			numDirectionalShadows: - 1,
 			numPointShadows: - 1,
 			numSpotShadows: - 1,
@@ -224,6 +228,11 @@ function WebGLLights( extensions, staticLightConfig ) {
 
 		ambient: [ 0, 0, 0 ],
 		probe: [],
+		sun: [],
+		sunShadow: [],
+		sunShadowMap: [],
+		sunShadowMatrix: [],
+		sunShadowCascade: [],
 		directional: [],
 		directionalShadow: [],
 		directionalShadowMap: [],
@@ -262,6 +271,9 @@ function WebGLLights( extensions, staticLightConfig ) {
 
 		for ( let i = 0; i < 9; i ++ ) state.probe[ i ].set( 0, 0, 0 );
 
+		let sunLength = 0;
+		let numSunShadows = 0;
+		let numSunShadowCascades = 0;
 		let directionalLength = 0;
 		let pointLength = 0;
 		let spotLength = 0;
@@ -329,6 +341,45 @@ function WebGLLights( extensions, staticLightConfig ) {
 				light.lightInUse = true;
 
 				numLightProbes ++;
+
+			} else if ( light.isSunLight ) {
+
+				const uniforms = cache.get( light );
+
+				uniforms.color.copy( light.color ).multiplyScalar( light.intensity );
+
+				if ( light.castShadow ) {
+
+					const shadow = light.shadow;
+
+					const shadowUniforms = shadowCache.get( light );
+
+					shadowUniforms.shadowIntensity = shadow.intensity;
+					shadowUniforms.shadowBias = shadow.bias;
+					shadowUniforms.shadowNormalBias = shadow.normalBias;
+					shadowUniforms.shadowRadius = shadow.radius;
+					shadowUniforms.shadowMapSize.copy( shadow.mapSize ).multiply( shadow.getFrameExtents() );
+
+					state.sunShadow[ numSunShadows ] = shadowUniforms;
+					state.sunShadowMap[ numSunShadows ] = shadowMap;
+
+					const cascadeCount = shadow.getViewportCount();
+
+					for ( let j = 0; j < cascadeCount; j ++ ) {
+
+						state.sunShadowMatrix[ numSunShadowCascades + j ] = shadow.getMatrix( j );
+						state.sunShadowCascade[ numSunShadowCascades + j ] = shadow._cascadeData[ j ];
+
+					}
+
+					numSunShadowCascades += cascadeCount;
+					numSunShadows ++;
+
+				}
+
+				state.sun[ sunLength ] = uniforms;
+
+				sunLength ++;
 
 			} else if ( light.isDirectionalLight ) {
 
@@ -568,11 +619,13 @@ function WebGLLights( extensions, staticLightConfig ) {
 
 		const hash = state.hash;
 
-		if ( hash.directionalLength !== directionalLength ||
+		if ( hash.sunLength !== sunLength ||
+			hash.directionalLength !== directionalLength ||
 			hash.pointLength !== pointLength ||
 			hash.spotLength !== spotLength ||
 			hash.rectAreaLength !== rectAreaLength ||
 			hash.hemiLength !== hemiLength ||
+			hash.numSunShadows !== numSunShadows ||
 			hash.numDirectionalShadows !== numDirectionalShadows ||
 			hash.numPointShadows !== numPointShadows ||
 			hash.numSpotShadows !== numSpotShadows ||
@@ -580,16 +633,23 @@ function WebGLLights( extensions, staticLightConfig ) {
 			hash.numSpotMaps !== numSpotMaps ||
 			hash.numLightProbes !== numLightProbes ) {
 
+			state.sun.length = sunLength;
 			state.directional.length = directionalLength;
 			state.spot.length = spotLength;
 			state.rectArea.length = rectAreaLength;
 			state.point.length = pointLength;
 			state.hemi.length = hemiLength;
 
+			state.sunShadow.length = numSunShadows;
+			state.sunShadowMap.length = numSunShadows;
+			state.sunShadowMatrix.length = numSunShadowCascades;
+			state.sunShadowCascade.length = numSunShadowCascades;
 			state.directionalShadow.length = numDirectionalShadows;
 			state.directionalShadowMap.length = numDirectionalShadows;
+			state.directionalShadowMatrix.length = numDirectionalShadows;
 			state.pointShadow.length = numPointShadows;
 			state.pointShadowMap.length = numPointShadows;
+			state.pointShadowMatrix.length = numPointShadows;
 			state.spotShadow.length = numSpotShadows;
 			state.spotShadowMap.length = numSpotShadows;
 			state.directionalShadowMatrix.length = numDirectionalShadows;
@@ -601,14 +661,19 @@ function WebGLLights( extensions, staticLightConfig ) {
 			state.spotMap.length = numSpotMaps;
 			state.spotMapMatrix.length = numSpotMaps;
 			
+			// state.spotLightMatrix.length = numSpotShadows + numSpotMaps - numSpotShadowsWithMaps;
+			// state.spotLightMap.length = numSpotMaps;
+			// state.numSpotLightShadowsWithMaps = numSpotShadowsWithMaps;
 			state.numLightProbes = numLightProbes;
 
+			hash.sunLength = sunLength;
 			hash.directionalLength = directionalLength;
 			hash.pointLength = pointLength;
 			hash.spotLength = spotLength;
 			hash.rectAreaLength = rectAreaLength;
 			hash.hemiLength = hemiLength;
 
+			hash.numSunShadows = numSunShadows;
 			hash.numDirectionalShadows = numDirectionalShadows;
 			hash.numPointShadows = numPointShadows;
 			hash.numSpotShadows = numSpotShadows;
@@ -662,6 +727,7 @@ function WebGLLights( extensions, staticLightConfig ) {
 
 	function setupView( lights, camera ) {
 
+		let sunLength = 0;
 		let directionalLength = 0;
 		let pointLength = 0;
 		let spotLength = 0;
@@ -676,7 +742,16 @@ function WebGLLights( extensions, staticLightConfig ) {
 
 			if( !light.lightInUse ) continue;
 
-			if ( light.isDirectionalLight ) {
+			if ( light.isSunLight ) {
+
+				const uniforms = state.sun[ sunLength ];
+
+				uniforms.direction.setFromMatrixPosition( light.matrixWorld );
+				uniforms.direction.transformDirection( viewMatrix );
+
+				sunLength ++;
+
+			} else if ( light.isDirectionalLight ) {
 
 				const uniforms = state.directional[ directionalLength ];
 

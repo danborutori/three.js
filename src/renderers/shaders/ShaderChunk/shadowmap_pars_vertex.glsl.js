@@ -1,6 +1,15 @@
 export default /* glsl */`
 #ifdef USE_SHADOWMAP
 
+	#if NUM_SUN_LIGHT_SHADOWS > 0
+
+		// cascade selection and shadow coordinates are computed per fragment
+
+		varying vec4 vSunShadowWorldPosition;
+		varying vec3 vSunShadowWorldNormal;
+
+	#endif
+
 	#if NUM_DIR_LIGHT_SHADOWS > 0
 
 		varying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHT_SHADOWS ];
