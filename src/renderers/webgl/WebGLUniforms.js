@@ -47,11 +47,13 @@ import { DataArrayTexture } from '../../textures/DataArrayTexture.js';
 import { Data3DTexture } from '../../textures/Data3DTexture.js';
 import { Vector3 } from '../../math/Vector3.js';
 import { DepthTexture } from '../../textures/DepthTexture.js';
-import { LessEqualCompare, GreaterEqualCompare } from '../../constants.js';
+import { CubeDepthTexture } from '../../textures/CubeDepthTexture.js';
+import { AlwaysCompare } from '../../constants.js';
 
 const emptyTexture = /*@__PURE__*/ new Texture();
 
 const emptyShadowTexture = /*@__PURE__*/ new DepthTexture( 1, 1 );
+const emptyCubeShadowTexture = /*@__PURE__*/ new CubeDepthTexture( 1 );
 
 const emptyArrayTexture = /*@__PURE__*/ new DataArrayTexture();
 const empty3dTexture = /*@__PURE__*/ new Data3DTexture();
@@ -560,6 +562,19 @@ function setValueV4ui( gl, v ) {
 }
 
 
+function initShadowTexture( texture ) {
+
+	if ( texture.version === 0 ) {
+
+		texture.compareFunction = AlwaysCompare;
+		texture.needsUpdate = true;
+
+	}
+
+	return texture;
+
+}
+
 // Single texture (2D / Cube)
 
 function setValueT1( gl, v, textures ) {
@@ -578,8 +593,7 @@ function setValueT1( gl, v, textures ) {
 
 	if ( this.type === gl.SAMPLER_2D_SHADOW ) {
 
-		emptyShadowTexture.compareFunction = textures.isReversedDepthBuffer() ? GreaterEqualCompare : LessEqualCompare;
-		emptyTexture2D = emptyShadowTexture;
+		emptyTexture2D = initShadowTexture( emptyShadowTexture );
 
 	} else {
 
@@ -619,7 +633,19 @@ function setValueT6( gl, v, textures ) {
 
 	}
 
-	textures.setTextureCube( v || emptyCubeTexture, unit );
+	let emptyTextureCube;
+
+	if ( this.type === gl.SAMPLER_CUBE_SHADOW ) {
+
+		emptyTextureCube = initShadowTexture( emptyCubeShadowTexture );
+
+	} else {
+
+		emptyTextureCube = emptyCubeTexture;
+
+	}
+
+	textures.setTextureCube( v || emptyTextureCube, unit );
 
 }
 
@@ -832,7 +858,7 @@ function setValueT1Array( gl, v, textures ) {
 
 	if ( this.type === gl.SAMPLER_2D_SHADOW ) {
 
-		emptyTexture2D = emptyShadowTexture;
+		emptyTexture2D = initShadowTexture( emptyShadowTexture );
 
 	} else {
 
@@ -888,9 +914,21 @@ function setValueT6Array( gl, v, textures ) {
 
 	}
 
+	let emptyTextureCube;
+
+	if ( this.type === gl.SAMPLER_CUBE_SHADOW ) {
+
+		emptyTextureCube = initShadowTexture( emptyCubeShadowTexture );
+
+	} else {
+
+		emptyTextureCube = emptyCubeTexture;
+
+	}
+
 	for ( let i = 0; i !== n; ++ i ) {
 
-		textures.setTextureCube( v[ i ] || emptyCubeTexture, units[ i ] );
+		textures.setTextureCube( v[ i ] || emptyTextureCube, units[ i ] );
 
 	}
 

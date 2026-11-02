@@ -88,6 +88,7 @@ const builds = [
 			'three.core.js': 'src/Three.Core.js',
 			'three.module.js': 'src/Three.js',
 			'three.webgpu.js': 'src/Three.WebGPU.js',
+			'three.tsl.js': 'src/Three.TSL.js',
 		},
 		plugins: [
 			glsl(),
@@ -102,24 +103,6 @@ const builds = [
 				entryFileNames: '[name]',
 			}
 		]
-	},
-	{
-		input: {
-			'three.tsl.js': 'src/Three.TSL.js',
-		},
-		plugins: [
-			header()
-		],
-		preserveEntrySignatures: 'allow-extension',
-		output: [
-			{
-				format: 'esm',
-				dir: 'build',
-				minifyInternalExports: false,
-				entryFileNames: '[name]',
-			}
-		],
-		external: [ 'three/webgpu' ]
 	},
 	{ // @deprecated, r150
 		input: 'src/Three.js',

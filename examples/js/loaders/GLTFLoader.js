@@ -92,7 +92,13 @@
 			} );
 	
 			this.register( function ( parser ) {
-	
+
+				return new GLTFMaterialsDiffuseRoughnessExtension( parser );
+
+			} );
+
+			this.register( function ( parser ) {
+
 				return new GLTFMaterialsDispersionExtension( parser );
 	
 			} );
@@ -253,7 +259,9 @@
 			};
 	
 			const loader = new FileLoader( this.manager );
-	
+			loader.setPriority( this.priority );
+			loader.setCache( this.cache );
+
 			loader.setPath( this.path );
 			loader.setResponseType( 'arraybuffer' );
 			loader.setRequestHeader( this.requestHeader );
@@ -422,6 +430,9 @@
 	
 				path: path || this.resourcePath || '',
 				crossOrigin: this.crossOrigin,
+				priority: this.priority,
+				cache: this.cache,
+				withCredentials: this.withCredentials,
 				requestHeader: this.requestHeader,
 				manager: this.manager,
 				ktx2Loader: this.ktx2Loader,
@@ -574,6 +585,7 @@
 		KHR_DRACO_MESH_COMPRESSION: 'KHR_draco_mesh_compression',
 		KHR_LIGHTS_PUNCTUAL: 'KHR_lights_punctual',
 		KHR_MATERIALS_CLEARCOAT: 'KHR_materials_clearcoat',
+		KHR_MATERIALS_DIFFUSE_ROUGHNESS: 'KHR_materials_diffuse_roughness',
 		KHR_MATERIALS_DISPERSION: 'KHR_materials_dispersion',
 		KHR_MATERIALS_IOR: 'KHR_materials_ior',
 		KHR_MATERIALS_SHEEN: 'KHR_materials_sheen',
@@ -897,7 +909,53 @@
 		}
 	
 	}
-	
+
+	/**
+	 * Diffuse Roughness Materials Extension
+	 *
+	 * Specification: https://github.com/MiiBond/glTF/tree/mbond/EXT_materials_diffuse_roughness/extensions/2.0/Khronos/KHR_materials_diffuse_roughness
+	 *
+	 * @private
+	 */
+	class GLTFMaterialsDiffuseRoughnessExtension {
+
+		constructor( parser ) {
+
+			this.parser = parser;
+			this.name = EXTENSIONS.KHR_MATERIALS_DIFFUSE_ROUGHNESS;
+
+		}
+
+		getMaterialType( materialIndex ) {
+
+			const extension = getMaterialExtension( this.parser, materialIndex, this.name );
+
+			return extension !== null ? MeshPhysicalMaterial : null;
+
+		}
+
+		extendMaterialParams( materialIndex, materialParams ) {
+
+			const extension = getMaterialExtension( this.parser, materialIndex, this.name );
+
+			if ( extension === null ) return Promise.resolve();
+
+			const pending = [];
+
+			materialParams.diffuseRoughness = extension.diffuseRoughnessFactor !== undefined ? extension.diffuseRoughnessFactor : 0;
+
+			if ( extension.diffuseRoughnessTexture !== undefined ) {
+
+				pending.push( this.parser.assignTexture( materialParams, 'diffuseRoughnessMap', extension.diffuseRoughnessTexture ) );
+
+			}
+
+			return Promise.all( pending );
+
+		}
+
+	}
+
 	/**
 	 * Materials dispersion Extension
 	 *
@@ -983,25 +1041,19 @@
 			if ( extension.iridescenceIor !== undefined ) {
 	
 				materialParams.iridescenceIOR = extension.iridescenceIor;
-	
+
 			}
-	
-			if ( materialParams.iridescenceThicknessRange === undefined ) {
-	
-				materialParams.iridescenceThicknessRange = [ 100, 400 ];
-	
-			}
-	
+
 			if ( extension.iridescenceThicknessMinimum !== undefined ) {
-	
-				materialParams.iridescenceThicknessRange[ 0 ] = extension.iridescenceThicknessMinimum;
-	
+
+				materialParams.iridescenceThicknessMinimum = extension.iridescenceThicknessMinimum;
+
 			}
-	
+
 			if ( extension.iridescenceThicknessMaximum !== undefined ) {
-	
-				materialParams.iridescenceThicknessRange[ 1 ] = extension.iridescenceThicknessMaximum;
-	
+
+				materialParams.iridescenceThicknessMaximum = extension.iridescenceThicknessMaximum;
+
 			}
 	
 			if ( extension.iridescenceThicknessTexture !== undefined ) {
@@ -2598,21 +2650,28 @@
             } else if ( typeof createImageBitmap === 'undefined' || ( isSafari && safariVersion < 17 ) || ( isFirefox && firefoxVersion < 98 ) ) {
 	
 				this.textureLoader = new TextureLoader( this.options.manager );
-	
+				this.textureLoader.setPriority( this.options.priority );
+				this.textureLoader.setCache( this.options.cache );
+
 			} else {
 	
 				this.textureLoader = new ImageBitmapLoader( this.options.manager );
-	
+				this.textureLoader.setPriority( this.options.priority );
+				this.textureLoader.setCache( this.options.cache );
+
 			}
 	
 			this.textureLoader.setCrossOrigin( this.options.crossOrigin );
+			this.textureLoader.setWithCredentials( this.options.withCredentials );
 			this.textureLoader.setRequestHeader( this.options.requestHeader );
 	
 			this.fileLoader = new FileLoader( this.options.manager );
+			this.fileLoader.setPriority( this.options.priority );
+			this.fileLoader.setCache( this.options.cache );
 			this.fileLoader.setResponseType( 'arraybuffer' );
-	
-			if ( this.options.crossOrigin === 'use-credentials' ) {
-	
+
+			if ( this.options.withCredentials || this.options.crossOrigin === 'use-credentials' ) {
+
 				this.fileLoader.setWithCredentials( true );
 	
 			}
@@ -3300,51 +3359,72 @@
 	
 			let sourceURI = sourceDef.uri || '';
 			let isObjectURL = false;
-	
-			if ( sourceDef.bufferView !== undefined ) {
-	
-				// Load binary image data from bufferView, if provided.
-	
-				sourceURI = parser.getDependency( 'bufferView', sourceDef.bufferView ).then( function ( bufferView ) {
-	
-					isObjectURL = true;
-					const blob = new Blob( [ bufferView ], { type: sourceDef.mimeType } );
-					sourceURI = URL.createObjectURL( blob );
-					return sourceURI;
-	
+			let pending;
+
+			if ( loader.isKTX2Loader === true && sourceDef.bufferView !== undefined ) {
+
+				// KTX2Loader parses the binary image data from bufferView directly (see #35193).
+
+				pending = parser.getDependency( 'bufferView', sourceDef.bufferView ).then( function ( bufferView ) {
+
+					return new Promise( function ( resolve, reject ) {
+
+						loader.parse( bufferView, resolve, reject );
+
+					} );
+
 				} );
-	
-			} else if ( sourceDef.uri === undefined ) {
-	
-				throw new Error( 'THREE.GLTFLoader: Image ' + sourceIndex + ' is missing URI and bufferView' );
-	
+
+			} else {
+
+				if ( sourceDef.bufferView !== undefined ) {
+
+					// Load binary image data from bufferView, if provided.
+
+					sourceURI = parser.getDependency( 'bufferView', sourceDef.bufferView ).then( function ( bufferView ) {
+
+						isObjectURL = true;
+						const blob = new Blob( [ bufferView ], { type: sourceDef.mimeType } );
+						sourceURI = URL.createObjectURL( blob );
+						return sourceURI;
+
+					} );
+
+				} else if ( sourceDef.uri === undefined ) {
+
+					throw new Error( 'THREE.GLTFLoader: Image ' + sourceIndex + ' is missing URI and bufferView' );
+
+				}
+
+				pending = Promise.resolve( sourceURI ).then( function ( sourceURI ) {
+
+					return new Promise( function ( resolve, reject ) {
+
+						let onLoad = resolve;
+
+						if ( loader.isImageBitmapLoader === true ) {
+
+							onLoad = function ( imageBitmap ) {
+
+								const texture = new Texture( imageBitmap );
+								texture.needsUpdate = true;
+
+								resolve( texture );
+
+							};
+
+						}
+
+						loader.load( LoaderUtils.resolveURL( sourceURI, options.path ), onLoad, undefined, reject );
+
+					} );
+
+				} );
+
 			}
-	
-			const promise = Promise.resolve( sourceURI ).then( function ( sourceURI ) {
-	
-				return new Promise( function ( resolve, reject ) {
-	
-					let onLoad = resolve;
-	
-					if ( loader.isImageBitmapLoader === true ) {
-	
-						onLoad = function ( imageBitmap ) {
-	
-							const texture = new Texture( imageBitmap );
-							texture.needsUpdate = true;
-	
-							resolve( texture );
-	
-						};
-	
-					}
-	
-					loader.load( LoaderUtils.resolveURL( sourceURI, options.path ), onLoad, undefined, reject );
-	
-				} );
-	
-			} ).then( function ( texture ) {
-	
+
+			const promise = pending.then( function ( texture ) {
+
 				// Clean up resources and configure Texture.
 	
 				if ( isObjectURL === true ) {
